@@ -16,19 +16,24 @@ object Main extends App {
 
   def handleClass(file: File) = {
     val cr = new ClassReader(new FileInputStream(file))
-    val cn = new ClassNode()
+    val cn = new ClassNode(Opcodes.ASM5)
     cr.accept(cn, 0)
+    val methods = new ListBuffer[MethodResult]
     for (_method <- cn.methods.asScala) {
       val method = _method.asInstanceOf[MethodNode]
-      println("-----------------------")
-      println(s"${method.name}_${method.desc}")
-      new MethodGenerator().handle(cn, method)
+      methods.append(new MethodGenerator().handle(cn, method))
     }
+    println(CppGenerator.generatePrefix)
+    println("class " + cn.name + "{\n")
+    for (method <- methods) println(method.signature)
+    println("};\n")
+    for (method <- methods) println(method.body)
   }
 }
 
 class MethodGenerator {
   val statements = StmList()
+  var argumentsAllocated = new ListBuffer[Var]
   var variablesAllocated = new ListBuffer[Var]
   var variables = new Array[Var](0)
   val stack = new mutable.Stack[Expr]()
@@ -45,8 +50,13 @@ class MethodGenerator {
     for (localIndex <- 0 to method.localVariables.size - 1) {
       val lvar = method.localVariables.get(localIndex).asInstanceOf[LocalVariableNode]
       val kind = Type.getType(lvar.desc)
-      val variable = new Var(kind, lvar.name, lvar.index, nodes.indexOf(lvar.start) - 1, nodes.indexOf(lvar.end))
-      variablesAllocated.append(variable)
+      val isArgument = (lvar.start.getPrevious == null)
+      val variable = new Var(kind, lvar.name, lvar.index, nodes.indexOf(lvar.start) - 1, nodes.indexOf(lvar.end), isArgument)
+      if (isArgument) {
+        argumentsAllocated.append(variable)
+      } else {
+        variablesAllocated.append(variable)
+      }
       items.append(variable)
       kind.getSort match {
         case Type.LONG | Type.DOUBLE =>
@@ -88,7 +98,7 @@ class MethodGenerator {
     variablesFromMethod(method)
 
     if (method.instructions.size > 0) {
-      for (node <- createInfoNode(method)) {
+      for (node <- createInfoNode(method).drop(1).dropRight(1)) { // remove start and end labels
         //println(_instruction)
 
         val _instruction = node.node
@@ -312,9 +322,14 @@ class MethodGenerator {
       }
     }
 
-    println(CppGenerator.generateMethod(classNode.name, method.name, method.desc, statements, variablesAllocated))
+    new MethodResult(
+      CppGenerator.generateMethodSignature(classNode.name, method, statements, variablesAllocated, argumentsAllocated),
+      CppGenerator.generateMethod(classNode.name, method, statements, variablesAllocated, argumentsAllocated)
+    )
   }
 }
+
+class MethodResult(val signature:String, val body:String)
 
 object CppGenerator {
   def descToCppType(jtype:Type):String = {
@@ -326,15 +341,29 @@ object CppGenerator {
       case Type.LONG => "s64"
       case Type.FLOAT => "f32"
       case Type.DOUBLE => "f64"
-      case Type.OBJECT => jtype.getClassName
+      case Type.OBJECT => jtype.getClassName + "*"
       case _ => "Unhandled_" + jtype.getDescriptor
     }
   }
 
-  def generateMethod(className:String, methodName:String, methodDesc:String, node:Node, variables:ListBuffer[Var]): String = {
-    val methodType = Type.getMethodType(methodDesc)
-    val head = descToCppType(methodType.getReturnType) + " " + className + "::" + methodName
-    val args = "(" + (for (arg <- methodType.getArgumentTypes) yield descToCppType(arg)).mkString(", ") + ") "
+  def nameToCppName(name:String):String = {
+    return name.replace('<', '_').replace('>', '_').replace('$', '_')
+  }
+
+  def generateMethodSignature(className:String, method:MethodNode, node:Node, variables:ListBuffer[Var], arguments:ListBuffer[Var]): String = {
+    val isStatic = ((method.access & Opcodes.ACC_STATIC) != 0)
+    val methodType = Type.getMethodType(method.desc)
+    val static = if (isStatic) "static " else ""
+    val head = descToCppType(methodType.getReturnType) + " " + nameToCppName(method.name)
+    val args = "(" + (for (argument <- arguments.drop(if (isStatic) 0 else 1)) yield descToCppType(argument.kind) + " " + argument.name).mkString(", ") + ");"
+    s"public: ${static}${head}${args}"
+  }
+
+  def generateMethod(className:String, method:MethodNode, node:Node, variables:ListBuffer[Var], arguments:ListBuffer[Var]): String = {
+    val isStatic = ((method.access & Opcodes.ACC_STATIC) != 0)
+    val methodType = Type.getMethodType(method.desc)
+    val head = descToCppType(methodType.getReturnType) + " " + className + "::" + nameToCppName(method.name)
+    val args = "(" + (for (argument <- arguments.drop(if (isStatic) 0 else 1)) yield descToCppType(argument.kind) + " " + argument.name).mkString(", ") + ") "
     val body = "{\n" + generateVariableDefinitions(variables) + "\n" + generateCode(node) + "}\n"
     s"${head}${args}${body}"
   }
@@ -345,8 +374,10 @@ object CppGenerator {
     out
   }
 
-  def generatePrefix(): Unit = {
-    "typedef int s32;"
+  def generatePrefix() = {
+    "#include <stdio.h>\n" +
+    "typedef int s32;\n" +
+    "typedef long long int s64;\n"
   }
 
   def generateCode(node: Node): String = {
@@ -382,7 +413,7 @@ object CppGenerator {
               case _:TypeRefExpr => generateCode(methodCall.thisExpr) + "::"
               case _ => generateCode(methodCall.thisExpr) + "->"
             }
-            val methodName = methodCall.methodName
+            val methodName = nameToCppName(methodCall.methodName)
             val argsList = (for (arg <- methodCall.args) yield generateCode(arg)).mkString(", ")
             s"${methodExpr}${methodName}(${argsList})"
 
@@ -406,7 +437,7 @@ object CppGenerator {
   }
 }
 
-class Var(val kind:Type, val name:String, val index:Int, val start:Int, val end:Int) {}
+class Var(val kind:Type, val name:String, val index:Int, val start:Int, val end:Int, val isArgument:Boolean) {}
 
 abstract class Node
 abstract class Expr() extends Node

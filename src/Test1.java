@@ -52,4 +52,7 @@ public class Test1 {
 		return sum;
 	}
 
+	static public int doFor3(int a) {
+		return -1;
+	}
 }
