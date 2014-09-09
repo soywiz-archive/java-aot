@@ -22,18 +22,76 @@ object Main extends App {
       val method = _method.asInstanceOf[MethodNode]
       println("-----------------------")
       println(s"${method.name}_${method.desc}")
-      handleMethod(cn, method)
+      new MethodGenerator().handle(cn, method)
     }
   }
+}
 
-  def handleMethod(classNode:ClassNode, method: MethodNode) = {
-    var statements = StmList()
-    var stack = new mutable.Stack[Expr]()
-    var tempindex = 0
+class MethodGenerator {
+  val statements = StmList()
+  var variablesAllocated = new ListBuffer[Var]
+  var variables = new Array[Var](0)
+  val stack = new mutable.Stack[Expr]()
+  var varIndex = 0
+
+  private def getVarIndex() = {
+    varIndex += 1
+    varIndex
+  }
+
+  private def variablesFromMethod(method: MethodNode): Unit = {
+    val items = new ListBuffer[Var]()
+    val nodes = method.instructions.toArray
+    for (localIndex <- 0 to method.localVariables.size - 1) {
+      val lvar = method.localVariables.get(localIndex).asInstanceOf[LocalVariableNode]
+      val kind = Type.getType(lvar.desc)
+      val variable = new Var(kind, lvar.name, lvar.index, nodes.indexOf(lvar.start) - 1, nodes.indexOf(lvar.end))
+      variablesAllocated.append(variable)
+      items.append(variable)
+      kind.getSort match {
+        case Type.LONG | Type.DOUBLE =>
+          items.append(variable)
+        case _ =>
+      }
+    }
+    variables = items.toArray
+  }
+
+  private def getVariable(method: MethodNode, node:InfoNode, varIndex:Int):Var = {
+    for (variable <- variables) {
+      //println(variable.index + ";" + variable.start + ";" + variable.end)
+      if ((varIndex == variable.index) && (node.index >= variable.start) && (node.index <= variable.end)) {
+        return variable
+      }
+    }
+    throw new Exception(s"Can't find variable with 'var($varIndex)@offset(${node.index}):'")
+  }
+
+  class InfoNode(val index:Int, val node:AbstractInsnNode) {
+    var variables:Array[Var] = null
+  }
+
+  def createInfoNode(method: MethodNode) = {
+    val nodes = new ListBuffer[InfoNode]
+    var index = 0
+    val labels = new mutable.HashMap[Label, Int]
+    for (_instruction <- method.instructions.iterator().asScala) {
+      nodes.append(new InfoNode(index, _instruction.asInstanceOf[AbstractInsnNode]))
+      index += 1
+    }
+    nodes.toArray
+  }
+
+  def handle(classNode:ClassNode, method: MethodNode) = {
+    var tempIndex = 0
+
+    variablesFromMethod(method)
 
     if (method.instructions.size > 0) {
-      for (_instruction <- method.instructions.iterator().asScala) {
+      for (node <- createInfoNode(method)) {
         //println(_instruction)
+
+        val _instruction = node.node
 
         //val instruction = _instruction.asInstanceOf[AbstractInsnNode]
         _instruction match {
@@ -85,7 +143,8 @@ object Main extends App {
           //println(s"CALL: ${method.owner}.${method.name} :: ${method.desc}")
 
           case frame: FrameNode =>
-            println("frame!!")
+            /*
+            println("frame!! : " + frame.`type`)
 
             frame.`type` match {
               case Opcodes.F_NEW =>
@@ -95,6 +154,7 @@ object Main extends App {
               case Opcodes.F_SAME =>
               case Opcodes.F_SAME1 =>
             }
+            */
 
             /*
             println(frame.`type`)
@@ -103,7 +163,8 @@ object Main extends App {
             */
 
           case iinc:IincInsnNode =>
-            statements.nodes.append(AssignStm(VarExpr(iinc.`var`), BinOp(VarExpr(iinc.`var`), ConstExpr(1), "+")))
+            val variable = getVariable(method, node, iinc.`var`)
+            statements.nodes.append(AssignStm(VarExpr(variable), BinOp(VarExpr(variable), ConstExpr(1), "+")))
 
           case varn: VarInsnNode =>
             var loading = false
@@ -112,10 +173,11 @@ object Main extends App {
               case Opcodes.ISTORE | Opcodes.LSTORE | Opcodes.FSTORE | Opcodes.DSTORE | Opcodes.ASTORE => loading = false
               case Opcodes.RET => throw new Exception("Not supported RET and deprecated in java6");
             }
+            val variable = getVariable(method, node, varn.`var`)
             if (loading) {
-              stack.push(VarExpr(varn.`var`))
+              stack.push(VarExpr(variable))
             } else {
-              statements.nodes.append(AssignStm(VarExpr(varn.`var`), stack.pop()))
+              statements.nodes.append(AssignStm(VarExpr(variable), stack.pop()))
             }
 
           case linen: LineNumberNode =>
@@ -151,7 +213,10 @@ object Main extends App {
                 }
                 JumpIfStm(BinOp(left, right, op), jump.label.getLabel)
 
-              case Opcodes.IF_ICMPEQ | Opcodes.IF_ICMPNE | Opcodes.IF_ICMPLT | Opcodes.IF_ICMPGE | Opcodes.IF_ICMPGT | Opcodes.IF_ICMPLE | Opcodes.IF_ACMPEQ | Opcodes.IF_ACMPNE =>
+              case
+                Opcodes.IF_ICMPEQ | Opcodes.IF_ICMPNE | Opcodes.IF_ICMPLT | Opcodes.IF_ICMPGE | Opcodes.IF_ICMPGT
+                | Opcodes.IF_ICMPLE | Opcodes.IF_ACMPEQ | Opcodes.IF_ACMPNE
+              =>
                 val right = stack.pop()
                 val left = stack.pop()
                 val op = jump.getOpcode match {
@@ -171,7 +236,7 @@ object Main extends App {
               case Opcodes.IFNONNULL => JumpIfStm(BinOp(stack.pop(), ConstExpr(null), "!="), jump.label.getLabel)
 
               case Opcodes.JSR => throw new Exception("Not supported JSR and deprecated in java6");
-           })
+            })
 
           case insn: InsnNode =>
             insn.getOpcode match {
@@ -212,10 +277,10 @@ object Main extends App {
                 statements.nodes.append(AssignStm(ArrayAccessExpr(arrayref, index), value))
               case Opcodes.DUP =>
                 val v = stack.pop()
-                val expr = TempExpr(tempindex)
+                val expr = TempExpr(tempIndex)
                 stack.push(expr)
-                stack.push(AssignTemp(tempindex, v))
-                tempindex += 1
+                stack.push(AssignTemp(tempIndex, v))
+                tempIndex += 1
               case Opcodes.I2L => stack.push(CastExpr(stack.pop(), Type.INT_TYPE, Type.LONG_TYPE))
               case Opcodes.I2F => stack.push(CastExpr(stack.pop(), Type.INT_TYPE, Type.FLOAT_TYPE))
               case Opcodes.I2D => stack.push(CastExpr(stack.pop(), Type.INT_TYPE, Type.DOUBLE_TYPE))
@@ -247,29 +312,41 @@ object Main extends App {
       }
     }
 
-    println(CppGenerator.generateMethod(classNode.name, method.name, method.desc, statements))
+    println(CppGenerator.generateMethod(classNode.name, method.name, method.desc, statements, variablesAllocated))
   }
 }
 
 object CppGenerator {
-  def descToCType(jtype:Type):String = {
+  def descToCppType(jtype:Type):String = {
     jtype.getSort match {
+      case Type.VOID => "void"
       case Type.CHAR => "u16"
       case Type.SHORT => "s16"
       case Type.INT => "s32"
       case Type.LONG => "s64"
       case Type.FLOAT => "f32"
       case Type.DOUBLE => "f64"
+      case Type.OBJECT => jtype.getClassName
       case _ => "Unhandled_" + jtype.getDescriptor
     }
   }
 
-  def generateMethod(className:String, methodName:String, methodDesc:String, node:Node): String = {
+  def generateMethod(className:String, methodName:String, methodDesc:String, node:Node, variables:ListBuffer[Var]): String = {
     val methodType = Type.getMethodType(methodDesc)
-    val head = descToCType(methodType.getReturnType) + " " + className + "::" + methodName
-    val args = "(" + (for (arg <- methodType.getArgumentTypes) yield descToCType(arg)).mkString(", ") + ") "
-    val body = "{\n" + generateCode(node) + "}\n"
-    head + args + body
+    val head = descToCppType(methodType.getReturnType) + " " + className + "::" + methodName
+    val args = "(" + (for (arg <- methodType.getArgumentTypes) yield descToCppType(arg)).mkString(", ") + ") "
+    val body = "{\n" + generateVariableDefinitions(variables) + "\n" + generateCode(node) + "}\n"
+    s"${head}${args}${body}"
+  }
+
+  def generateVariableDefinitions(variables:ListBuffer[Var]): String = {
+    var out = ""
+    for (variable <- variables) out += descToCppType(variable.kind) + " " + variable.name + ";"
+    out
+  }
+
+  def generatePrefix(): Unit = {
+    "typedef int s32;"
   }
 
   def generateCode(node: Node): String = {
@@ -277,7 +354,7 @@ object CppGenerator {
       case expr: Expr =>
         expr match {
           case _return: VoidExpr => ""
-          case varexpr: VarExpr => s"var_${varexpr.varIndex}"
+          case varexpr: VarExpr => varexpr.variable.name
           case tempExpr: TempExpr => s"temp_${tempExpr.index}"
           case classref: TypeRefExpr => classref.name
           case arraya:ArrayAccessExpr => generateCode(arraya.expr) + "[" + generateCode(arraya.index) + "]"
@@ -286,7 +363,7 @@ object CppGenerator {
           case newArrayExpr:NewArrayExpr => "new " + newArrayExpr.desc + "[" + generateCode(newArrayExpr.countExpr) + "]"
           case newExpr:NewExpr => "(new " + newExpr.desc + "())"
           case binop:BinOp => "(" + generateCode(binop.left) + " " + binop.op + " " + generateCode(binop.right) + ")"
-          case cast:CastExpr => "((" + descToCType(cast.to) + ")(" + generateCode(cast.expr) + "))"
+          case cast:CastExpr => "((" + descToCppType(cast.to) + ")(" + generateCode(cast.expr) + "))"
           case const: ConstExpr =>
             const.value match {
               case string: String => "\"" + const.value.toString + "\""
@@ -329,13 +406,15 @@ object CppGenerator {
   }
 }
 
+class Var(val kind:Type, val name:String, val index:Int, val start:Int, val end:Int) {}
+
 abstract class Node
 abstract class Expr() extends Node
 abstract class LValue() extends Expr
 abstract class Stm() extends Node
 
 case class VoidExpr() extends Expr
-case class VarExpr(varIndex: Int) extends LValue
+case class VarExpr(variable: Var) extends LValue
 case class TempExpr(index: Int) extends LValue
 case class FieldAccessExpr(base: Expr, fieldName: String, fieldDesc: String = "") extends LValue
 case class TypeRefExpr(name: String) extends Expr
