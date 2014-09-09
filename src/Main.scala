@@ -27,7 +27,7 @@ object Main extends App {
   }
 
   def handleMethod(classNode:ClassNode, method: MethodNode) = {
-    var statements = new StmList()
+    var statements = StmList()
     var stack = new mutable.Stack[Expr]()
     var tempindex = 0
 
@@ -41,20 +41,20 @@ object Main extends App {
             field.getOpcode match {
               case Opcodes.GETSTATIC =>
                 //throw new Exception("Not implemented GETSTATIC")
-                stack.push(new FieldAccessExpr(new TypeRefExpr(field.owner), field.name))
+                stack.push(FieldAccessExpr(TypeRefExpr(field.owner), field.name))
 
               case Opcodes.PUTSTATIC =>
                 val value = stack.pop()
-                statements.nodes.append(new AssignStm(new FieldAccessExpr(new TypeRefExpr(field.owner), field.name), value))
+                statements.nodes.append(AssignStm(FieldAccessExpr(TypeRefExpr(field.owner), field.name), value))
 
               case Opcodes.GETFIELD =>
                 val ref = stack.pop()
-                stack.push(new FieldAccessExpr(ref, field.name))
+                stack.push(FieldAccessExpr(ref, field.name))
 
               case Opcodes.PUTFIELD =>
                 val ref = stack.pop()
                 val value = stack.pop()
-                statements.nodes.append(new AssignStm(new FieldAccessExpr(ref, field.name), value))
+                statements.nodes.append(AssignStm(FieldAccessExpr(ref, field.name), value))
             }
           //println(s"FIELD: ${field.owner}.${field.name} :: ${field.desc}")
 
@@ -72,11 +72,11 @@ object Main extends App {
             val thisExpr = if (!isStatic) {
               stack.pop()
             } else {
-              new TypeRefExpr(method.owner)
+              TypeRefExpr(method.owner)
             }
-            stack.push(new MethodCall(method.owner, method.name, method.desc, thisExpr, argumentExprs.toArray))
+            stack.push(MethodCallExpr(method.owner, method.name, method.desc, thisExpr, argumentExprs.toArray))
             if (methodType.getReturnType.getSort == Type.VOID) {
-              statements.nodes.append(new ExprStm(stack.pop()))
+              statements.nodes.append(ExprStm(stack.pop()))
             }
 
           //methodType.getReturnType
@@ -103,44 +103,44 @@ object Main extends App {
             */
 
           case iinc:IincInsnNode =>
-            statements.nodes.append(new AssignStm(new VarExpr(iinc.`var`), new BinOp(new VarExpr(iinc.`var`), new ConstExpr(1), "+")))
+            statements.nodes.append(AssignStm(VarExpr(iinc.`var`), BinOp(VarExpr(iinc.`var`), ConstExpr(1), "+")))
 
           case varn: VarInsnNode =>
             var loading = false
             varn.getOpcode match {
               case Opcodes.ILOAD | Opcodes.LLOAD | Opcodes.FLOAD | Opcodes.DLOAD | Opcodes.ALOAD => loading = true
               case Opcodes.ISTORE | Opcodes.LSTORE | Opcodes.FSTORE | Opcodes.DSTORE | Opcodes.ASTORE => loading = false
-              case Opcodes.RET => throw new Exception("Not supported RET");
+              case Opcodes.RET => throw new Exception("Not supported RET and deprecated in java6");
             }
             if (loading) {
-              stack.push(new VarExpr(varn.`var`))
+              stack.push(VarExpr(varn.`var`))
             } else {
-              statements.nodes.append(new AssignStm(new VarExpr(varn.`var`), stack.pop()))
+              statements.nodes.append(AssignStm(VarExpr(varn.`var`), stack.pop()))
             }
 
           case linen: LineNumberNode =>
-            statements.nodes.append(new LineNumberStm(linen.line))
+            statements.nodes.append(LineNumberStm(linen.line))
 
 
           case typen: TypeInsnNode =>
             typen.getOpcode match {
-              case Opcodes.NEW => stack.push(new NewExpr(typen.desc))
-              case Opcodes.ANEWARRAY => stack.push(new NewArrayExpr(stack.pop(), typen.desc))
-              case Opcodes.CHECKCAST => stack.push(new CheckCastExpr(stack.pop(), typen.desc))
-              case Opcodes.INSTANCEOF => stack.push(new InstanceofExpr(stack.pop(), typen.desc))
+              case Opcodes.NEW => stack.push(NewExpr(typen.desc))
+              case Opcodes.ANEWARRAY => stack.push(NewArrayExpr(stack.pop(), typen.desc))
+              case Opcodes.CHECKCAST => stack.push(CheckCastExpr(stack.pop(), typen.desc))
+              case Opcodes.INSTANCEOF => stack.push(InstanceofExpr(stack.pop(), typen.desc))
             }
 
           case ldc:LdcInsnNode =>
-            stack.push(new ConstExpr(ldc.cst))
+            stack.push(ConstExpr(ldc.cst))
 
           case label:LabelNode =>
-            statements.nodes.append(new LabelStm(label.getLabel))
+            statements.nodes.append(LabelStm(label.getLabel))
 
           case jump:JumpInsnNode =>
             statements.nodes.append(jump.getOpcode match {
               case Opcodes.IFEQ | Opcodes.IFNE | Opcodes.IFLT | Opcodes.IFGE | Opcodes.IFGT | Opcodes.IFLE =>
                 val left = stack.pop()
-                val right = new ConstExpr(0)
+                val right = ConstExpr(0)
                 val op = jump.getOpcode match {
                   case Opcodes.IFEQ => "=="
                   case Opcodes.IFNE => "!="
@@ -149,7 +149,7 @@ object Main extends App {
                   case Opcodes.IFGT => ">"
                   case Opcodes.IFLE => "<="
                 }
-                new JumpIfStm(new BinOp(left, right, op), jump.label.getLabel)
+                JumpIfStm(BinOp(left, right, op), jump.label.getLabel)
 
               case Opcodes.IF_ICMPEQ | Opcodes.IF_ICMPNE | Opcodes.IF_ICMPLT | Opcodes.IF_ICMPGE | Opcodes.IF_ICMPGT | Opcodes.IF_ICMPLE | Opcodes.IF_ACMPEQ | Opcodes.IF_ACMPNE =>
                 val right = stack.pop()
@@ -164,21 +164,21 @@ object Main extends App {
                   case Opcodes.IF_ACMPEQ => "=="
                   case Opcodes.IF_ACMPNE => "!="
                 }
-                new JumpIfStm(new BinOp(left, right, op), jump.label.getLabel)
+                JumpIfStm(BinOp(left, right, op), jump.label.getLabel)
 
-              case Opcodes.GOTO => new JumpStm(jump.label.getLabel)
-              case Opcodes.IFNULL => new JumpIfStm(new BinOp(stack.pop(), new ConstExpr(null), "=="), jump.label.getLabel)
-              case Opcodes.IFNONNULL => new JumpIfStm(new BinOp(stack.pop(), new ConstExpr(null), "!="), jump.label.getLabel)
+              case Opcodes.GOTO => JumpStm(jump.label.getLabel)
+              case Opcodes.IFNULL => JumpIfStm(BinOp(stack.pop(), ConstExpr(null), "=="), jump.label.getLabel)
+              case Opcodes.IFNONNULL => JumpIfStm(BinOp(stack.pop(), ConstExpr(null), "!="), jump.label.getLabel)
 
-              case Opcodes.JSR => throw new Exception("Not implemented JSR");
-            })
+              case Opcodes.JSR => throw new Exception("Not supported JSR and deprecated in java6");
+           })
 
           case insn: InsnNode =>
             insn.getOpcode match {
               case Opcodes.RETURN =>
-                statements.nodes.append(new ReturnStm(new VoidExpr))
+                statements.nodes.append(ReturnStm(VoidExpr()))
               case Opcodes.LRETURN | Opcodes.IRETURN | Opcodes.ARETURN =>
-                statements.nodes.append(new ReturnStm(stack.pop()))
+                statements.nodes.append(ReturnStm(stack.pop()))
               case
                 Opcodes.IADD | Opcodes.ISUB | Opcodes.IMUL | Opcodes.IREM | Opcodes.IDIV
                 | Opcodes.LADD | Opcodes.LSUB | Opcodes.LMUL | Opcodes.LREM | Opcodes.LDIV
@@ -187,54 +187,54 @@ object Main extends App {
               =>
                 val right = stack.pop()
                 val left = stack.pop()
-                stack.push(new BinOp(left, right, insn.getOpcode match {
+                stack.push(BinOp(left, right, insn.getOpcode match {
                   case Opcodes.IADD | Opcodes.LADD | Opcodes.FADD | Opcodes.DADD => "+"
                   case Opcodes.ISUB | Opcodes.LSUB | Opcodes.FSUB | Opcodes.DSUB => "-"
                   case Opcodes.IMUL | Opcodes.LMUL | Opcodes.FMUL | Opcodes.DMUL => "*"
                   case Opcodes.IREM | Opcodes.LREM | Opcodes.FREM | Opcodes.DREM => "%"
                   case Opcodes.IDIV | Opcodes.LDIV | Opcodes.FDIV | Opcodes.DDIV => "/"
                 }))
-              case Opcodes.ICONST_M1 => stack.push(new ConstExpr(-1))
-              case Opcodes.ICONST_0 => stack.push(new ConstExpr(0))
-              case Opcodes.ICONST_1 => stack.push(new ConstExpr(1))
-              case Opcodes.ICONST_2 => stack.push(new ConstExpr(2))
-              case Opcodes.ICONST_3 => stack.push(new ConstExpr(3))
-              case Opcodes.ICONST_4 => stack.push(new ConstExpr(4))
-              case Opcodes.ICONST_5 => stack.push(new ConstExpr(5))
+              case Opcodes.ICONST_M1 => stack.push(ConstExpr(-1))
+              case Opcodes.ICONST_0 => stack.push(ConstExpr(0))
+              case Opcodes.ICONST_1 => stack.push(ConstExpr(1))
+              case Opcodes.ICONST_2 => stack.push(ConstExpr(2))
+              case Opcodes.ICONST_3 => stack.push(ConstExpr(3))
+              case Opcodes.ICONST_4 => stack.push(ConstExpr(4))
+              case Opcodes.ICONST_5 => stack.push(ConstExpr(5))
               case Opcodes.AALOAD =>
                 val index = stack.pop()
                 val arrayref = stack.pop()
-                stack.push(new ArrayAccessExpr(arrayref, index))
+                stack.push(ArrayAccessExpr(arrayref, index))
               case Opcodes.AASTORE =>
                 val value = stack.pop()
                 val index = stack.pop()
                 val arrayref = stack.pop()
-                statements.nodes.append(new AssignStm(new ArrayAccessExpr(arrayref, index), value))
+                statements.nodes.append(AssignStm(ArrayAccessExpr(arrayref, index), value))
               case Opcodes.DUP =>
                 val v = stack.pop()
-                val expr = new TempExpr(tempindex)
+                val expr = TempExpr(tempindex)
                 stack.push(expr)
-                stack.push(new AssignTemp(tempindex, v))
+                stack.push(AssignTemp(tempindex, v))
                 tempindex += 1
-              case Opcodes.I2L => stack.push(new CastExpr(stack.pop(), "s32", "s64"))
-              case Opcodes.I2F => stack.push(new CastExpr(stack.pop(), "s32", "f32"))
-              case Opcodes.I2D => stack.push(new CastExpr(stack.pop(), "s32", "f64"))
+              case Opcodes.I2L => stack.push(CastExpr(stack.pop(), Type.INT_TYPE, Type.LONG_TYPE))
+              case Opcodes.I2F => stack.push(CastExpr(stack.pop(), Type.INT_TYPE, Type.FLOAT_TYPE))
+              case Opcodes.I2D => stack.push(CastExpr(stack.pop(), Type.INT_TYPE, Type.DOUBLE_TYPE))
 
-              case Opcodes.L2I => stack.push(new CastExpr(stack.pop(), "s64", "s32"))
-              case Opcodes.L2F => stack.push(new CastExpr(stack.pop(), "s64", "f32"))
-              case Opcodes.L2D => stack.push(new CastExpr(stack.pop(), "s64", "f64"))
+              case Opcodes.L2I => stack.push(CastExpr(stack.pop(), Type.LONG_TYPE, Type.INT_TYPE))
+              case Opcodes.L2F => stack.push(CastExpr(stack.pop(), Type.LONG_TYPE, Type.FLOAT_TYPE))
+              case Opcodes.L2D => stack.push(CastExpr(stack.pop(), Type.LONG_TYPE, Type.DOUBLE_TYPE))
 
-              case Opcodes.F2I => stack.push(new CastExpr(stack.pop(), "f32", "s32"))
-              case Opcodes.F2L => stack.push(new CastExpr(stack.pop(), "f32", "s64"))
-              case Opcodes.F2D => stack.push(new CastExpr(stack.pop(), "f32", "f64"))
+              case Opcodes.F2I => stack.push(CastExpr(stack.pop(), Type.FLOAT_TYPE, Type.INT_TYPE))
+              case Opcodes.F2L => stack.push(CastExpr(stack.pop(), Type.FLOAT_TYPE, Type.LONG_TYPE))
+              case Opcodes.F2D => stack.push(CastExpr(stack.pop(), Type.FLOAT_TYPE, Type.DOUBLE_TYPE))
 
-              case Opcodes.D2I => stack.push(new CastExpr(stack.pop(), "f64", "s32"))
-              case Opcodes.D2L => stack.push(new CastExpr(stack.pop(), "f64", "s64"))
-              case Opcodes.D2F => stack.push(new CastExpr(stack.pop(), "f64", "f32"))
+              case Opcodes.D2I => stack.push(CastExpr(stack.pop(), Type.DOUBLE_TYPE, Type.INT_TYPE))
+              case Opcodes.D2L => stack.push(CastExpr(stack.pop(), Type.DOUBLE_TYPE, Type.LONG_TYPE))
+              case Opcodes.D2F => stack.push(CastExpr(stack.pop(), Type.DOUBLE_TYPE, Type.FLOAT_TYPE))
 
-              case Opcodes.I2B => stack.push(new CastExpr(stack.pop(), "s32", "s8"))
-              case Opcodes.I2C => stack.push(new CastExpr(stack.pop(), "s32", "u16"))
-              case Opcodes.I2S => stack.push(new CastExpr(stack.pop(), "s32", "s16"))
+              case Opcodes.I2B => stack.push(CastExpr(stack.pop(), Type.INT_TYPE, Type.BYTE_TYPE))
+              case Opcodes.I2C => stack.push(CastExpr(stack.pop(), Type.INT_TYPE, Type.CHAR_TYPE))
+              case Opcodes.I2S => stack.push(CastExpr(stack.pop(), Type.INT_TYPE, Type.SHORT_TYPE))
 
               case _ =>
                 throw new Exception(s"Unhandled INSN ${insn.getOpcode}");
@@ -254,21 +254,22 @@ object Main extends App {
 object CppGenerator {
   def descToCType(jtype:Type):String = {
     jtype.getSort match {
+      case Type.CHAR => "u16"
+      case Type.SHORT => "s16"
       case Type.INT => "s32"
+      case Type.LONG => "s64"
+      case Type.FLOAT => "f32"
+      case Type.DOUBLE => "f64"
       case _ => "Unhandled_" + jtype.getDescriptor
     }
   }
 
   def generateMethod(className:String, methodName:String, methodDesc:String, node:Node): String = {
-    var out = ""
     val methodType = Type.getMethodType(methodDesc)
-
-    out += descToCType(methodType.getReturnType) + " " + className + "::" + methodName
-    out += "(" + (for (arg <- methodType.getArgumentTypes) yield descToCType(arg)).mkString(", ") + ") "
-    out += "{\n"
-    out += generateCode(node)
-    out += "}\n"
-    out
+    val head = descToCType(methodType.getReturnType) + " " + className + "::" + methodName
+    val args = "(" + (for (arg <- methodType.getArgumentTypes) yield descToCType(arg)).mkString(", ") + ") "
+    val body = "{\n" + generateCode(node) + "}\n"
+    head + args + body
   }
 
   def generateCode(node: Node): String = {
@@ -285,7 +286,7 @@ object CppGenerator {
           case newArrayExpr:NewArrayExpr => "new " + newArrayExpr.desc + "[" + generateCode(newArrayExpr.countExpr) + "]"
           case newExpr:NewExpr => "(new " + newExpr.desc + "())"
           case binop:BinOp => "(" + generateCode(binop.left) + " " + binop.op + " " + generateCode(binop.right) + ")"
-          case cast:CastExpr => "((" + cast.to + ")(" + generateCode(cast.expr) + "))"
+          case cast:CastExpr => "((" + descToCType(cast.to) + ")(" + generateCode(cast.expr) + "))"
           case const: ConstExpr =>
             const.value match {
               case string: String => "\"" + const.value.toString + "\""
@@ -299,7 +300,7 @@ object CppGenerator {
                 generateCode(fieldaccess.base) + "->" + fieldaccess.fieldName
             }
 
-          case methodCall: MethodCall =>
+          case methodCall: MethodCallExpr =>
             val methodExpr = methodCall.thisExpr match {
               case _:TypeRefExpr => generateCode(methodCall.thisExpr) + "::"
               case _ => generateCode(methodCall.thisExpr) + "->"
@@ -328,32 +329,32 @@ object CppGenerator {
   }
 }
 
-trait Node
+abstract class Node
+abstract class Expr() extends Node
+abstract class LValue() extends Expr
+abstract class Stm() extends Node
 
-class Expr extends Node
-class VoidExpr extends Expr
-class LValue extends Expr
-class VarExpr(val varIndex: Int) extends LValue
-class TempExpr(val index: Int) extends LValue
-class FieldAccessExpr(val base: Expr, val fieldName: String, val fieldDesc: String = "") extends LValue
-class TypeRefExpr(val name: String) extends Expr
-class MethodCall(val className: String, val methodName: String, val methodType: String, val thisExpr: Expr, val args: Array[Expr]) extends Expr
-class NewExpr(val desc:String) extends Expr
-class NewArrayExpr(val countExpr:Expr, val desc:String) extends Expr
-class CheckCastExpr(val expr:Expr, val desc:String) extends Expr
-class InstanceofExpr(val expr:Expr, val desc:String) extends Expr
-class ConstExpr(val value:Any) extends Expr
-class ArrayAccessExpr(val expr:Expr, val index:Expr) extends LValue
-class AssignTemp(val index:Int, val expr:Expr) extends Expr
-class BinOp(val left:Expr, val right:Expr, val op:String) extends Expr
-class CastExpr(val expr: Expr, val from: String, val to: String) extends Expr
+case class VoidExpr() extends Expr
+case class VarExpr(varIndex: Int) extends LValue
+case class TempExpr(index: Int) extends LValue
+case class FieldAccessExpr(base: Expr, fieldName: String, fieldDesc: String = "") extends LValue
+case class TypeRefExpr(name: String) extends Expr
+case class MethodCallExpr(className: String, methodName: String, methodType: String, thisExpr: Expr, args: Array[Expr]) extends Expr
+case class NewExpr(desc:String) extends Expr
+case class NewArrayExpr(countExpr:Expr, desc:String) extends Expr
+case class CheckCastExpr(expr:Expr, desc:String) extends Expr
+case class InstanceofExpr(expr:Expr, desc:String) extends Expr
+case class ConstExpr(value:Any) extends Expr
+case class ArrayAccessExpr(expr:Expr, index:Expr) extends LValue
+case class AssignTemp(index:Int, expr:Expr) extends Expr
+case class BinOp(left:Expr, right:Expr, op:String) extends Expr
+case class CastExpr(expr: Expr, from: Type, to: Type) extends Expr
 
-class Stm extends Node
-class ReturnStm(val expr: Expr) extends Stm
-class ExprStm(val expr: Expr) extends Stm
-class AssignStm(val lvalue: LValue, val expr: Expr) extends Stm
-class StmList(val nodes: ListBuffer[Stm] = new ListBuffer[Stm]()) extends Stm
-class LineNumberStm(val line:Int) extends Stm
-class LabelStm(val label:Label) extends Stm
-class JumpIfStm(val expr:Expr, val label:Label) extends Stm
-class JumpStm(val label:Label) extends Stm
+case class ReturnStm(expr: Expr) extends Stm
+case class ExprStm(expr: Expr) extends Stm
+case class AssignStm(lvalue: LValue, expr: Expr) extends Stm
+case class StmList(nodes: ListBuffer[Stm] = new ListBuffer[Stm]()) extends Stm
+case class LineNumberStm(line:Int) extends Stm
+case class LabelStm(label:Label) extends Stm
+case class JumpIfStm(expr:Expr, label:Label) extends Stm
+case class JumpStm(label:Label) extends Stm
