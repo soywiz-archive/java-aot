@@ -20,6 +20,36 @@ public class Test1 {
 	}
 	static public Test1 newInstance() {
 		Test1 test1 = new Test1();
+		test1.demo();
 		return test1;
 	}
+
+	private void demo() {
+
+	}
+
+	static public int doIf(int a, int b) {
+		if (a < b) {
+			return a;
+		} else {
+			return a + b;
+		}
+	}
+
+	static public int doFor(int a, int b) {
+		int sum = 0;
+		for (int n = a; n < b; n++) {
+			sum += n;
+		}
+		return sum;
+	}
+
+	static public int doFor2(int a, int b) {
+		int sum = 0;
+		for (int n = a; n < b; n++) {
+			if ((n % 2) != 0) sum += n;
+		}
+		return sum;
+	}
+
 }

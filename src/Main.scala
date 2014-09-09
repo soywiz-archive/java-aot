@@ -8,10 +8,11 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 object Main extends App {
+  val result = Test1.sum(1, 2)
+  println(Test1.doFor2(0, 10))
+
   //handleClass(new File("target/classes/Main.class"))
   handleClass(new File("target/classes/Test1.class"))
-
-  val result = Test1.sum(1, 2)
 
   def handleClass(file: File) = {
     val cr = new ClassReader(new FileInputStream(file))
@@ -21,11 +22,11 @@ object Main extends App {
       val method = _method.asInstanceOf[MethodNode]
       println("-----------------------")
       println(s"${method.name}_${method.desc}")
-      handleMethod(method)
+      handleMethod(cn, method)
     }
   }
 
-  def handleMethod(method: MethodNode) = {
+  def handleMethod(classNode:ClassNode, method: MethodNode) = {
     var statements = new StmList()
     var stack = new mutable.Stack[Expr]()
     var tempindex = 0
@@ -83,6 +84,27 @@ object Main extends App {
           //method.itf
           //println(s"CALL: ${method.owner}.${method.name} :: ${method.desc}")
 
+          case frame: FrameNode =>
+            println("frame!!")
+
+            frame.`type` match {
+              case Opcodes.F_NEW =>
+              case Opcodes.F_FULL =>
+              case Opcodes.F_APPEND =>
+              case Opcodes.F_CHOP =>
+              case Opcodes.F_SAME =>
+              case Opcodes.F_SAME1 =>
+            }
+
+            /*
+            println(frame.`type`)
+            println(frame.local)
+            println(frame.stack)
+            */
+
+          case iinc:IincInsnNode =>
+            statements.nodes.append(new AssignStm(new VarExpr(iinc.`var`), new BinOp(new VarExpr(iinc.`var`), new ConstExpr(1), "+")))
+
           case varn: VarInsnNode =>
             var loading = false
             varn.getOpcode match {
@@ -114,6 +136,43 @@ object Main extends App {
           case label:LabelNode =>
             statements.nodes.append(new LabelStm(label.getLabel))
 
+          case jump:JumpInsnNode =>
+            statements.nodes.append(jump.getOpcode match {
+              case Opcodes.IFEQ | Opcodes.IFNE | Opcodes.IFLT | Opcodes.IFGE | Opcodes.IFGT | Opcodes.IFLE =>
+                val left = stack.pop()
+                val right = new ConstExpr(0)
+                val op = jump.getOpcode match {
+                  case Opcodes.IFEQ => "=="
+                  case Opcodes.IFNE => "!="
+                  case Opcodes.IFLT => "<"
+                  case Opcodes.IFGE => ">="
+                  case Opcodes.IFGT => ">"
+                  case Opcodes.IFLE => "<="
+                }
+                new JumpIfStm(new BinOp(left, right, op), jump.label.getLabel)
+
+              case Opcodes.IF_ICMPEQ | Opcodes.IF_ICMPNE | Opcodes.IF_ICMPLT | Opcodes.IF_ICMPGE | Opcodes.IF_ICMPGT | Opcodes.IF_ICMPLE | Opcodes.IF_ACMPEQ | Opcodes.IF_ACMPNE =>
+                val right = stack.pop()
+                val left = stack.pop()
+                val op = jump.getOpcode match {
+                  case Opcodes.IF_ICMPEQ => "=="
+                  case Opcodes.IF_ICMPNE => "!="
+                  case Opcodes.IF_ICMPLT => "<"
+                  case Opcodes.IF_ICMPGE => ">="
+                  case Opcodes.IF_ICMPGT => ">"
+                  case Opcodes.IF_ICMPLE => "<="
+                  case Opcodes.IF_ACMPEQ => "=="
+                  case Opcodes.IF_ACMPNE => "!="
+                }
+                new JumpIfStm(new BinOp(left, right, op), jump.label.getLabel)
+
+              case Opcodes.GOTO => new JumpStm(jump.label.getLabel)
+              case Opcodes.IFNULL => new JumpIfStm(new BinOp(stack.pop(), new ConstExpr(null), "=="), jump.label.getLabel)
+              case Opcodes.IFNONNULL => new JumpIfStm(new BinOp(stack.pop(), new ConstExpr(null), "!="), jump.label.getLabel)
+
+              case Opcodes.JSR => throw new Exception("Not implemented JSR");
+            })
+
           case insn: InsnNode =>
             insn.getOpcode match {
               case Opcodes.RETURN =>
@@ -123,15 +182,17 @@ object Main extends App {
               case
                 Opcodes.IADD | Opcodes.ISUB | Opcodes.IMUL | Opcodes.IREM | Opcodes.IDIV
                 | Opcodes.LADD | Opcodes.LSUB | Opcodes.LMUL | Opcodes.LREM | Opcodes.LDIV
+                | Opcodes.FADD | Opcodes.FSUB | Opcodes.FMUL | Opcodes.FREM | Opcodes.FDIV
+                | Opcodes.DADD | Opcodes.DSUB | Opcodes.DMUL | Opcodes.DREM | Opcodes.DDIV
               =>
                 val right = stack.pop()
                 val left = stack.pop()
                 stack.push(new BinOp(left, right, insn.getOpcode match {
-                  case Opcodes.IADD | Opcodes.LADD => "+"
-                  case Opcodes.ISUB | Opcodes.LSUB => "-"
-                  case Opcodes.IMUL | Opcodes.LMUL => "*"
-                  case Opcodes.IREM | Opcodes.LREM => "%"
-                  case Opcodes.IDIV | Opcodes.LDIV => "/"
+                  case Opcodes.IADD | Opcodes.LADD | Opcodes.FADD | Opcodes.DADD => "+"
+                  case Opcodes.ISUB | Opcodes.LSUB | Opcodes.FSUB | Opcodes.DSUB => "-"
+                  case Opcodes.IMUL | Opcodes.LMUL | Opcodes.FMUL | Opcodes.DMUL => "*"
+                  case Opcodes.IREM | Opcodes.LREM | Opcodes.FREM | Opcodes.DREM => "%"
+                  case Opcodes.IDIV | Opcodes.LDIV | Opcodes.FDIV | Opcodes.DDIV => "/"
                 }))
               case Opcodes.ICONST_M1 => stack.push(new ConstExpr(-1))
               case Opcodes.ICONST_0 => stack.push(new ConstExpr(0))
@@ -176,21 +237,40 @@ object Main extends App {
               case Opcodes.I2S => stack.push(new CastExpr(stack.pop(), "s32", "s16"))
 
               case _ =>
-                println(s"INSN: ${insn.getOpcode}")
+                throw new Exception(s"Unhandled INSN ${insn.getOpcode}");
             }
 
           case _ =>
-            println(_instruction)
+            throw new Exception(s"Unhandled instruction ${_instruction}");
         }
         //println(instruction)
       }
     }
 
-    println(CppGenerator.generateCode(statements))
+    println(CppGenerator.generateMethod(classNode.name, method.name, method.desc, statements))
   }
 }
 
 object CppGenerator {
+  def descToCType(jtype:Type):String = {
+    jtype.getSort match {
+      case Type.INT => "s32"
+      case _ => "Unhandled_" + jtype.getDescriptor
+    }
+  }
+
+  def generateMethod(className:String, methodName:String, methodDesc:String, node:Node): String = {
+    var out = ""
+    val methodType = Type.getMethodType(methodDesc)
+
+    out += descToCType(methodType.getReturnType) + " " + className + "::" + methodName
+    out += "(" + (for (arg <- methodType.getArgumentTypes) yield descToCType(arg)).mkString(", ") + ") "
+    out += "{\n"
+    out += generateCode(node)
+    out += "}\n"
+    out
+  }
+
   def generateCode(node: Node): String = {
     node match {
       case expr: Expr =>
@@ -232,6 +312,9 @@ object CppGenerator {
         }
       case stm: Stm =>
         stm match {
+          case label:LabelStm => "label_" + label.label + ":;\n"
+          case jump:JumpIfStm => "if (" + generateCode(jump.expr) + ") goto label_" + jump.label + ";\n"
+          case jump:JumpStm => "goto label_" + jump.label + ";\n"
           case list: StmList => (for (node2 <- list.nodes) yield generateCode(node2)).mkString("")
           case assignStm: AssignStm => generateCode(assignStm.lvalue) + " = " + generateCode(assignStm.expr) + ";\n"
           case exprStm: ExprStm => generateCode(exprStm.expr) + ";\n"
@@ -271,4 +354,6 @@ class ExprStm(val expr: Expr) extends Stm
 class AssignStm(val lvalue: LValue, val expr: Expr) extends Stm
 class StmList(val nodes: ListBuffer[Stm] = new ListBuffer[Stm]()) extends Stm
 class LineNumberStm(val line:Int) extends Stm
-class LabelStm(val id:Label) extends Stm
+class LabelStm(val label:Label) extends Stm
+class JumpIfStm(val expr:Expr, val label:Label) extends Stm
+class JumpStm(val label:Label) extends Stm
