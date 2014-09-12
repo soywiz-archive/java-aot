@@ -28,6 +28,12 @@ public class Test1 {
 
 	}
 
+	private int test = 0;
+
+	public void increment() {
+		test++;
+	}
+
 	static public int doIf(int a, int b) {
 		if (a < b) {
 			return a;
@@ -52,4 +58,27 @@ public class Test1 {
 		return sum;
 	}
 
+	static public void doTryCatch() {
+		try {
+			throw(new Exception("aaa"));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	static public void doSwitch(int a) {
+		switch (a) {
+			case 0: System.out.println(0); break;
+			case 1: System.out.println(1); break;
+			case 2: System.out.println(2); break;
+		}
+	}
+
+	static public void doSwitchMap(int a) {
+		switch (a) {
+			case 0: System.out.println(0); break;
+			case 1111: System.out.println(1); break;
+			case 2222: System.out.println(2); break;
+		}
+	}
 }
