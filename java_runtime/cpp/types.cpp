@@ -1,5 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <wchar.h>
-#include <wchar.h>
+#include <sys/time.h>
 
 #include "types.h"
 #include "java_lang_String.h"
@@ -48,8 +50,15 @@ void libcore_Native::putchar(wchar_t v) {
 void libcore_Native::gc() {
 }
 
+void libcore_Native::exit(int32 status) {
+    ::exit(status);
+}
+
 int64 libcore_Native::currentTimeMillis() {
-    return 0L;
+    struct timeval tp;
+    ::gettimeofday(&tp, NULL);
+    return tp.tv_sec * 1000 + tp.tv_usec / 1000;
+    //return 0L;
 }
 
 void libcore_Native::arraycopy(java_lang_Object* src, int srcOfs, java_lang_Object* dest, int destOfs, int len) {

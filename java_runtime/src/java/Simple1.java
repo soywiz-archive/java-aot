@@ -19,7 +19,10 @@ public class Simple1 {
 
 		int len = sum(list);
 
-		Native.putchar('H');
+		Native.putchar(':');
+
+		System.out.println("" + System.currentTimeMillis());
+		System.out.println("" + System.currentTimeMillis());
 
 		for (int n = 0; n < len; n++) {
 			if ((n % 2) == 0) {
@@ -27,6 +30,8 @@ public class Simple1 {
 				//System.out.println("Hello world!" + n);
 			}
 		}
+
+		System.out.println("" + System.currentTimeMillis());
 
 		for (int n = 0; n < 10; n++) {
 			for (int m = 0; m < 10; m++) {

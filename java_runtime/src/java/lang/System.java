@@ -24,8 +24,19 @@ public class System {
 		Native.gc();
 	}
 
+	public static void exit(int status) {
+		Native.exit(status);
+	}
+
 	public static String getProperty(String key, String def) {
+		if (key.equals("file.separator")) return "/";
+		if (key.equals("path.separator")) return ":";
+		if (key.equals("line.separator")) return lineSeparator();
 		return def;
+	}
+
+	public static String lineSeparator() {
+		return "\n";
 	}
 
 	public static int identityHashCode(Object o) {

@@ -12,17 +12,23 @@ public class StringBuilder {
 		return this;
 	}
 
+	public StringBuilder append(long v) {
+		return append((int)v);
+	}
+
 	public StringBuilder append(int v) {
 		String set = "0123456789abcdefghijklmnopqrtuvwxyz";
 		char[] out = new char[64];
 		int index = out.length;
 		int count = 0;
 		if (v == 0) return append(new String(new char[] { '0' }));
+		boolean isNegative = (v < 0);
 		while (v != 0) {
-			out[--index] = set.charAt(v % 10);
+			out[--index] = set.charAt((int)(v % 10));
 			count++;
 			v /= 10;
 		}
+		if (isNegative) append("-");
 		return append(new String(out, index, count));
 	}
 
