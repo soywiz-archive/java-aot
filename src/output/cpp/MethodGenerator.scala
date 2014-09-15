@@ -120,7 +120,7 @@ class MethodGenerator(method:SootMethod) {
         var out = ""
         var index = 0
         for (i <- s.getLowIndex to s.getHighIndex) {
-          out += "case " + i + ": goto " + labels(s.getTarget(i)) + "; break;\n"
+          out += "case " + i + ": goto " + labels(s.getTarget(index)) + "; break;\n"
           index += 1
         }
         out += "default: goto " + labels(s.getDefaultTarget) + "; break;\n"

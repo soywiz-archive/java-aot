@@ -1,3 +1,5 @@
+package output
+
 import java.io.File
 
 import soot.Scene
@@ -14,8 +16,10 @@ object SootUtils {
     //Options.v.set_allow_phantom_refs(true)
 
     Options.v.set_keep_line_number(true)
-    //Options.v.set_soot_classpath(List("C:\\Program Files (x86)\\Java\\jre6\\lib\\rt.jar", ".", "C:\\projects\\java-aot\\target\\classes").mkString(File.pathSeparator))
-    Options.v.set_soot_classpath(List("C:\\dev\\rt.jar", ".", "C:\\projects\\java-aot\\target\\classes").mkString(File.pathSeparator))
+    Options.v.set_soot_classpath(List("C:\\Program Files (x86)\\Java\\jre6\\lib\\rt.jar", ".", "C:\\projects\\java-aot\\target\\classes").mkString(File.pathSeparator))
+    //Options.v.set_soot_classpath(List("C:\\dev\\rt.jar", ".", "C:\\projects\\java-aot\\target\\classes").mkString(File.pathSeparator))
+    //Options.v.set_soot_classpath(List("C:\\temp\\classes", ".", "C:\\projects\\java-aot\\target\\classes").mkString(File.pathSeparator))
+
     Options.v.setPhaseOption("jb.dae", "enabled:false")
     Options.v.setPhaseOption("jb.uce", "enabled:false")
     Options.v.setPhaseOption("jap.npc", "enabled:true")
@@ -34,6 +38,8 @@ object SootUtils {
     Options.v.setPhaseOption("jop.uce2", "enabled:false")
     Options.v.setPhaseOption("jop.ubf2", "enabled:false")
     Options.v.setPhaseOption("jop.ule", "enabled:false")
-    Scene.v.loadNecessaryClasses
+
+    Scene.v.loadBasicClasses()
+    Scene.v.loadNecessaryClasses()
   }
 }

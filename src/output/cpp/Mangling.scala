@@ -19,6 +19,7 @@ object Mangling {
   def typeToCppNoRef(kind:Type): String = {
     kind match {
       case v:VoidType => "void"
+      case v:NullType => "Null"
       case prim:PrimType =>
         prim match {
           case v:BooleanType => "bool"

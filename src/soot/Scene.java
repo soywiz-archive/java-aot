@@ -492,6 +492,11 @@ public class Scene  //extends AbstractHost
 
 	public SootClass getSootClass(String className) {
 		RefType type = (RefType) nameToClass.get(className);
+
+		if (type == null) {
+
+		}
+
 		SootClass toReturn = null;
 		if (type != null)
 			toReturn = type.getSootClass();
