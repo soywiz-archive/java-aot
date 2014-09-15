@@ -152,7 +152,8 @@ class MethodGenerator(method:SootMethod) {
       case t: ThisRef => "this"
       case t: ParameterRef => getParamName(t.getIndex)
       case t: CaughtExceptionRef => "__caughtexception"
-      case t: ArrayRef => "__ArrayRef:" + t.toString()
+      case t: ArrayRef =>
+        doValue(t.getBase) + "->get(" + doValue(t.getIndex) + ")"
       case t: InstanceFieldRef =>
         referenceType(t.getField.getDeclaringClass)
         doValue(t.getBase) + "->" + t.getField.getName
@@ -203,7 +204,7 @@ class MethodGenerator(method:SootMethod) {
         "new " + Mangling.typeToCppNoRef(e.getType) + "()"
       case e:NewArrayExpr =>
         referenceType(e.getType)
-        "new " + Mangling.typeToCppNoRef(e.getType) + "[" + doValue(e.getSize) + "]"
+        "new " + Mangling.typeToCppNoRef(e.getType) + "(" + doValue(e.getSize) + ")"
       case e:NewMultiArrayExpr =>
         referenceType(e.getType)
         "new " + Mangling.typeToCppNoRef(e.getType) + (0 to e.getSizeCount - 1).map(i => "[" + e.getSize(i) + "]").mkString
@@ -225,7 +226,7 @@ class MethodGenerator(method:SootMethod) {
                 doValue(i.getBase) + "->" + Mangling.mangle(i.getMethod.getDeclaringClass) + "::" + mangleBaseName(e.getMethod) + "(" + argsCall + ")"
             }
         }
-      case e:LengthExpr => "length(" + doValue(e.getOp) + ")"
+      case e:LengthExpr => "((" + doValue(e.getOp) + ")->size())"
       case e:NegExpr => "-(" + doValue(e.getOp) + ")"
     }
   }

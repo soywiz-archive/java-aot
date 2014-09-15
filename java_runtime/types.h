@@ -11,6 +11,12 @@ public:
     T* items;
     int len;
 
+    Array(int len) {
+        this->items = new T[len];
+        this->len = len;
+        for (int n = 0; n < len; n++) this->items[n] = 0;
+    }
+
     Array(T* items, int len) {
         this->items = items;
         this->len = len;
@@ -20,7 +26,19 @@ public:
         this->len = len;
     }
 
-    T operator[](int index) {
+    void set(int index, T value) {
+        items[index] = value;
+    }
+
+    int size() {
+        return len;
+    }
+
+    T& get(int index) {
+        return items[index];
+    }
+
+    T& operator[](int index) {
         return items[index];
     }
 };
