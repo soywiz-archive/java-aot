@@ -23,9 +23,23 @@ class MethodGenerator(method:SootMethod) {
     val mangledFullName = mangleFullName(method)
     val mangledBaseName = mangleBaseName(method)
     val params = (0 to method.getParameterCount - 1).map(index => Mangling.typeToCppRef(method.getParameterType(index)) + " " + getParamName(index)).mkString(", ")
-    val visibility = Mangling.visibility(method)
     val static = if (method.isStatic) "static" else ""
-    val declaration = s"$visibility: $static $returnType $mangledBaseName($params);"
+    var declaration = ""
+    declaration += Mangling.visibility(method) + ": "
+    if (method.isStatic) {
+      declaration += "static "
+    } else {
+      //declaration += "virtual "
+      if (method.isAbstract) {
+        declaration += "virtual "
+      }
+    }
+    declaration += s"$returnType $mangledBaseName($params)"
+    if (method.isAbstract) {
+      declaration += " = 0"
+    }
+
+    declaration += ";"
 
     for (argType <- method.getParameterTypes.asScala) {
       this.referenceType(argType.asInstanceOf[Type])

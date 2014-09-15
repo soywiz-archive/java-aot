@@ -23,8 +23,8 @@ class ClassTreeGenerator {
   def run() = {
     val outputPath = "c:\\temp"
 
-    Files.copy(new File("c:\\projects\\java-aot\\java_runtime\\types.h"), new File(outputPath + "\\types.h"))
-    Files.copy(new File("c:\\projects\\java-aot\\java_runtime\\types.cpp"), new File(outputPath + "\\types.cpp"))
+    Files.copy(new File("c:\\projects\\java-aot\\java_runtime\\cpp\\types.h"), new File(outputPath + "\\types.h"))
+    Files.copy(new File("c:\\projects\\java-aot\\java_runtime\\cpp\\types.cpp"), new File(outputPath + "\\types.cpp"))
 
     while (toProcessList.length > 0) {
       val item = toProcessList.dequeue()
@@ -40,5 +40,9 @@ class ClassTreeGenerator {
       for (referencedClass <- result.referencedClasses) enqueue(referencedClass)
     }
     println("Processed classes: " + processedList.size)
+
+    Files.write("#include \"java_Simple1.h\" \n int main(int argc, char **argv) { printf(\"Start!\\n\"); java_Simple1::main(new Array<java_lang_String*>((java_lang_String**)0, 0)); return 0; }", new File("c:\\temp\\main.cpp"), Charset.forName("UTF-8"))
+    val paths = processedList.filter(_.getName != "java.lang.Object").map(item => Mangling.mangleFullClassName(item.getName) + ".cpp").mkString(" ")
+    Files.write("@g++ -fpermissive -Wint-to-pointer-cast -g -ggdb -gstabs -gpubnames types.cpp main.cpp " + paths, new File("c:\\temp\\build.bat"), Charset.forName("UTF-8"))
   }
 }

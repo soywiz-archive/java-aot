@@ -1,12 +1,31 @@
 #ifndef types_h_def
 #define types_h_def
 #include <stdio.h>
+
+typedef char int8;
+typedef short int16;
 typedef int int32;
 typedef long long int int64;
 
 class java_lang_String;
+class java_lang_Object;
+class java_lang_Class;
 
-template <class T> class Array {
+class java_lang_Object {
+    public:  void __init__();
+    public:  bool equals(java_lang_Object* p0);
+    public:  int32 hashCode();
+    public:  java_lang_Class* getClass();
+    public:  java_lang_String* toString();
+};
+
+class ArrayBase : public java_lang_Object {
+public:
+    virtual void __set_object(int index, void* value) = 0;
+    virtual void* __get_object(int index) = 0;
+};
+
+template <class T> class Array : public ArrayBase {
 public:
     T* items;
     int len;
@@ -41,6 +60,15 @@ public:
     T& operator[](int index) {
         return items[index];
     }
+
+    void __set_object(int index, void* value) {
+        items[index] = (T)(int64)(void *)(value);
+    }
+
+    void* __get_object(int index) {
+        return (void *)(int64)items[index];
+    }
+
 };
 
 java_lang_String* cstr_to_JavaString(const wchar_t* str);

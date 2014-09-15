@@ -1,11 +1,9 @@
 package output.cpp
 
-import output.cpp.Mangling
 import soot.{Scene, SootClass}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.HashSet
-import scala.collection.mutable.ListBuffer
 
 class ClassGenerator(clazz: SootClass) {
   def this(className: String) = {
@@ -39,7 +37,10 @@ class ClassGenerator(clazz: SootClass) {
     declaration += "#include \"types.h\"\n"
     //for (rc <- referencedClasses) declaration += "#include \"" + Mangling.mangle(rc) + ".h\"\n"
     if (clazz.hasSuperclass) {
-      declaration += "#include \"" + Mangling.mangle(clazz.getSuperclass) + ".h\"\n"
+      val res = Mangling.mangle(clazz.getSuperclass)
+      if (res != "java_lang_Object") {
+        declaration += "#include \"" + res + ".h\"\n"
+      }
     }
     declaration += "\n"
 
@@ -59,7 +60,12 @@ class ClassGenerator(clazz: SootClass) {
     declaration += "#endif\n"
 
     definition += "#include \"" + Mangling.mangleFullClassName(clazz.getName) + ".h\"\n"
-    for (rc <- referencedClasses) definition += "#include \"" + Mangling.mangle(rc) + ".h\"\n"
+    for (rc <- referencedClasses) {
+      val res = Mangling.mangle(rc)
+      if (res != "java_lang_Object") {
+        definition += "#include \"" + res + ".h\"\n"
+      }
+    }
 
     for (field <- clazz.getFields.asScala) {
       if (field.isStatic) {

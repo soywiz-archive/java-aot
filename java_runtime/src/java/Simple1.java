@@ -11,8 +11,12 @@ public class Simple1 {
 
 	static public int main(String[] args) {
 		int[] list = new int[10];
+
 		list[0] = 1;
 		list[2] = 20;
+
+		System.arraycopy(list, 0, list, 4, 4);
+
 		int len = sum(list);
 
 		Native.putchar('H');
