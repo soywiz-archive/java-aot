@@ -13,6 +13,7 @@ java_lang_String* cstr_to_JavaString(const wchar_t* str) {
 }
 
 void java_lang_SystemOut::println(java_lang_String* str) {
-    for (int n = 0; n < str->chars->len; n++) putchar(str->chars->get(n));
+    int length = str->length();
+    for (int n = 0; n < length; n++) putchar(str->charAt(n));
     putchar('\n');
 }

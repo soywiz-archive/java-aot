@@ -20,6 +20,13 @@ public class Simple1 {
 				System.out.println("Hello world!" + n);
 			}
 		}
+
+		for (int n = 0; n < 10; n++) {
+			for (int m = 0; m < 10; m++) {
+				System.out.println("" + n + "x" + m + "=" + (n * m));
+			}
+		}
+
 		return 0;
 	}
 }

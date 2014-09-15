@@ -6,18 +6,24 @@ public class StringBuilder {
 	public StringBuilder append(String str) {
 		char[] newValue = new char[value.length + str.length()];
 		for (int n = 0; n < value.length; n++) newValue[n] = value[n];
-		for (int n = 0; n < str.length(); n++) newValue[n + value.length] = str.chars[n];
+		for (int n = 0; n < str.length(); n++) newValue[n + value.length] = str.charAt(n);
 
 		this.value = newValue;
 		return this;
 	}
 
 	public StringBuilder append(int v) {
-		String chars = "0123456789";
-		char[] chars2 = new char[1];
-		chars2[0] = chars.charAt((v % 10));
-
-		return append(new String(chars2));
+		String set = "0123456789abcdefghijklmnopqrtuvwxyz";
+		char[] out = new char[64];
+		int index = out.length;
+		int count = 0;
+		if (v == 0) return append(new String(new char[] { '0' }));
+		while (v != 0) {
+			out[--index] = set.charAt(v % 10);
+			count++;
+			v /= 10;
+		}
+		return append(new String(out, index, count));
 	}
 
 	public String toString() {
