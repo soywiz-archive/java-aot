@@ -6,12 +6,15 @@ object Mangling {
   def mangle(clazz:SootClass): String = mangleClassName(clazz.getName)
   def mangle(field:SootField): String = field.getName
   def mangleClassName(name:String):String = name.replace('.', '_')
+  def mangleFullClassName(name:String):String = name.replace('.', '_')
 
   def visibility(member:ClassMember):String = if (member.isPublic) "public" else if (member.isProtected) "protected" else "private"
+  def staticity(member:ClassMember):String = if (member.isStatic) "static" else ""
 
-  def typeToCpp(kind:Type): String = {
+  def typeToCppRef(kind:Type): String = {
     kind match {
       case r:RefType => typeToCppNoRef(kind) + "*"
+      case r:ArrayType => typeToCppNoRef(kind) + "*"
       case _ => typeToCppNoRef(kind)
     }
   }
@@ -31,7 +34,7 @@ object Mangling {
           case v:FloatType => "float32"
           case v:DoubleType => "float64"
         }
-      case r:ArrayType => typeToCppNoRef(r.getElementType) + "[]"
+      case r:ArrayType => "Array<" + typeToCppRef(r.getElementType) + ">"
       case r:RefType => mangleClassName(r.getClassName)
     }
   }

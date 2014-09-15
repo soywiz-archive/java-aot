@@ -1,5 +1,6 @@
 package output.cpp
 
+import output.cpp.Mangling
 import soot.{Scene, SootClass}
 
 import scala.collection.JavaConverters._
@@ -32,21 +33,33 @@ class ClassGenerator(clazz: SootClass) {
     var declaration = ""
     var definition = ""
 
-    for (rc <- referencedClasses) declaration += "#include <" + Mangling.mangle(rc) + ".h>\n"
+    declaration += "#ifndef " + Mangling.mangleFullClassName(clazz.getName) + "_def\n"
+    declaration += "#define " + Mangling.mangleFullClassName(clazz.getName) + "_def\n"
+
+    declaration += "#include \"types.h\"\n"
+    for (rc <- referencedClasses) declaration += "#include \"" + Mangling.mangle(rc) + ".h\"\n"
 
     declaration += "\n"
 
-    if (clazz.hasSuperclass) {
-      declaration += "class " + Mangling.mangle(clazz) + " : public " + Mangling.mangle(clazz.getSuperclass) + "{\n"
-    } else {
-      declaration += "class " + Mangling.mangle(clazz) + " {\n"
-    }
+    declaration += "class " + Mangling.mangle(clazz)
+    if (clazz.hasSuperclass) declaration += " : public " + Mangling.mangle(clazz.getSuperclass)
+    declaration += " {\n"
 
     for (field <- clazz.getFields.asScala) {
-      declaration += Mangling.visibility(field) + ": " +Mangling.typeToCpp(field.getType) + " " + Mangling.mangle(field) + ";\n"
+      declaration += Mangling.visibility(field) + ": " + Mangling.staticity(field) + " " + Mangling.typeToCppRef(field.getType) + " " + Mangling.mangle(field) + ";\n"
     }
     for (result <- results) declaration += result.declaration + "\n"
     declaration += "};\n"
+
+    declaration += "#endif\n"
+
+    definition += "#include \"" + Mangling.mangleFullClassName(clazz.getName) + ".h\"\n"
+
+    for (field <- clazz.getFields.asScala) {
+      if (field.isStatic) {
+        definition += Mangling.typeToCppRef(field.getType) + " " + Mangling.mangleClassName(clazz.getName) + "::" + Mangling.mangle(field) + " = (" + Mangling.typeToCppRef(field.getType) + ")(void *)0;\n"
+      }
+    }
 
     for (result <- results) {
       if (result.definition != null) {
@@ -55,8 +68,6 @@ class ClassGenerator(clazz: SootClass) {
         definition += "// Native method: " + result.method + "\n"
       }
     }
-
-
 
     ClassResult(clazz, results, declaration, definition, referencedClasses.toList)
   }

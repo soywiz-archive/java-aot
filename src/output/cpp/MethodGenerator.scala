@@ -19,13 +19,17 @@ class MethodGenerator(method:SootMethod) {
   private val referencedClasses = new mutable.HashSet[SootClass]
 
   def doMethod(): MethodResult = {
-    val returnType = Mangling.typeToCpp(method.getReturnType)
+    val returnType = Mangling.typeToCppRef(method.getReturnType)
     val mangledFullName = mangleFullName(method)
     val mangledBaseName = mangleBaseName(method)
-    val params = (0 to method.getParameterCount - 1).map(index => Mangling.typeToCpp(method.getParameterType(index)) + " " + getParamName(index)).mkString(", ")
+    val params = (0 to method.getParameterCount - 1).map(index => Mangling.typeToCppRef(method.getParameterType(index)) + " " + getParamName(index)).mkString(", ")
     val visibility = Mangling.visibility(method)
     val static = if (method.isStatic) "static" else ""
     val declaration = s"$visibility: $static $returnType $mangledBaseName($params);"
+
+    for (argType <- method.getParameterTypes.asScala) {
+      this.referenceType(argType.asInstanceOf[Type])
+    }
 
     if (method.isAbstract || method.isNative) return MethodResult(method, declaration, null, referencedClasses.toList)
     val body = method.retrieveActiveBody
@@ -47,7 +51,7 @@ class MethodGenerator(method:SootMethod) {
     var bodyString = ""
     for (local2 <- locals) {
       val (local, name) = local2
-      bodyString += Mangling.typeToCpp(local.getType) + " " + name + ";\n"
+      bodyString += Mangling.typeToCppRef(local.getType) + " " + name + ";\n"
     }
     bodyString += stms
 
@@ -88,8 +92,6 @@ class MethodGenerator(method:SootMethod) {
       }
     }
   }
-
-
 
   def doUnit(unit:soot.Unit): String = {
     var out = ""
@@ -139,7 +141,14 @@ class MethodGenerator(method:SootMethod) {
   def doValue(value:Value):String = {
     value match {
       case t: Local => allocateLocal(t)
-      case t: Immediate => t.toString()
+      case t: Immediate =>
+        //if (t.)
+        val tstr = t.toString()
+        if ((tstr.length > 0) && (tstr.charAt(0) == '"')) {
+          "cstr_to_JavaString(L" + tstr + ")"
+        } else {
+          tstr
+        }
       case t: ThisRef => "this"
       case t: ParameterRef => getParamName(t.getIndex)
       case t: CaughtExceptionRef => "__caughtexception"
@@ -185,10 +194,10 @@ class MethodGenerator(method:SootMethod) {
         doValue(e.getOp1) + " " + op + " " + doValue(e.getOp2)
       case e:CastExpr =>
         referenceType(e.getCastType)
-        "((" + Mangling.typeToCpp(e.getCastType) + ")" + doValue(e.getOp) + ")"
+        "((" + Mangling.typeToCppRef(e.getCastType) + ")" + doValue(e.getOp) + ")"
       case e:InstanceOfExpr =>
         referenceType(e.getType)
-        e.getOp + " instanceof " + Mangling.typeToCpp(e.getType)
+        e.getOp + " instanceof " + Mangling.typeToCppRef(e.getType)
       case e:NewExpr =>
         referenceType(e.getType)
         "new " + Mangling.typeToCppNoRef(e.getType) + "()"
@@ -201,12 +210,16 @@ class MethodGenerator(method:SootMethod) {
       case e:InvokeExpr =>
         referenceType(e.getMethod.getDeclaringClass)
         val args = e.getArgs.asScala.map(i => doValue(i))
+        for (arg <- e.getArgs.asScala) {
+          referenceType(arg.getType)
+        }
         val argsCall = args.mkString(", ")
         e match {
           case i:StaticInvokeExpr => mangleFullName(e.getMethod) + "(" + argsCall + ")"
           case i:InstanceInvokeExpr =>
             i match {
-              case i:InterfaceInvokeExpr => doValue(i.getBase) + "->" + mangleBaseName(e.getMethod) + "(" + argsCall + ")"
+              case i:InterfaceInvokeExpr =>
+                doValue(i.getBase) + "->" + mangleBaseName(e.getMethod) + "(" + argsCall + ")"
               case i:VirtualInvokeExpr => doValue(i.getBase) + "->" + mangleBaseName(e.getMethod) + "(" + argsCall + ")"
               case i:SpecialInvokeExpr =>
                 doValue(i.getBase) + "->" + Mangling.mangle(i.getMethod.getDeclaringClass) + "::" + mangleBaseName(e.getMethod) + "(" + argsCall + ")"
