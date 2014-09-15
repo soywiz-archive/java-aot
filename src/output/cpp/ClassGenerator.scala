@@ -37,8 +37,13 @@ class ClassGenerator(clazz: SootClass) {
     declaration += "#define " + Mangling.mangleFullClassName(clazz.getName) + "_def\n"
 
     declaration += "#include \"types.h\"\n"
-    for (rc <- referencedClasses) declaration += "#include \"" + Mangling.mangle(rc) + ".h\"\n"
+    //for (rc <- referencedClasses) declaration += "#include \"" + Mangling.mangle(rc) + ".h\"\n"
+    if (clazz.hasSuperclass) {
+      declaration += "#include \"" + Mangling.mangle(clazz.getSuperclass) + ".h\"\n"
+    }
+    declaration += "\n"
 
+    for (rc <- referencedClasses) declaration += "class " + Mangling.mangle(rc) + ";\n"
     declaration += "\n"
 
     declaration += "class " + Mangling.mangle(clazz)
@@ -54,6 +59,7 @@ class ClassGenerator(clazz: SootClass) {
     declaration += "#endif\n"
 
     definition += "#include \"" + Mangling.mangleFullClassName(clazz.getName) + ".h\"\n"
+    for (rc <- referencedClasses) definition += "#include \"" + Mangling.mangle(rc) + ".h\"\n"
 
     for (field <- clazz.getFields.asScala) {
       if (field.isStatic) {

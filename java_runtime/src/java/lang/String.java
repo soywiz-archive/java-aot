@@ -1,5 +1,7 @@
 package java.lang;
 
+import libcore.Native;
+
 public class String {
 	private char[] chars;
 	private int offset;
@@ -17,6 +19,12 @@ public class String {
 	}
 
 	public char charAt(int index) { return chars[offset + index]; }
+	public String toUpperCase() {
+		int length = this.length();
+		char[] out = new char[length];
+		for (int n = 0; n < length; n++) out[n] = Native.upper(charAt(n));
+		return new String(out);
+	}
 
 	public int length() { return len; }
 }

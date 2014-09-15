@@ -31,6 +31,8 @@ class MethodGenerator(method:SootMethod) {
       this.referenceType(argType.asInstanceOf[Type])
     }
 
+    this.referenceType(method.getReturnType)
+
     if (method.isAbstract || method.isNative) return MethodResult(method, declaration, null, referencedClasses.toList)
     val body = method.retrieveActiveBody
     for (trap <- body.getTraps.asScala) {
@@ -142,12 +144,10 @@ class MethodGenerator(method:SootMethod) {
     value match {
       case t: Local => allocateLocal(t)
       case t: Immediate =>
-        //if (t.)
-        val tstr = t.toString()
-        if ((tstr.length > 0) && (tstr.charAt(0) == '"')) {
-          "cstr_to_JavaString(L" + tstr + ")"
-        } else {
-          tstr
+        t match {
+          case c:NullConstant => "NULL"
+          case c:StringConstant => "cstr_to_JavaString(L\"" + escapeString(c.value) + "\")"
+          case _=> t.toString()
         }
       case t: ThisRef => "this"
       case t: ParameterRef => getParamName(t.getIndex)
@@ -163,6 +163,16 @@ class MethodGenerator(method:SootMethod) {
       case t: Expr => doExpr(t)
       //case _ => value.toString
     }
+  }
+
+  private def escapeString(str:String): String = {
+    str.map(v => v match {
+      case '"' => "\""
+      case '\n' => "\\n"
+      case '\r' => "\\r"
+      case '\t' => "\\t"
+      case _ => v
+    }).mkString("")
   }
 
   def doExpr(expr:Expr):String = {

@@ -1,5 +1,17 @@
 package java.lang;
 
+import libcore.Native;
+
 public class SystemOut {
-	native public void println(String text);
+	public void println(String text) {
+		print(text);
+		print("\n");
+	}
+	public void print(String text) {
+		int length = text.length();
+		for (int n = 0; n < length; n++) {
+			Native.putchar(text.charAt(n));
+		}
+	}
+
 }

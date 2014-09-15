@@ -1,11 +1,11 @@
 package java;
 
+import libcore.Native;
+
 public class Simple1 {
 	static public int sum(int[] args) {
 		int sum = 0;
-		for (int n = 0; n < args.length; n++) {
-			sum += args[n];
-		}
+		for (int arg : args) sum += arg;
 		return sum;
 	}
 
@@ -15,9 +15,12 @@ public class Simple1 {
 		list[2] = 20;
 		int len = sum(list);
 
+		Native.putchar('H');
+
 		for (int n = 0; n < len; n++) {
 			if ((n % 2) == 0) {
-				System.out.println("Hello world!" + n);
+				System.out.println(("Hello world!" + n).toUpperCase());
+				//System.out.println("Hello world!" + n);
 			}
 		}
 
