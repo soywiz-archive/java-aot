@@ -22,6 +22,8 @@ class ClassTreeGenerator {
       processedList.add(item)
       println("Processing class: " + item.getName)
       val result = new ClassGenerator(item).doClass()
+      println(result.declaration)
+      println(result.definition)
       for (referencedClass <- result.referencedClasses) enqueue(referencedClass)
     }
     println("Processed classes: " + processedList.size)

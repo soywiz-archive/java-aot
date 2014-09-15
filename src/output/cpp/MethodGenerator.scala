@@ -128,8 +128,8 @@ class MethodGenerator(method:SootMethod) {
       case s:GotoStmt => "goto " + labels(s.getTarget) + ";"
       case s:ThrowStmt => "throw(" + doValue(s.getOp) + ");"
       case s:InvokeStmt => doExpr(s.getInvokeExpr) + ";"
-      case s:EnterMonitorStmt => s"$$EnterMonitorStmt:$s"
-      case s:ExitMonitorStmt => s"$$ExitMonitorStmt:$s"
+      case s:EnterMonitorStmt => "RuntimeEnterMonitor(" + doValue(s.getOp) + ")"
+      case s:ExitMonitorStmt => "RuntimeExitMonitor(" + doValue(s.getOp) + ")"
       case s:NopStmt => s";"
     }
     //unit.addBoxPointingToThis()
