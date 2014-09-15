@@ -2,3 +2,5 @@
 /*.ipr
 /*.iws
 /target
+/java_runtime/src/java/lang/*.class
+/java_runtime/src/java/*.class
