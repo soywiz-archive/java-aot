@@ -1,6 +1,10 @@
 import output.cpp.ClassTreeGenerator
 
 object Main extends App {
+  System.out.println(System.getProperty("os.name").toLowerCase)
+  System.out.println("OS current temporary directory is "
+    + System.getProperty("java.io.tmpdir"))
+
   SootUtils.init()
 
   //ClassGenerator.doClass("Test1")

@@ -1,9 +1,9 @@
 package output.cpp
 
-import java.io.File
+import java.io.{InputStream, File}
 import java.nio.charset.Charset
 
-import com.google.common.io.Files
+import com.google.common.io.{ByteStreams, Files}
 import soot.{Scene, SootClass}
 
 import scala.collection.mutable
@@ -21,10 +21,12 @@ class ClassTreeGenerator {
   }
 
   def run() = {
-    val outputPath = "c:\\temp"
 
-    Files.copy(new File("c:\\projects\\java-aot\\java_runtime\\cpp\\types.h"), new File(outputPath + "\\types.h"))
-    Files.copy(new File("c:\\projects\\java-aot\\java_runtime\\cpp\\types.cpp"), new File(outputPath + "\\types.cpp"))
+    val outputPath = System.getProperty("java.io.tmpdir")
+
+    val cl = this.getClass.getClassLoader
+    Files.write(ByteStreams.toByteArray(cl.getResourceAsStream("types.cpp")), new File(outputPath + "/types.cpp"))
+    Files.write(ByteStreams.toByteArray(cl.getResourceAsStream("types.h")), new File(outputPath + "/types.h"))
 
     while (toProcessList.length > 0) {
       val item = toProcessList.dequeue()
@@ -41,8 +43,9 @@ class ClassTreeGenerator {
     }
     println("Processed classes: " + processedList.size)
 
-    Files.write("#include \"java_Simple1.h\" \n int main(int argc, char **argv) { printf(\"Start!\\n\"); java_Simple1::main(new Array<java_lang_String*>((java_lang_String**)0, 0)); return 0; }", new File("c:\\temp\\main.cpp"), Charset.forName("UTF-8"))
+    Files.write("#include \"java_Simple1.h\" \n int main(int argc, char **argv) { printf(\"Start!\\n\"); java_Simple1::main(new Array<java_lang_String*>((java_lang_String**)0, 0)); return 0; }", new File(outputPath + "/main.cpp"), Charset.forName("UTF-8"))
     val paths = processedList.filter(_.getName != "java.lang.Object").map(item => Mangling.mangleFullClassName(item.getName) + ".cpp").mkString(" ")
-    Files.write("@g++ -fpermissive -Wint-to-pointer-cast -g -ggdb -gstabs -gpubnames types.cpp main.cpp " + paths, new File("c:\\temp\\build.bat"), Charset.forName("UTF-8"))
+    Files.write("@g++ -fpermissive -Wint-to-pointer-cast -g -ggdb -gstabs -gpubnames types.cpp main.cpp " + paths, new File(outputPath + "/build.bat"), Charset.forName("UTF-8"))
+    Files.write("g++ -fpermissive -Wint-to-pointer-cast -O3 types.cpp main.cpp " + paths, new File(outputPath + "/build.sh"), Charset.forName("UTF-8"))
   }
 }
