@@ -1,12 +1,13 @@
 package output.cpp
 
-import java.io.{InputStream, File}
+import java.io._
 import java.nio.charset.Charset
 
 import com.google.common.io.{ByteStreams, Files}
 import soot.{Scene, SootClass}
 
 import scala.collection.mutable
+import scala.io.Source
 
 class ClassTreeGenerator {
   private val processedList = new mutable.HashSet[SootClass]
@@ -17,7 +18,10 @@ class ClassTreeGenerator {
   }
 
   def enqueue(clazz: SootClass): scala.Unit = {
-    if (!processedList.contains(clazz)) toProcessList.enqueue(clazz)
+    if (!processedList.contains(clazz)) {
+      processedList.add(clazz)
+      toProcessList.enqueue(clazz)
+    }
   }
 
   def run() = {
@@ -30,7 +34,6 @@ class ClassTreeGenerator {
 
     while (toProcessList.length > 0) {
       val item = toProcessList.dequeue()
-      processedList.add(item)
       println("Processing class: " + item.getName)
       val result = new ClassGenerator(item).doClass()
 
@@ -47,5 +50,26 @@ class ClassTreeGenerator {
     val paths = processedList.filter(_.getName != "java.lang.Object").map(item => Mangling.mangleFullClassName(item.getName) + ".cpp").mkString(" ")
     Files.write("@g++ -fpermissive -Wint-to-pointer-cast -g -ggdb -gstabs -gpubnames types.cpp main.cpp " + paths, new File(outputPath + "/build.bat"), Charset.forName("UTF-8"))
     Files.write("g++ -fpermissive -Wint-to-pointer-cast -O3 types.cpp main.cpp " + paths, new File(outputPath + "/build.sh"), Charset.forName("UTF-8"))
+
+    redirectProcess(Runtime.getRuntime.exec(
+      "g++ -fpermissive -Wint-to-pointer-cast -O3 types.cpp main.cpp " + paths,
+      new Array[String](0),
+      new File(outputPath)
+    ))
+
+    redirectProcess(Runtime.getRuntime.exec(
+      "./a.out",
+      new Array[String](0),
+      new File(outputPath)
+    ))
+
+  }
+
+  private def redirectProcess(p:Process): Unit = {
+    for (line <- Source.fromInputStream(p.getInputStream).getLines()) {
+      println(line)
+    }
+
+    p.waitFor()
   }
 }
