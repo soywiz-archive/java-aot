@@ -6,6 +6,8 @@ typedef char int8;
 typedef short int16;
 typedef int int32;
 typedef long long int int64;
+typedef float float32;
+typedef double float64;
 
 class java_lang_String;
 class java_lang_Object;

@@ -3,6 +3,7 @@ package output.cpp
 import java.io._
 import java.nio.charset.Charset
 
+import build.BuildMacOS
 import com.google.common.io.{ByteStreams, Files}
 import soot.{Scene, SootClass}
 
@@ -32,6 +33,7 @@ class ClassTreeGenerator {
     val cl = this.getClass.getClassLoader
     Files.write(ByteStreams.toByteArray(cl.getResourceAsStream("types.cpp")), new File(outputPath + "/types.cpp"))
     Files.write(ByteStreams.toByteArray(cl.getResourceAsStream("types.h")), new File(outputPath + "/types.h"))
+    val png512 = ByteStreams.toByteArray(cl.getResourceAsStream("emptyicon.png"))
 
     val frameworks = new mutable.HashSet[String]
 
@@ -59,12 +61,25 @@ class ClassTreeGenerator {
     Files.write("@g++ -fpermissive -Wint-to-pointer-cast -g -ggdb -gstabs -gpubnames types.cpp main.cpp " + paths, new File(outputPath + "/build.bat"), Charset.forName("UTF-8"))
     Files.write("g++ -fpermissive -Wint-to-pointer-cast -O3 types.cpp main.cpp " + paths, new File(outputPath + "/build.sh"), Charset.forName("UTF-8"))
 
-    val frameworksAppend = frameworks.map(framework => s"-I/Library/Frameworks/${framework}.framework/Headers -framework $framework").mkString(" ")
+    val frameworksAppend = frameworks.map(framework => {
+      var result:String = null
+      for (frameworkPath <- List(s"/Library/Frameworks/${framework}.framework", s"/System/Library/Frameworks/${framework}.framework")) {
+        if (new File(frameworkPath).exists()) {
+          result = s"-I$frameworkPath/Headers -framework $framework"
+        }
+      }
+      println(result)
+      if (result == null) throw new Exception(s"Can't find framework $framework")
+      result
+    }).mkString(" ")
     val command = s"g++ -fpermissive -Wint-to-pointer-cast -O3 types.cpp main.cpp $paths -F/Library/Frameworks $frameworksAppend -framework Cocoa"
 
+    val outputExecutableFile = s"$outputPath/a.out"
     println(command)
-    new File(outputPath + "/a.out").delete()
+    new File(outputExecutableFile).delete()
     if (redirectProcess(Runtime.getRuntime.exec(command, new Array[String](0), new File(outputPath))) == 0) {
+      BuildMacOS.createAPP(s"$outputPath/test.app", "sampleapp", Files.toByteArray(new File(outputExecutableFile)), png512)
+
       redirectProcess(Runtime.getRuntime.exec( "./a.out", new Array[String](0), new File(outputPath)))
     }
   }

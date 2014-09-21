@@ -1,7 +1,9 @@
 package java;
 
 import libcore.Native;
+import libgame.GL;
 import libgame.SDL;
+import libgame.SDLRenderer;
 import libgame.SDLWindow;
 
 public class Simple1 {
@@ -41,7 +43,12 @@ public class Simple1 {
 		//	}
 		//}
 
+        SDL.init();
         SDLWindow win = SDL.createWindow("Hello SDL!", 640, 480);
+        SDLRenderer renderer = win.createRenderer();
+        GL.clearColor(1f, 1f, 0f, 1f);
+        GL.clear();
+        win.swap();
         SDL.delay(2000);
         win.dispose();
 

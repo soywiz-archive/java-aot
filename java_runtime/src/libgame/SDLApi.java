@@ -21,13 +21,18 @@ class SDLApi {
                     "}")
     static public native long createWindow(String title, int width, int height);
 
-    @CPPMethod("void libgame_SDLApi::destroyWindow(int64 id) { SDL_DestroyWindow((SDL_Window *)(void*)id); }")
-    static public native void destroyWindow(long id);
+    @CPPMethod("void libgame_SDLApi::destroyWindow(int64 window) { SDL_DestroyWindow((SDL_Window *)(void*)window); }")
+    static public native void destroyWindow(long window);
 
+    @CPPMethod("int64 libgame_SDLApi::createRenderer(int64 window) { return (int64)(void*)SDL_CreateRenderer((SDL_Window *)(void*)window, -1, SDL_RENDERER_ACCELERATED); }")
+    static public native long createRenderer(long window);
+
+    @CPPMethod("void libgame_SDLApi::destroyRenderer(int64 renderer) { SDL_DestroyRenderer((SDL_Renderer *)(void*)renderer); }")
+    static public native void destroyRenderer(long renderer);
 
     @CPPMethod("void libgame_SDLApi::delay(int32 ms) { SDL_Delay(ms); }")
     static public native void delay(int ms);
 
-
-
+    @CPPMethod("void libgame_SDLApi::swapWindow(int64 window) { SDL_GL_SwapWindow((SDL_Window *)(void*)window); }")
+    static public native void swapWindow(long id);
 }
