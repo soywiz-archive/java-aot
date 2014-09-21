@@ -31,9 +31,9 @@ public:
     int len;
 
     Array(int len) {
-        this->items = new T[len];
+        this->items = new T[len + 1];
         this->len = len;
-        for (int n = 0; n < len; n++) this->items[n] = 0;
+        for (int n = 0; n < len + 1; n++) this->items[n] = 0;
     }
 
     Array(T* items, int len) {
@@ -72,5 +72,7 @@ public:
 };
 
 java_lang_String* cstr_to_JavaString(const wchar_t* str);
+wchar_t* JavaString_to_cstr(java_lang_String*  str);
+char* JavaString_to_cstr_byte(java_lang_String*  str);
 
 #endif

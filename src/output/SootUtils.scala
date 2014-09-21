@@ -1,9 +1,12 @@
+package output
+
 import java.io.File
 
 import soot.Scene
 import soot.options.Options
+import soot.tagkit.{AnnotationElem, AnnotationStringElem, Tag, VisibilityAnnotationTag}
 
-import scala.util.matching.Regex
+import scala.collection.JavaConverters._
 
 object SootUtils {
   def init(): Unit = {
@@ -45,5 +48,40 @@ object SootUtils {
     Options.v.setPhaseOption("jop.ubf2", "enabled:false")
     Options.v.setPhaseOption("jop.ule", "enabled:false")
     Scene.v.loadNecessaryClasses
+  }
+
+  def getTag(tags: Iterable[Tag], clazz:String, name:String): Object = {
+    for (tag <- tags) {
+      tag match {
+        case at:VisibilityAnnotationTag =>
+          for (annotation <- at.getAnnotations.asScala) {
+            if (annotation.getType == clazz) {
+              //println(annotation.getName)
+              //println(annotation.getNumElems)
+              //println(annotation.getType)
+              //println(annotation.getInfo)
+              for (n <- 0 to annotation.getNumElems - 1) {
+                val el = annotation.getElemAt(n)
+                if (el.getName == name) {
+                  def parseAnnotationElement(el:AnnotationElem):Object = {
+                    el match {
+                      case e: AnnotationStringElem => e.getValue
+                      case _ => null
+                    }
+                    //println("::" + el.getName + " : " + el.getKind + " : " + el.toString)
+                  }
+
+                  return parseAnnotationElement(el)
+                }
+              }
+            }
+          }
+        case _ =>
+      }
+      //println(tag.getName)
+      //soot.tagkit.VisibilityAnnotationTag
+      //println(tag.getValue)
+    }
+    null
   }
 }

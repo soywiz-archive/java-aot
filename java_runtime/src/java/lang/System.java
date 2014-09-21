@@ -44,9 +44,11 @@ public class System {
 		return o.hashCode();
 	}
 
+    /*
 	public static void setErr(PrintStream err) {
 	}
 
 	public static void setOut(PrintStream out) {
 	}
+	*/
 }

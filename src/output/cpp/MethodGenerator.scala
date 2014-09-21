@@ -1,5 +1,6 @@
 package output.cpp
 
+import output.SootUtils
 import soot._
 import soot.jimple._
 
@@ -47,7 +48,11 @@ class MethodGenerator(method:SootMethod) {
 
     this.referenceType(method.getReturnType)
 
-    if (method.isAbstract || method.isNative) return MethodResult(method, declaration, null, referencedClasses.toList)
+    if (method.isAbstract || method.isNative) {
+      val methodBody = SootUtils.getTag(method.getTags.asScala, "Llibcore/CPPMethod;", "value").asInstanceOf[String]
+      return MethodResult(method, declaration, methodBody, referencedClasses.toList)
+    }
+
     val body = method.retrieveActiveBody
     for (trap <- body.getTraps.asScala) {
       tryList(trap.getBeginUnit) = trap.getException

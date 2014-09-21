@@ -27,7 +27,13 @@ public class String {
 		this.len = original.len;
 	}
 
-	public char charAt(int index) {
+    public char[] toCharArray() {
+        char[] out = new char[len];
+        for (int n = 0; n < len; n++) out[n] = charAt(n);
+        return out;
+    }
+
+    public char charAt(int index) {
 		return chars[offset + index];
 	}
 

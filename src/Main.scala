@@ -1,3 +1,4 @@
+import output.SootUtils
 import output.cpp.ClassTreeGenerator
 
 object Main extends App {
@@ -12,6 +13,7 @@ object Main extends App {
 
   val generator = new ClassTreeGenerator()
   //generator.enqueue("java.lang.System")
+  generator.enqueue("libgame.SDLApi")
   generator.enqueue("libcore.StdoutOutputStream")
   generator.enqueue("libcore.Native")
   generator.enqueue("java.Simple1")

@@ -35,44 +35,19 @@ java_lang_String* cstr_to_JavaString(const wchar_t* str) {
     return str2;
 }
 
-wchar_t libcore_Native::upper(wchar_t v) {
-    return ::towupper(v);
+wchar_t* JavaString_to_cstr_wide(java_lang_String*  str) {
+    int len = str->length();
+    wchar_t* bytes = new wchar_t[len + 1];
+    bytes[len] = 0;
+    for (int n = 0; n < len; n++) bytes[n] = (wchar_t)str->charAt(n);
+    return bytes;
 }
 
-wchar_t libcore_Native::lower(wchar_t v) {
-    return ::towlower(v);
-}
-
-void libcore_Native::putchar(wchar_t v) {
-    ::putchar(v);
-}
-
-void libcore_Native::gc() {
-}
-
-void libcore_Native::exit(int32 status) {
-    ::exit(status);
-}
-
-int64 libcore_Native::currentTimeMillis() {
-    struct timeval tp;
-    ::gettimeofday(&tp, NULL);
-    return tp.tv_sec * 1000 + tp.tv_usec / 1000;
-    //return 0L;
-}
-
-void libcore_Native::arraycopy(java_lang_Object* src, int srcOfs, java_lang_Object* dest, int destOfs, int len) {
-    if (src == NULL) return;
-    if (dest == NULL) return;
-    //Array<int> *src_int = dynamic_cast< Array<int>*>(src);
-    //Array<int> *dest_int = dynamic_cast< Array<int>*>(dest);
-    //if ((src_int != NULL) && (dest_int != NULL)) {
-    //    printf("Copying integer list!\n");
-    //} else {
-        ArrayBase *_src = (ArrayBase *)src;
-        ArrayBase *_dest = (ArrayBase *)dest;
-        for (int n = 0; n < len; n++) {
-            _dest->__set_object(destOfs + n, _dest->__get_object(srcOfs + n));
-        }
-    //}
+char* JavaString_to_cstr_byte(java_lang_String*  str) {
+    // @TODO: free
+    int len = str->length();
+    char* bytes = new char[len + 1];
+    bytes[len] = 0;
+    for (int n = 0; n < len; n++) bytes[n] = (char)str->charAt(n);
+    return bytes;
 }

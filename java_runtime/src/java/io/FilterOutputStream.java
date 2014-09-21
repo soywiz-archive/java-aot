@@ -1,35 +1,35 @@
 package java.io;
 
 public class FilterOutputStream extends OutputStream {
-	protected OutputStream outputStream;
+    protected OutputStream out;
 
-	public FilterOutputStream(OutputStream outputStream) {
-		this.outputStream = outputStream;
-	}
+    public FilterOutputStream(OutputStream out) {
+        this.out = out;
+    }
 
-	@java.lang.Override
-	public void close() {
-		outputStream.close();
-	}
+    @java.lang.Override
+    public void close() throws IOException {
+        out.close();
+    }
 
-	@java.lang.Override
-	public void flush() {
-		outputStream.flush();
-	}
+    @java.lang.Override
+    public void flush() throws IOException {
+        out.flush();
+    }
 
-	@java.lang.Override
-	public void write(byte[] b) {
-		outputStream.write(b);
-	}
+    @java.lang.Override
+    public void write(byte[] b) throws IOException {
+        out.write(b);
+    }
 
-	@java.lang.Override
-	public void write(byte[] b, int off, int len) {
-		outputStream.write(b, off, len);
-	}
+    @java.lang.Override
+    public void write(byte[] b, int off, int len) throws IOException {
+        out.write(b, off, len);
+    }
 
-	@java.lang.Override
-	public void write(int b) {
-		outputStream.write(b);
-	}
+    @java.lang.Override
+    public void write(int b) throws IOException {
+        out.write(b);
+    }
 }
 

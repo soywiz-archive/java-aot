@@ -1,5 +1,7 @@
 package output.cpp
 
+import output.SootUtils
+import soot.tagkit.{AnnotationElem, Tag, AnnotationStringElem, VisibilityAnnotationTag}
 import soot.{Scene, SootClass}
 
 import scala.collection.JavaConverters._
@@ -23,6 +25,9 @@ class ClassGenerator(clazz: SootClass) {
     }
     referencedClasses.remove(this.clazz)
 
+    val native_framework = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPP;", "framework").asInstanceOf[String]
+    val native_header = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPP;", "header").asInstanceOf[String]
+
     //println("typedef int int32;")
     //println("typedef long long int int64;")
     //println("class java_lang_Exception;")
@@ -35,6 +40,9 @@ class ClassGenerator(clazz: SootClass) {
     declaration += "#define " + Mangling.mangleFullClassName(clazz.getName) + "_def\n"
 
     declaration += "#include \"types.h\"\n"
+    if (native_header != null) {
+      declaration += native_header + "\n"
+    }
     //for (rc <- referencedClasses) declaration += "#include \"" + Mangling.mangle(rc) + ".h\"\n"
     if (clazz.hasSuperclass) {
       val res = Mangling.mangle(clazz.getSuperclass)
@@ -81,6 +89,6 @@ class ClassGenerator(clazz: SootClass) {
       }
     }
 
-    ClassResult(clazz, results, declaration, definition, referencedClasses.toList)
+    ClassResult(clazz, results, declaration, definition, referencedClasses.toList, native_framework)
   }
 }

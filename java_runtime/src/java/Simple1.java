@@ -1,6 +1,8 @@
 package java;
 
 import libcore.Native;
+import libgame.SDL;
+import libgame.SDLWindow;
 
 public class Simple1 {
 	static public int sum(int[] args) {
@@ -38,6 +40,10 @@ public class Simple1 {
 		//		System.out.println("" + n + "x" + m + "=" + (n * m));
 		//	}
 		//}
+
+        SDLWindow win = SDL.createWindow("Hello SDL!", 640, 480);
+        SDL.delay(2000);
+        win.dispose();
 
 		return 0;
 	}
