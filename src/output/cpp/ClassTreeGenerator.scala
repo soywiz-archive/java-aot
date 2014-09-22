@@ -5,10 +5,10 @@ import java.nio.charset.Charset
 
 import build.BuildMacOS
 import com.google.common.io.{ByteStreams, Files}
+import output.OS
 import soot.{Scene, SootClass}
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 class ClassTreeGenerator {
@@ -32,7 +32,8 @@ class ClassTreeGenerator {
 
     val cl = this.getClass.getClassLoader
     val file_separator = System.getProperty("file.separator")
-    val java_macos_embedded_frameworks = "types\\.cpp$".r.replaceAllIn(cl.getResource("types.cpp").getPath, "/frameworks".replace("/", file_separator))
+    var java_macos_embedded_frameworks = "types\\.cpp$".r.replaceAllIn(cl.getResource("types.cpp").getPath, "/frameworks".replace("/", file_separator))
+    if (OS.isWindows) java_macos_embedded_frameworks = "^/+".r.replaceAllIn(java_macos_embedded_frameworks, "")
 
     Files.write(ByteStreams.toByteArray(cl.getResourceAsStream("types.cpp")), new File(outputPath + "/types.cpp"))
     Files.write(ByteStreams.toByteArray(cl.getResourceAsStream("types.h")), new File(outputPath + "/types.h"))
@@ -68,25 +69,31 @@ class ClassTreeGenerator {
     Files.write("@g++ -fpermissive -Wint-to-pointer-cast -g -ggdb -gstabs -gpubnames types.cpp main.cpp " + paths, new File(outputPath + "/build.bat"), Charset.forName("UTF-8"))
     Files.write("g++ -fpermissive -Wint-to-pointer-cast -O3 types.cpp main.cpp " + paths, new File(outputPath + "/build.sh"), Charset.forName("UTF-8"))
 
-    val frameworksAppend = frameworks.map(framework => {
-      var result:String = null
-      for (frameworkPath <- List(s"/Library/Frameworks/${framework}.framework", s"/System/Library/Frameworks/${framework}.framework")) {
-        println(frameworkPath)
-        if (new File(frameworkPath).exists()) {
-          result = s"-I$frameworkPath/Versions/A/Headers -framework $framework"
+    var frameworksAppend = ""
+    if (OS.isMac) {
+      frameworksAppend = frameworks.map(framework => {
+        var result: String = null
+        for (frameworkPath <- List(s"/Library/Frameworks/${framework}.framework", s"/System/Library/Frameworks/${framework}.framework")) {
+          println(frameworkPath)
+          if (new File(frameworkPath).exists()) {
+            result = s"-I$frameworkPath/Versions/A/Headers -framework $framework"
+          }
         }
-      }
-      println(result)
-      if (result == null) throw new Exception(s"Can't find framework $framework")
-      result
-    }).mkString(" ")
+        println(result)
+        if (result == null) throw new Exception(s"Can't find framework $framework")
+        result
+      }).mkString(" ")
+    }
+
+    var libSystem = "MacOS"
+    if (OS.isWindows) libSystem = "Windows"
 
     val libraryAppend = libraries.map(library => {
-      var result:String = null
+      var result: String = null
       for (libraryPath <- List(s"$java_macos_embedded_frameworks/$library")) {
         println(libraryPath)
         if (new File(libraryPath).exists()) {
-          result = s"-I$libraryPath/include $libraryPath/lib/MacOS/lib$library.a"
+          result = s"-I$libraryPath/include/$libSystem $libraryPath/lib/$libSystem/lib$library.a"
         }
       }
       println(result)
@@ -96,19 +103,31 @@ class ClassTreeGenerator {
 
 
     val cflagsAppend = cflagsList.mkString(" ")
-    val command = s"g++ -fpermissive -Wint-to-pointer-cast -O3 types.cpp main.cpp $paths -framework Cocoa -framework CoreAudio -F/Library/Frameworks -F$java_macos_embedded_frameworks $frameworksAppend $libraryAppend $cflagsAppend"
+    var command = s"g++ -fpermissive -Wint-to-pointer-cast -O3 types.cpp main.cpp $paths $frameworksAppend $libraryAppend $cflagsAppend"
+    if (OS.isMac) {
+      command += " -framework Cocoa -framework CoreAudio -F/Library/Frameworks -F$java_macos_embedded_frameworks"
+    }
+    if (OS.isWindows) {
+      command += " -lopengl32 -lshell32 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -lkernel32 -lversion -lOleAut32 -lstdc++"
+    }
 
     val outputExecutableFile = s"$outputPath/a.out"
     println(command)
     new File(outputExecutableFile).delete()
-    if (redirectProcess(Runtime.getRuntime.exec(command, new Array[String](0), new File(outputPath))) == 0) {
-      BuildMacOS.createAPP(s"$outputPath/test.app", "sampleapp", Files.toByteArray(new File(outputExecutableFile)), png512)
+    if (redirectProcess(Runtime.getRuntime.exec(command, null, new File(outputPath))) == 0) {
+      if (OS.isMac) {
+        BuildMacOS.createAPP(s"$outputPath/test.app", "sampleapp", Files.toByteArray(new File(outputExecutableFile)), png512)
+      }
 
-      redirectProcess(Runtime.getRuntime.exec( "./a.out", new Array[String](0), new File(outputPath)))
+      if (OS.isWindows) {
+        redirectProcess(Runtime.getRuntime.exec(outputPath + "/a.exe", null, new File(outputPath)))
+      } else {
+        redirectProcess(Runtime.getRuntime.exec("./a.out", null, new File(outputPath)))
+      }
     }
   }
 
-  private def redirectProcess(p:Process): Int = {
+  private def redirectProcess(p: Process): Int = {
     for (line <- Source.fromInputStream(p.getInputStream).getLines()) {
       println(line)
     }

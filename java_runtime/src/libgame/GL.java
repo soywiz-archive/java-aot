@@ -5,7 +5,12 @@ import libcore.CPPMethod;
 
 @CPP(
         framework = "OpenGL",
-        header = "#include <gl.h>"
+        header = "\n" +
+	        "#ifdef _WIN32\n" +
+	        "#  include <GL/gl.h>\n" +
+	        "#else\n" +
+	        "#  include <gl.h>\n" +
+	        "#endif\n"
 )
 public class GL {
     @CPPMethod("void libgame_GL::clear() { ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }")

@@ -21,13 +21,15 @@ object SootUtils {
     Options.v.set_keep_line_number(true)
 
     val cl = this.getClass.getClassLoader
-    val file_separator = System.getProperty("file.separator")
-    val java_runtime_classes_path = "types\\.cpp$".r.replaceAllIn(cl.getResource("types.cpp").getPath, "/../../out/production/java_runtime".replace("/", file_separator))
+    val file_separator = OS.fileSeparator
 
-    //Options.v.set_soot_classpath(List("C:\\Program Files (x86)\\Java\\jre6\\lib\\rt.jar", ".", "C:\\projects\\java-aot\\target\\classes").mkString(File.pathSeparator))
-    //Options.v.set_soot_classpath(List("C:\\dev\\rt.jar", ".", "C:\\projects\\java-aot\\target\\classes").mkString(File.pathSeparator))
-    //Options.v.set_soot_classpath(List("C:\\projects\\java-aot\\java_runtime\\src", ".", "C:\\projects\\java-aot\\target\\classes").mkString(File.pathSeparator))
-    Options.v.set_soot_classpath(List(java_runtime_classes_path, ".").mkString(File.pathSeparator))
+    println(s"file_separator: $file_separator")
+
+    val java_runtime_classes_path = "types\\.cpp$".r.replaceAllIn(cl.getResource("types.cpp").getPath, "/../../out/production/java_runtime")
+
+    println(s"java_runtime_classes_path: $java_runtime_classes_path")
+
+    Options.v.set_soot_classpath(List(java_runtime_classes_path).mkString(File.pathSeparator))
 
     Options.v.setPhaseOption("jb.dae", "enabled:false")
     Options.v.setPhaseOption("jb.uce", "enabled:false")
@@ -47,7 +49,7 @@ object SootUtils {
     Options.v.setPhaseOption("jop.uce2", "enabled:false")
     Options.v.setPhaseOption("jop.ubf2", "enabled:false")
     Options.v.setPhaseOption("jop.ule", "enabled:false")
-    Scene.v.loadNecessaryClasses
+    Scene.v.loadNecessaryClasses()
   }
 
   def getTag(tags: Iterable[Tag], clazz:String, name:String): Object = {

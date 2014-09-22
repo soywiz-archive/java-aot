@@ -1,10 +1,9 @@
-import output.SootUtils
+import output.{OS, SootUtils}
 import output.cpp.ClassTreeGenerator
 
 object Main extends App {
   System.out.println(System.getProperty("os.name").toLowerCase)
-  System.out.println("OS current temporary directory is "
-    + System.getProperty("java.io.tmpdir"))
+  System.out.println(s"OS current temporary directory is ${OS.tempDir}")
 
   SootUtils.init()
 
