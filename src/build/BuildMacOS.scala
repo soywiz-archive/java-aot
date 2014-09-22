@@ -21,6 +21,9 @@ object BuildMacOS {
     new File(s"$path/Contents/Frameworks").mkdirs()
     Files.write(executable, new File(s"$path/Contents/MacOS/app"))
     Runtime.getRuntime.exec(s"chmod +x $path/Contents/MacOS/app")
+    Runtime.getRuntime.exec(s"strip $path/Contents/MacOS/app")
+
+    //install_name_tool -change @rpath/SDL2.framework/Versions/A/SDL2 @executable_path/../Frameworks/SDL2.framework/Versions/A/SDL2 app
 
     Files.write(createIcns(png512x512), new File(s"$path/Contents/Resources/app.icns"))
     //Files.write(icns, new File(s"$path/Contents/Resources/app.icns"))

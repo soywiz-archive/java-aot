@@ -1,10 +1,7 @@
 package java;
 
 import libcore.Native;
-import libgame.GL;
-import libgame.SDL;
-import libgame.SDLRenderer;
-import libgame.SDLWindow;
+import libgame.*;
 
 public class Simple1 {
 	static public int sum(int[] args) {
@@ -44,12 +41,26 @@ public class Simple1 {
 		//}
 
         SDL.init();
-        SDLWindow win = SDL.createWindow("Hello SDL!", 640, 480);
+        SDLWindow win = SDL.createWindow("Hello SDL from java-aot!", 640, 480);
         SDLRenderer renderer = win.createRenderer();
-        GL.clearColor(1f, 1f, 0f, 1f);
-        GL.clear();
-        win.swap();
-        SDL.delay(2000);
+        boolean running = true;
+        while (true) {
+            SDLEvent event;
+            while ((event = SDL.pollEvent()) != null) {
+                if (event.getType() == SDLEventType.SDL_QUIT) {
+                    running = false;
+                    break;
+                }
+                System.out.println("" + event.getCode());
+            }
+
+            if (!running) break;
+
+            GL.clearColor(1f, 1f, 0f, 1f);
+            GL.clear();
+            win.swap();
+            SDL.delay(20);
+        }
         win.dispose();
 
 		return 0;

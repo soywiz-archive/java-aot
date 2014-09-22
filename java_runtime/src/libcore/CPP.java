@@ -5,4 +5,6 @@ package libcore;
 public @interface CPP {
     String header() default "";
     String framework() default "";
+    String library() default "";
+    String cflags() default "";
 }

@@ -4,7 +4,8 @@ import libcore.CPP;
 import libcore.CPPMethod;
 
 @CPP(
-    framework = "SDL2",
+    library = "SDL2",
+    cflags = "-D_THREAD_SAFE -lm -liconv -Wl,-framework,OpenGL -Wl,-framework,ForceFeedback -lobjc -Wl,-framework,Cocoa -Wl,-framework,Carbon -Wl,-framework,IOKit -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit",
     header = "#include <SDL.h>"
 )
 class SDLApi {
@@ -35,4 +36,14 @@ class SDLApi {
 
     @CPPMethod("void libgame_SDLApi::swapWindow(int64 window) { SDL_GL_SwapWindow((SDL_Window *)(void*)window); }")
     static public native void swapWindow(long id);
+
+    @CPPMethod("SDL_Event test_event; int32 libgame_SDLApi::eventPoll() {return SDL_PollEvent(&test_event); }")
+    static public native int eventPoll();
+
+    @CPPMethod("int32 libgame_SDLApi::eventGetType() { return test_event.type; }") static public native int eventGetType();
+    @CPPMethod("int32 libgame_SDLApi::eventGetCode() { return test_event.user.code; }") static public native int eventGetCode();
+    @CPPMethod("int64 libgame_SDLApi::eventGetData1() { return (int64)(void*)test_event.user.data1; }") static public native long eventGetData1();
+    @CPPMethod("int64 libgame_SDLApi::eventGetData2() { return (int64)(void*)test_event.user.data2; }") static public native long eventGetData2();
+
+
 }

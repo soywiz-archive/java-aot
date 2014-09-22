@@ -26,6 +26,8 @@ class ClassGenerator(clazz: SootClass) {
     referencedClasses.remove(this.clazz)
 
     val native_framework = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPP;", "framework").asInstanceOf[String]
+    val native_library = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPP;", "library").asInstanceOf[String]
+    val cflags = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPP;", "cflags").asInstanceOf[String]
     val native_header = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPP;", "header").asInstanceOf[String]
 
     //println("typedef int int32;")
@@ -89,6 +91,6 @@ class ClassGenerator(clazz: SootClass) {
       }
     }
 
-    ClassResult(clazz, results, declaration, definition, referencedClasses.toList, native_framework)
+    ClassResult(clazz, results, declaration, definition, referencedClasses.toList, native_framework, native_library, cflags)
   }
 }

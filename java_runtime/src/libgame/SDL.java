@@ -15,4 +15,11 @@ public class SDL {
     static public void delay(int ms) {
         SDLApi.delay(ms);
     }
+
+    static public SDLEvent pollEvent() {
+        if (SDLApi.eventPoll() != 0) {
+            return new SDLEvent(SDLApi.eventGetType(), SDLApi.eventGetCode(), SDLApi.eventGetData1(), SDLApi.eventGetData2());
+        }
+        return null;
+    }
 }

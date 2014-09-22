@@ -13,7 +13,7 @@ public class Native {
     @CPPMethod("wchar_t libcore_Native::upper(wchar_t v) { return ::towupper(v); }")
 	static public native char upper(char v);
 
-    @CPPMethod("void libcore_Native::putchar(wchar_t v) { ::putchar(v); }")
+    @CPPMethod("void libcore_Native::putchar(wchar_t v) { ::putwchar(v); }")
     static public native void putchar(char v);
 
     @CPPMethod("void libcore_Native::exit(int32 status) { ::exit(status); }")
