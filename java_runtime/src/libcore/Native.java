@@ -16,6 +16,9 @@ public class Native {
     @CPPMethod("void libcore_Native::putchar(wchar_t v) { ::putwchar(v); }")
     static public native void putchar(char v);
 
+    @CPPMethod("void libcore_Native::debugint(int v) { ::printf(\"Int(%d)\", v); }")
+    static public native void debugint(int v);
+
     @CPPMethod("void libcore_Native::exit(int32 status) { ::exit(status); }")
     static public native void exit(int status);
 

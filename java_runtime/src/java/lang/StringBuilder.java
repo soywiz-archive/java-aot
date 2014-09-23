@@ -1,5 +1,8 @@
 package java.lang;
 
+import libcore.Native;
+import libcore.SystemOut;
+
 public class StringBuilder {
 	char[] value = new char[0];
 
@@ -17,18 +20,25 @@ public class StringBuilder {
 	}
 
 	public StringBuilder append(int v) {
-		String set = "0123456789abcdefghijklmnopqrtuvwxyz";
-		char[] out = new char[64];
-		int index = out.length;
+		//String set = "0123456789abcdefghijklmnopqrtuvwxyz";
+        String set = "0123456789";
+		char[] out = new char[128];
+		int index = out.length - 1;
 		int count = 0;
 		if (v == 0) return append(new String(new char[] { '0' }));
 		boolean isNegative = (v < 0);
+        if (isNegative) v = -v;
 		while (v != 0) {
-			out[--index] = set.charAt((int)(v % 10));
+			out[index] = set.charAt((int)(v % 10));
+            //Native.debugint(out[index]);
+            index--;
 			count++;
 			v /= 10;
 		}
 		if (isNegative) append("-");
+        //Native.debugint(out.length);
+        //Native.debugint(index);
+        //Native.debugint(count);
 		return append(new String(out, index, count));
 	}
 

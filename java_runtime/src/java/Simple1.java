@@ -22,6 +22,9 @@ public class Simple1 {
 
 		Native.putchar(':');
 
+        System.out.println("123456789");
+        System.out.println("" + 123456789);
+
 		System.out.println("" + System.currentTimeMillis());
 		System.out.println("" + System.currentTimeMillis());
 

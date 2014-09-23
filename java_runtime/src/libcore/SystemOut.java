@@ -1,4 +1,4 @@
-package java.lang;
+package libcore;
 
 import libcore.Native;
 

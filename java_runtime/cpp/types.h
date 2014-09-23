@@ -1,6 +1,7 @@
 #ifndef types_h_def
 #define types_h_def
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef char int8;
 typedef short int16;
@@ -56,6 +57,10 @@ public:
     }
 
     T& get(int index) {
+        if (index < 0 || index >= len) {
+            fprintf(stderr, "Array access out of bounds index(%d) bounds(0, %d)", index, len);
+            abort();
+        }
         return items[index];
     }
 

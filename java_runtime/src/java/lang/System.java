@@ -2,6 +2,7 @@ package java.lang;
 
 import libcore.Native;
 import libcore.StdoutOutputStream;
+import libcore.SystemOut;
 
 import java.io.PrintStream;
 

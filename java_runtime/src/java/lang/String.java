@@ -16,8 +16,9 @@ public class String {
 	}
 
 	public String(char[] chars, int offset, int length) {
-		this.chars = chars;
-		this.offset = offset;
+		this.chars = new char[length];
+        for (int n = 0; n < length; n++) this.chars[n] = chars[offset + n];
+		this.offset = 0;
 		this.len = length;
 	}
 

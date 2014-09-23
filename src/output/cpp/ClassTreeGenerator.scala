@@ -106,6 +106,7 @@ class ClassTreeGenerator {
     var command = s"g++ -fpermissive -Wint-to-pointer-cast -O3 types.cpp main.cpp $paths $frameworksAppend $libraryAppend $cflagsAppend"
     if (OS.isMac) {
       command += " -framework Cocoa -framework CoreAudio -F/Library/Frameworks -F$java_macos_embedded_frameworks"
+      command += " -D_THREAD_SAFE -lm -liconv -Wl,-framework,OpenGL -Wl,-framework,ForceFeedback -lobjc -Wl,-framework,Cocoa -Wl,-framework,Carbon -Wl,-framework,IOKit -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit"
     }
     if (OS.isWindows) {
       command += " -static-libstdc++ -static-libgcc -L. -lopengl32 -lshell32 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -lkernel32 -lversion -lOleAut32 -lstdc++"
