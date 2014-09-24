@@ -1,4 +1,4 @@
-package output.cpp
+package target.as3
 
 import soot.SootClass
 

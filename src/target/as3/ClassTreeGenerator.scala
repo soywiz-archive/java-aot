@@ -1,12 +1,11 @@
-package output.cpp
+package target.as3
 
 import java.io._
 import java.nio.charset.Charset
-
-import build.BuildMacOS
 import com.google.common.io.{ByteStreams, Files}
-import output.OS
 import soot.{Scene, SootClass}
+import target.OS
+import target.cpp.build.BuildMacOS
 
 import scala.collection.mutable
 import scala.io.Source

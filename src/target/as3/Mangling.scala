@@ -1,4 +1,4 @@
-package output.cpp
+package target.as3
 
 import soot._
 
@@ -22,10 +22,10 @@ object Mangling {
   def typeToCppNoRef(kind:Type): String = {
     kind match {
       case v:VoidType => "void"
-      case v:NullType => "Null"
+      case v:NullType => "null"
       case prim:PrimType =>
         prim match {
-          case v:BooleanType => "bool"
+          case v:BooleanType => "Boolean"
           case v:ByteType => "int8"
           case v:CharType => "wchar_t"
           case v:ShortType => "int16"

@@ -1,8 +1,7 @@
-package output.cpp
+package target.as3
 
-import output.SootUtils
-import soot.tagkit.{AnnotationElem, Tag, AnnotationStringElem, VisibilityAnnotationTag}
 import soot.{Scene, SootClass}
+import target.SootUtils
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.HashSet

@@ -1,5 +1,5 @@
-import output.{OS, SootUtils}
-import output.cpp.ClassTreeGenerator
+import target.{SootUtils, OS}
+import target.cpp.ClassTreeGenerator
 
 object Main extends App {
   System.out.println(System.getProperty("os.name").toLowerCase)

@@ -1,10 +1,9 @@
-package build
+package target.cpp.build
 
 import java.io._
 import java.nio.charset.Charset
-import javax.imageio.ImageIO
 
-import com.google.common.io.{ByteStreams, Files}
+import com.google.common.io.Files
 
 import scala.io.Source
 

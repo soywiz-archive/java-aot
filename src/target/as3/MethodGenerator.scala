@@ -1,8 +1,8 @@
-package output.cpp
+package target.as3
 
-import output.SootUtils
 import soot._
 import soot.jimple._
+import target.SootUtils
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable

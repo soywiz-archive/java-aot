@@ -1,4 +1,4 @@
-package output
+package target
 
 object OS {
   private val OS = System.getProperty("os.name").toLowerCase
