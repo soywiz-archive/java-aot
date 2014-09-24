@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.charset.Charset
 
 import soot.{Scene, SootClass}
-import target.{FileBytes, OS}
+import target.{ProcessUtils, FileBytes, OS}
 import target.as3.As3ClassGenerator
 import target.cpp.build.BuildMacOS
 
@@ -115,28 +115,16 @@ abstract class BaseClassTreeGenerator(mangler:BaseMangler) {
     val outputExecutableFile = s"$outputPath/a.out"
     println(command)
     new File(outputExecutableFile).delete()
-    if (redirectProcess(Runtime.getRuntime.exec(command, null, new File(outputPath))) == 0) {
+    if (ProcessUtils.redirectProcess(Runtime.getRuntime.exec(command, null, new File(outputPath))) == 0) {
       if (OS.isMac) {
         BuildMacOS.createAPP(s"$outputPath/test.app", "sampleapp", FileBytes.read(new File(outputExecutableFile)), png512)
       }
 
       if (OS.isWindows) {
-        redirectProcess(Runtime.getRuntime.exec(outputPath + "/a.exe", null, new File(outputPath)))
+        ProcessUtils.redirectProcess(Runtime.getRuntime.exec(outputPath + "/a.exe", null, new File(outputPath)))
       } else {
-        redirectProcess(Runtime.getRuntime.exec("./a.out", null, new File(outputPath)))
+        ProcessUtils.redirectProcess(Runtime.getRuntime.exec("./a.out", null, new File(outputPath)))
       }
     }
-  }
-
-  private def redirectProcess(p: Process): Int = {
-    for (line <- Source.fromInputStream(p.getInputStream).getLines()) {
-      println(line)
-    }
-
-    for (line <- Source.fromInputStream(p.getErrorStream).getLines()) {
-      println(line)
-    }
-
-    p.waitFor()
   }
 }

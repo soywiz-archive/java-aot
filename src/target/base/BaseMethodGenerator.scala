@@ -24,7 +24,7 @@ abstract class BaseMethodGenerator(method: SootMethod, mangler: BaseMangler) {
     val mangledFullName = mangleFullName(method)
     val mangledBaseName = mangleBaseName(method)
     val params = (0 to method.getParameterCount - 1).map(index => mangler.typeToCppRef(method.getParameterType(index)) + " " + getParamName(index)).mkString(", ")
-    val static = if (method.isStatic) "static" else ""
+    //val static = if (method.isStatic) "static" else ""
     var declaration = ""
     declaration += mangler.visibility(method) + ": "
     if (method.isStatic) {

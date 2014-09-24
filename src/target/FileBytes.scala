@@ -13,6 +13,10 @@ object FileBytes {
     data
   }
 
+  def read(file:File, charset:Charset):String = {
+    charset.decode(ByteBuffer.wrap(read(file))).toString
+  }
+
   def write(file:File, data:Array[Byte]):Unit = {
     val fout = new FileOutputStream(file)
     fout.write(data)
