@@ -25,10 +25,10 @@ class ClassGenerator(clazz: SootClass) {
     }
     referencedClasses.remove(this.clazz)
 
-    val native_framework = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPP;", "framework").asInstanceOf[String]
-    val native_library = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPP;", "library").asInstanceOf[String]
-    val cflags = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPP;", "cflags").asInstanceOf[String]
-    val native_header = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPP;", "header").asInstanceOf[String]
+    val native_framework = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPPClass;", "framework").asInstanceOf[String]
+    val native_library = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPPClass;", "library").asInstanceOf[String]
+    val cflags = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPPClass;", "cflags").asInstanceOf[String]
+    val native_header = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPPClass;", "header").asInstanceOf[String]
 
     //println("typedef int int32;")
     //println("typedef long long int int64;")

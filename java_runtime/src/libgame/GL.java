@@ -1,9 +1,9 @@
 package libgame;
 
-import libcore.CPP;
+import libcore.CPPClass;
 import libcore.CPPMethod;
 
-@CPP(
+@CPPClass(
         framework = "OpenGL",
         header = "\n" +
 	        "#ifdef _WIN32\n" +

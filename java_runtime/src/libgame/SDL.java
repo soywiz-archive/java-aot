@@ -1,8 +1,5 @@
 package libgame;
 
-import libcore.CPP;
-import libcore.CPPMethod;
-
 public class SDL {
     static public void init() {
         SDLApi.init();

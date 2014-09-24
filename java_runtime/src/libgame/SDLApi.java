@@ -1,9 +1,9 @@
 package libgame;
 
-import libcore.CPP;
+import libcore.CPPClass;
 import libcore.CPPMethod;
 
-@CPP(
+@CPPClass(
     library = "SDL2",
     //cflags = "-D_THREAD_SAFE -lm -liconv -Wl,-framework,OpenGL -Wl,-framework,ForceFeedback -lobjc -Wl,-framework,Cocoa -Wl,-framework,Carbon -Wl,-framework,IOKit -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit",
 	//  -lopengl32 -lshell32 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -lkernel32 -lversion -lOleAut32 -lstdc++

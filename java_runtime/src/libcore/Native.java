@@ -1,14 +1,14 @@
 package libcore;
 
-@CPP(header =
+@CPPClass(header =
     "#include <wchar.h>\n" +
     "#include <sys/time.h>\n" +
     "#include <stdio.h>\n" +
     "#include <stdlib.h>\n"
 )
 public class Native {
-    @CPPMethod("wchar_t libcore_Native::lower(wchar_t v) { return ::towlower(v); }")
-	static public native char lower(char v);
+     @CPPMethod("wchar_t libcore_Native::lower(wchar_t v) { return ::towlower(v); }") static public native char lower(char v);
+	//static public char lower(char v) { AOT.cpp("return ::towlower(v);"); return 0; }
 
     @CPPMethod("wchar_t libcore_Native::upper(wchar_t v) { return ::towupper(v); }")
 	static public native char upper(char v);
