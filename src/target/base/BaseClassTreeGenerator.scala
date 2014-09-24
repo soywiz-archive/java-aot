@@ -3,9 +3,8 @@ package target.base
 import java.io.File
 import java.nio.charset.Charset
 
-import com.google.common.io.{ByteStreams, Files}
 import soot.{Scene, SootClass}
-import target.OS
+import target.{FileBytes, OS}
 import target.as3.As3ClassGenerator
 import target.cpp.build.BuildMacOS
 
@@ -28,7 +27,7 @@ abstract class BaseClassTreeGenerator(mangler:BaseMangler) {
   }
 
   def run() = {
-
+    val utf8 = Charset.forName("UTF-8")
     val outputPath = System.getProperty("java.io.tmpdir")
 
     val cl = this.getClass.getClassLoader
@@ -36,9 +35,9 @@ abstract class BaseClassTreeGenerator(mangler:BaseMangler) {
     var java_macos_embedded_frameworks = "types\\.cpp$".r.replaceAllIn(cl.getResource("types.cpp").getPath, "/frameworks".replace("/", file_separator))
     if (OS.isWindows) java_macos_embedded_frameworks = "^/+".r.replaceAllIn(java_macos_embedded_frameworks, "")
 
-    Files.write(ByteStreams.toByteArray(cl.getResourceAsStream("types.cpp")), new File(outputPath + "/types.cpp"))
-    Files.write(ByteStreams.toByteArray(cl.getResourceAsStream("types.h")), new File(outputPath + "/types.h"))
-    val png512 = ByteStreams.toByteArray(cl.getResourceAsStream("emptyicon.png"))
+    FileBytes.write(new File(s"$outputPath/types.cpp"), FileBytes.read(new File(cl.getResource("types.cpp").getPath)))
+    FileBytes.write(new File(s"$outputPath/types.h"), FileBytes.read(new File(cl.getResource("types.h").getPath)))
+    val png512 = FileBytes.read(new File(cl.getResource("emptyicon.png").getPath))
 
     val frameworks = new mutable.HashSet[String]
     val libraries = new mutable.HashSet[String]
@@ -53,8 +52,8 @@ abstract class BaseClassTreeGenerator(mangler:BaseMangler) {
       if (result.nativeLibrary != null) libraries.add(result.nativeLibrary)
       if (result.cflags != null) cflagsList.append(result.cflags)
 
-      Files.write(result.declaration, new File(outputPath + "/" + mangler.mangleFullClassName(item.getName) + ".h"), Charset.forName("UTF-8"))
-      Files.write(result.definition, new File(outputPath + "/" + mangler.mangleFullClassName(item.getName) + ".cpp"), Charset.forName("UTF-8"))
+      FileBytes.write(new File(outputPath + "/" + mangler.mangleFullClassName(item.getName) + ".h"), utf8, result.declaration)
+      FileBytes.write(new File(outputPath + "/" + mangler.mangleFullClassName(item.getName) + ".cpp"), utf8, result.definition)
 
       //println(result.definition)
       //println(result.declaration)
@@ -65,10 +64,10 @@ abstract class BaseClassTreeGenerator(mangler:BaseMangler) {
     }
     println("Processed classes: " + processedList.size)
 
-    Files.write("#include \"java_Simple1.h\" \n int main(int argc, char **argv) { printf(\"Start!\\n\"); java_Simple1::main(new Array<java_lang_String*>((java_lang_String**)0, 0)); return 0; }", new File(outputPath + "/main.cpp"), Charset.forName("UTF-8"))
+    FileBytes.write(new File(s"$outputPath/main.cpp"), utf8, "#include \"java_Simple1.h\" \n int main(int argc, char **argv) { printf(\"Start!\\n\"); java_Simple1::main(new Array<java_lang_String*>((java_lang_String**)0, 0)); return 0; }")
     val paths = processedList.filter(_.getName != "java.lang.Object").map(item => mangler.mangleFullClassName(item.getName) + ".cpp").mkString(" ")
-    Files.write("@g++ -fpermissive -Wint-to-pointer-cast -g -ggdb -gstabs -gpubnames types.cpp main.cpp " + paths, new File(outputPath + "/build.bat"), Charset.forName("UTF-8"))
-    Files.write("g++ -fpermissive -Wint-to-pointer-cast -O3 types.cpp main.cpp " + paths, new File(outputPath + "/build.sh"), Charset.forName("UTF-8"))
+    FileBytes.write(new File(s"$outputPath/build.bat"), utf8, "@g++ -fpermissive -Wint-to-pointer-cast -g -ggdb -gstabs -gpubnames types.cpp main.cpp " + paths)
+    FileBytes.write(new File(s"$outputPath/build.sh"), utf8, "g++ -fpermissive -Wint-to-pointer-cast -O3 types.cpp main.cpp " + paths)
 
     var frameworksAppend = ""
     if (OS.isMac) {
@@ -118,7 +117,7 @@ abstract class BaseClassTreeGenerator(mangler:BaseMangler) {
     new File(outputExecutableFile).delete()
     if (redirectProcess(Runtime.getRuntime.exec(command, null, new File(outputPath))) == 0) {
       if (OS.isMac) {
-        BuildMacOS.createAPP(s"$outputPath/test.app", "sampleapp", Files.toByteArray(new File(outputExecutableFile)), png512)
+        BuildMacOS.createAPP(s"$outputPath/test.app", "sampleapp", FileBytes.read(new File(outputExecutableFile)), png512)
       }
 
       if (OS.isWindows) {

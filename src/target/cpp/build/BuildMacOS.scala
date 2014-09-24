@@ -3,7 +3,7 @@ package target.cpp.build
 import java.io._
 import java.nio.charset.Charset
 
-import com.google.common.io.Files
+import target.FileBytes
 
 import scala.io.Source
 
@@ -15,19 +15,20 @@ object BuildMacOS {
   // Contents/Info.plist
 
   def createAPP(path:String, name:String, executable:Array[Byte], png512x512:Array[Byte]): Unit = {
+    val utf8 = Charset.forName("UTF-8")
     new File(s"$path/Contents/Resources").mkdirs()
     new File(s"$path/Contents/MacOS").mkdirs()
     new File(s"$path/Contents/Frameworks").mkdirs()
-    Files.write(executable, new File(s"$path/Contents/MacOS/app"))
+    FileBytes.write(new File(s"$path/Contents/MacOS/app"), executable)
     Runtime.getRuntime.exec(s"chmod +x $path/Contents/MacOS/app")
     Runtime.getRuntime.exec(s"strip $path/Contents/MacOS/app")
 
     //install_name_tool -change @rpath/SDL2.framework/Versions/A/SDL2 @executable_path/../Frameworks/SDL2.framework/Versions/A/SDL2 app
 
-    Files.write(createIcns(png512x512), new File(s"$path/Contents/Resources/app.icns"))
+    FileBytes.write(new File(s"$path/Contents/Resources/app.icns"), createIcns(png512x512))
     //Files.write(icns, new File(s"$path/Contents/Resources/app.icns"))
-    Files.write("APPL????", new File(s"$path/Contents/PkgInfo"), Charset.forName("UTF-8"))
-    Files.write(
+    FileBytes.write(new File(s"$path/Contents/PkgInfo"), utf8, "APPL????")
+    FileBytes.write(new File(s"$path/Contents/Info.plist"), utf8,
     s"""
       |<?xml version="1.0" encoding="UTF-8"?>
       |<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -60,14 +61,14 @@ object BuildMacOS {
       |</dict>
       |</plist>
     """.stripMargin
-    , new File(s"$path/Contents/Info.plist"), Charset.forName("UTF-8"))
+    )
   }
 
   private def createIcns(png512x512:Array[Byte]) = {
     val outPath = System.getProperty("java.io.tmpdir") + "/build_iconset"
     val outPathSet = s"$outPath/app.iconset"
     new File(outPathSet).mkdirs()
-    Files.write(png512x512, new File(s"$outPath/app.png"))
+    FileBytes.write(new File(s"$outPath/app.png"), png512x512)
 
     def exec(command:String) = {
       println(command)
@@ -90,7 +91,7 @@ object BuildMacOS {
 
     exec(s"iconutil -c icns -o ${outPath}/app.icns ${outPathSet}")
 
-    Files.toByteArray(new File(s"${outPath}/app.icns"))
+    FileBytes.read(new File(s"${outPath}/app.icns"))
 
 
     /*
