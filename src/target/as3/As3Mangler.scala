@@ -1,17 +1,18 @@
 package target.as3
 
 import soot._
+import target.base.BaseMangler
 
-object Mangling {
-  def mangle(clazz:SootClass): String = mangleClassName(clazz.getName)
-  def mangle(field:SootField): String = field.getName
-  def mangleClassName(name:String):String = name.replace('.', '_')
-  def mangleFullClassName(name:String):String = name.replace('.', '_')
+class As3Mangler extends BaseMangler {
+  override def mangle(clazz:SootClass): String = mangleClassName(clazz.getName)
+  override def mangle(field:SootField): String = field.getName
+  override def mangleClassName(name:String):String = name.replace('.', '_')
+  override def mangleFullClassName(name:String):String = name.replace('.', '_')
 
-  def visibility(member:ClassMember):String = if (member.isPublic) "public" else if (member.isProtected) "protected" else "private"
-  def staticity(member:ClassMember):String = if (member.isStatic) "static" else ""
+  override def visibility(member:ClassMember):String = if (member.isPublic) "public" else if (member.isProtected) "protected" else "private"
+  override def staticity(member:ClassMember):String = if (member.isStatic) "static" else ""
 
-  def typeToCppRef(kind:Type): String = {
+  override def typeToCppRef(kind:Type): String = {
     kind match {
       case r:RefType => typeToCppNoRef(kind) + "*"
       case r:ArrayType => typeToCppNoRef(kind) + "*"
@@ -19,7 +20,7 @@ object Mangling {
     }
   }
 
-  def typeToCppNoRef(kind:Type): String = {
+  override def typeToCppNoRef(kind:Type): String = {
     kind match {
       case v:VoidType => "void"
       case v:NullType => "null"

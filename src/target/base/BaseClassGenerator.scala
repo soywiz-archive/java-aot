@@ -1,18 +1,21 @@
-package target.as3
+package target.base
 
-import soot.{Scene, SootClass}
+import soot.{SootMethod, Scene, SootClass}
 import target.SootUtils
-
+import target.as3.As3Mangler
 import scala.collection.JavaConverters._
+
 import scala.collection.mutable.HashSet
 
-class ClassGenerator(clazz: SootClass) {
-  def this(className: String) = {
-    this(Scene.v.loadClassAndSupport(className))
+abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
+  def this(className: String, mangler:BaseMangler) = {
+    this(Scene.v.loadClassAndSupport(className), mangler)
   }
 
+  def createMethodGenerator(method:SootMethod):BaseMethodGenerator
+
   def doClass(): ClassResult = {
-    val results = (for (method <- clazz.getMethods.asScala) yield new MethodGenerator(method).doMethod()).toList
+    val results = (for (method <- clazz.getMethods.asScala) yield createMethodGenerator(method).doMethod()).toList
 
     val referencedClasses = new HashSet[SootClass]
     if (clazz.hasSuperclass) referencedClasses.add(clazz.getSuperclass)
@@ -37,8 +40,8 @@ class ClassGenerator(clazz: SootClass) {
     var declaration = ""
     var definition = ""
 
-    declaration += "#ifndef " + Mangling.mangleFullClassName(clazz.getName) + "_def\n"
-    declaration += "#define " + Mangling.mangleFullClassName(clazz.getName) + "_def\n"
+    declaration += "#ifndef " + mangler.mangleFullClassName(clazz.getName) + "_def\n"
+    declaration += "#define " + mangler.mangleFullClassName(clazz.getName) + "_def\n"
 
     declaration += "#include \"types.h\"\n"
     if (native_header != null) {
@@ -46,31 +49,31 @@ class ClassGenerator(clazz: SootClass) {
     }
     //for (rc <- referencedClasses) declaration += "#include \"" + Mangling.mangle(rc) + ".h\"\n"
     if (clazz.hasSuperclass) {
-      val res = Mangling.mangle(clazz.getSuperclass)
+      val res = mangler.mangle(clazz.getSuperclass)
       if (res != "java_lang_Object") {
         declaration += "#include \"" + res + ".h\"\n"
       }
     }
     declaration += "\n"
 
-    for (rc <- referencedClasses) declaration += "class " + Mangling.mangle(rc) + ";\n"
+    for (rc <- referencedClasses) declaration += "class " + mangler.mangle(rc) + ";\n"
     declaration += "\n"
 
-    declaration += "class " + Mangling.mangle(clazz)
-    if (clazz.hasSuperclass) declaration += " : public " + Mangling.mangle(clazz.getSuperclass)
+    declaration += "class " + mangler.mangle(clazz)
+    if (clazz.hasSuperclass) declaration += " : public " + mangler.mangle(clazz.getSuperclass)
     declaration += " {\n"
 
     for (field <- clazz.getFields.asScala) {
-      declaration += Mangling.visibility(field) + ": " + Mangling.staticity(field) + " " + Mangling.typeToCppRef(field.getType) + " " + Mangling.mangle(field) + ";\n"
+      declaration += mangler.visibility(field) + ": " + mangler.staticity(field) + " " + mangler.typeToCppRef(field.getType) + " " + mangler.mangle(field) + ";\n"
     }
     for (result <- results) declaration += result.declaration + "\n"
     declaration += "};\n"
 
     declaration += "#endif\n"
 
-    definition += "#include \"" + Mangling.mangleFullClassName(clazz.getName) + ".h\"\n"
+    definition += "#include \"" + mangler.mangleFullClassName(clazz.getName) + ".h\"\n"
     for (rc <- referencedClasses) {
-      val res = Mangling.mangle(rc)
+      val res = mangler.mangle(rc)
       if (res != "java_lang_Object") {
         definition += "#include \"" + res + ".h\"\n"
       }
@@ -78,7 +81,7 @@ class ClassGenerator(clazz: SootClass) {
 
     for (field <- clazz.getFields.asScala) {
       if (field.isStatic) {
-        definition += Mangling.typeToCppRef(field.getType) + " " + Mangling.mangleClassName(clazz.getName) + "::" + Mangling.mangle(field) + " = (" + Mangling.typeToCppRef(field.getType) + ")(void *)0;\n"
+        definition += mangler.typeToCppRef(field.getType) + " " + mangler.mangleClassName(clazz.getName) + "::" + mangler.mangle(field) + " = (" + mangler.typeToCppRef(field.getType) + ")(void *)0;\n"
       }
     }
 

@@ -1,16 +1,18 @@
-package target.as3
+package target.base
 
-import java.io._
+import java.io.File
 import java.nio.charset.Charset
+
 import com.google.common.io.{ByteStreams, Files}
 import soot.{Scene, SootClass}
 import target.OS
+import target.as3.As3ClassGenerator
 import target.cpp.build.BuildMacOS
 
 import scala.collection.mutable
 import scala.io.Source
 
-class ClassTreeGenerator {
+abstract class BaseClassTreeGenerator(mangler:BaseMangler) {
   private val processedList = new mutable.HashSet[SootClass]
   private val toProcessList = new mutable.Queue[SootClass]
 
@@ -45,14 +47,14 @@ class ClassTreeGenerator {
     while (toProcessList.length > 0) {
       val item = toProcessList.dequeue()
       println("Processing class: " + item.getName)
-      val result = new ClassGenerator(item).doClass()
+      val result = new As3ClassGenerator(item).doClass()
 
       if (result.nativeFramework != null) frameworks.add(result.nativeFramework)
       if (result.nativeLibrary != null) libraries.add(result.nativeLibrary)
       if (result.cflags != null) cflagsList.append(result.cflags)
 
-      Files.write(result.declaration, new File(outputPath + "/" + Mangling.mangleFullClassName(item.getName) + ".h"), Charset.forName("UTF-8"))
-      Files.write(result.definition, new File(outputPath + "/" + Mangling.mangleFullClassName(item.getName) + ".cpp"), Charset.forName("UTF-8"))
+      Files.write(result.declaration, new File(outputPath + "/" + mangler.mangleFullClassName(item.getName) + ".h"), Charset.forName("UTF-8"))
+      Files.write(result.definition, new File(outputPath + "/" + mangler.mangleFullClassName(item.getName) + ".cpp"), Charset.forName("UTF-8"))
 
       //println(result.definition)
       //println(result.declaration)
@@ -64,7 +66,7 @@ class ClassTreeGenerator {
     println("Processed classes: " + processedList.size)
 
     Files.write("#include \"java_Simple1.h\" \n int main(int argc, char **argv) { printf(\"Start!\\n\"); java_Simple1::main(new Array<java_lang_String*>((java_lang_String**)0, 0)); return 0; }", new File(outputPath + "/main.cpp"), Charset.forName("UTF-8"))
-    val paths = processedList.filter(_.getName != "java.lang.Object").map(item => Mangling.mangleFullClassName(item.getName) + ".cpp").mkString(" ")
+    val paths = processedList.filter(_.getName != "java.lang.Object").map(item => mangler.mangleFullClassName(item.getName) + ".cpp").mkString(" ")
     Files.write("@g++ -fpermissive -Wint-to-pointer-cast -g -ggdb -gstabs -gpubnames types.cpp main.cpp " + paths, new File(outputPath + "/build.bat"), Charset.forName("UTF-8"))
     Files.write("g++ -fpermissive -Wint-to-pointer-cast -O3 types.cpp main.cpp " + paths, new File(outputPath + "/build.sh"), Charset.forName("UTF-8"))
 

@@ -1,5 +1,5 @@
 import target.{SootUtils, OS}
-import target.cpp.ClassTreeGenerator
+import target.cpp.CppClassTreeGenerator
 
 object Main extends App {
   System.out.println(System.getProperty("os.name").toLowerCase)
@@ -10,7 +10,7 @@ object Main extends App {
   //ClassGenerator.doClass("Test1")
   //new ClassGenerator("java.lang.Object").doClass()
 
-  val generator = new ClassTreeGenerator()
+  val generator = new CppClassTreeGenerator()
   //generator.enqueue("java.lang.System")
   generator.enqueue("libgame.SDLApi")
   generator.enqueue("libcore.StdoutOutputStream")
