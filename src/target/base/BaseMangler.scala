@@ -14,4 +14,14 @@ trait BaseMangler {
   def typeToCppRef(kind:Type): String
 
   def typeToCppNoRef(kind:Type): String
+
+  def mangleBaseName(method: SootMethod): String = {
+    val name = method.getName
+    name.replace('.', '_').replace('(', '_').replace(')', '_').replace("<", "__").replace(">", "__").replace(" ", "")
+  }
+
+  def mangleFullName(method: SootMethod): String = {
+    val name = method.getDeclaringClass.getName + "::" + method.getName
+    name.replace('.', '_').replace('(', '_').replace(')', '_').replace("<", "__").replace(">", "__").replace(" ", "")
+  }
 }

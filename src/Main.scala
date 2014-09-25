@@ -1,3 +1,4 @@
+import target.as3.As3ClassTreeGenerator
 import target.{SootUtils, OS}
 import target.cpp.CppClassTreeGenerator
 
@@ -10,7 +11,7 @@ object Main extends App {
   //ClassGenerator.doClass("Test1")
   //new ClassGenerator("java.lang.Object").doClass()
 
-  val generator = new CppClassTreeGenerator()
+  val generator = new As3ClassTreeGenerator()
   //generator.enqueue("java.lang.System")
   generator.enqueue("libgame.SDLApi")
   generator.enqueue("libcore.StdoutOutputStream")

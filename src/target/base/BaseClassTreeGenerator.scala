@@ -11,7 +11,7 @@ import target.cpp.build.BuildMacOS
 import scala.collection.mutable
 import scala.io.Source
 
-abstract class BaseClassTreeGenerator(mangler:BaseMangler) {
+abstract class BaseClassTreeGenerator(mangler:BaseMangler, compiler:BaseCompiler, runner:BaseRunner) {
   private val processedList = new mutable.HashSet[SootClass]
   private val toProcessList = new mutable.Queue[SootClass]
 
@@ -25,9 +25,6 @@ abstract class BaseClassTreeGenerator(mangler:BaseMangler) {
       toProcessList.enqueue(clazz)
     }
   }
-
-  protected def createCompiler(): BaseCompiler = new BaseCompiler()
-  protected def createRunner(): BaseRunner = new BaseRunner()
 
   def run() = {
     val utf8 = Charset.forName("UTF-8")
@@ -64,9 +61,9 @@ abstract class BaseClassTreeGenerator(mangler:BaseMangler) {
     }
     println("Processed classes: " + processedList.size)
 
-    val Tuple2(result, executableOutputPath) = createCompiler().compile(outputPath, mangler, libraries, frameworks, cflagsList, processedList)
+    val (result, executableOutputPath) = compiler.compile(outputPath, libraries, frameworks, cflagsList, processedList)
     if (result) {
-      createRunner().run(outputPath, executableOutputPath)
+      runner.run(outputPath, executableOutputPath)
     }
   }
 }

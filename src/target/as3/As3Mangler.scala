@@ -3,7 +3,7 @@ package target.as3
 import soot._
 import target.base.BaseMangler
 
-class As3Mangler extends BaseMangler {
+object As3Mangler extends BaseMangler {
   override def mangle(clazz:SootClass): String = mangleClassName(clazz.getName)
   override def mangle(field:SootField): String = field.getName
   override def mangleClassName(name:String):String = name.replace('.', '_')

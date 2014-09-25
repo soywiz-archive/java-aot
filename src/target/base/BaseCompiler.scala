@@ -9,12 +9,12 @@ import target.{ProcessUtils, OS, FileBytes}
 
 import scala.collection.mutable
 
-class BaseCompiler {
+class BaseCompiler(mangler:BaseMangler) {
   private val utf8 = Charset.forName("UTF-8")
   private val file_separator = System.getProperty("file.separator")
   private val cl = this.getClass.getClassLoader
 
-  def compile(outputPath:String, mangler:BaseMangler, libraries:mutable.HashSet[String], frameworks:mutable.HashSet[String], cflagsList:mutable.ListBuffer[String], processedList:mutable.HashSet[SootClass]): Tuple2[Boolean, String] = {
+  def compile(outputPath:String, libraries:mutable.HashSet[String], frameworks:mutable.HashSet[String], cflagsList:mutable.ListBuffer[String], processedList:mutable.HashSet[SootClass]): Tuple2[Boolean, String] = {
     var java_macos_embedded_frameworks = "types\\.cpp$".r.replaceAllIn(cl.getResource("types.cpp").getPath, "/frameworks".replace("/", file_separator))
     if (OS.isWindows) java_macos_embedded_frameworks = "^/+".r.replaceAllIn(java_macos_embedded_frameworks, "")
 
