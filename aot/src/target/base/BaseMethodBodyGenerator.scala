@@ -1,5 +1,6 @@
 package target.base
 
+import _root_.soot.jimple.TableSwitchStmt
 import soot._
 import soot.jimple._
 

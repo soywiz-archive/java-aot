@@ -1,9 +1,9 @@
-package java;
+package sample1;
 
 import libcore.Native;
 import libgame.*;
 
-public class Simple1 {
+public class Sample1 {
 	static public int sum(int[] args) {
 		int sum = 0;
 		for (int arg : args) sum += arg;

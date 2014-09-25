@@ -3,7 +3,7 @@ package target.cpp
 import soot._
 import target.base.BaseMangler
 
-class CppMangler extends BaseMangler {
+object CppMangler extends BaseMangler {
   override def mangle(clazz:SootClass): String = mangleClassName(clazz.getName)
   override def mangle(field:SootField): String = field.getName
   override def mangleClassName(name:String):String = name.replace('.', '_')

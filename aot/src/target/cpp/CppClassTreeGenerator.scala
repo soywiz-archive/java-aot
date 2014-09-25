@@ -2,5 +2,5 @@ package target.cpp
 
 import target.base.BaseClassTreeGenerator
 
-class CppClassTreeGenerator extends BaseClassTreeGenerator(new CppMangler) {
+class CppClassTreeGenerator extends BaseClassTreeGenerator(CppMangler, CppCompiler, CppRunner) {
 }

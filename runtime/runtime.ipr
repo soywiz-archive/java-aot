@@ -157,7 +157,7 @@
   </component>
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/java_runtime.iml" filepath="$PROJECT_DIR$/java_runtime.iml" />
+      <module fileurl="file://$PROJECT_DIR$/runtime.iml" filepath="$PROJECT_DIR$/runtime.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true" project-jdk-name="1.8_nojdk" project-jdk-type="JavaSDK">
