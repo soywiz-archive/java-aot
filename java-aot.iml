@@ -13,6 +13,7 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/java_runtime/cpp" type="java-resource" />
+      <excludeFolder url="file://$MODULE_DIR$/java_runtime/src" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

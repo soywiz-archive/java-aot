@@ -24,7 +24,7 @@ object SootUtils {
 
     println(s"file_separator: $file_separator")
 
-    val java_runtime_classes_path = "types\\.cpp$".r.replaceAllIn(cl.getResource("types.cpp").getPath, "/../../out/production/java_runtime")
+    val java_runtime_classes_path = "types\\.cpp$".r.replaceAllIn(cl.getResource("types.cpp").getPath, "/../../../out/production/java_runtime")
 
     println(s"java_runtime_classes_path: $java_runtime_classes_path")
 

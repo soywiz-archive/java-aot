@@ -5,6 +5,5 @@ class BaseMethodSignatureGenerator {
   }
 
   def generateFooter() = {
-
   }
 }

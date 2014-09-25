@@ -13,11 +13,7 @@ class As3Mangler extends BaseMangler {
   override def staticity(member:ClassMember):String = if (member.isStatic) "static" else ""
 
   override def typeToCppRef(kind:Type): String = {
-    kind match {
-      case r:RefType => typeToCppNoRef(kind) + "*"
-      case r:ArrayType => typeToCppNoRef(kind) + "*"
-      case _ => typeToCppNoRef(kind)
-    }
+    typeToCppNoRef(kind)
   }
 
   override def typeToCppNoRef(kind:Type): String = {
@@ -27,13 +23,13 @@ class As3Mangler extends BaseMangler {
       case prim:PrimType =>
         prim match {
           case v:BooleanType => "Boolean"
-          case v:ByteType => "int8"
-          case v:CharType => "wchar_t"
-          case v:ShortType => "int16"
-          case v:IntType => "int32"
-          case v:LongType => "int64"
-          case v:FloatType => "float32"
-          case v:DoubleType => "float64"
+          case v:ByteType => "int"
+          case v:CharType => "int"
+          case v:ShortType => "int"
+          case v:IntType => "int"
+          case v:LongType => "Long"
+          case v:FloatType => "Number"
+          case v:DoubleType => "Number"
         }
       case r:ArrayType => "Array<" + typeToCppRef(r.getElementType) + ">"
       case r:RefType => mangleClassName(r.getClassName)
