@@ -1,32 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <properties>
-        <scala.version>2.11.2</scala.version>
-    </properties>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<vertx.version>2.1.1</vertx.version>
+	</properties>
+  
+	<groupId>java-aot</groupId>
+	<artifactId>java-aot-pom</artifactId>
+	<version>1.0.0</version>
+	<packaging>pom</packaging>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-compiler</artifactId>
-            <version>${scala.version}</version>
-            <scope>compile</scope>
-        </dependency>
-    </dependencies>
+	<name>Java Ahead Of Time Compiler</name>
+	<url>https://github.com/soywiz/java-aot</url>
 
-    <groupId>javanativevm</groupId>
-    <artifactId>javanativevm</artifactId>
-    <version>1.0-SNAPSHOT</version>
-
-    <build>
-        <resources>
-            <resource>
-                <directory>java_runtime/cpp</directory>
-            </resource>
-        </resources>
-    </build>
-
+	<modules>
+		<module>runtime</module>
+		<module>soot</module>
+		<module>aot</module>
+	</modules>  
 </project>

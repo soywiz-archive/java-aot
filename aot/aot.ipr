@@ -41,7 +41,7 @@
   </component>
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/java-aot.iml" filepath="$PROJECT_DIR$/java-aot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/aot.iml" filepath="$PROJECT_DIR$/java-aot.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_7" assert-keyword="true" jdk-15="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
