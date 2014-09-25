@@ -1,4 +1,1 @@
-*.iws
-/target
-/out
-*.class
+/bin
