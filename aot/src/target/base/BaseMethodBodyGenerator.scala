@@ -188,13 +188,13 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
         doInstanceof(e.getType, e.getCheckType, e.getOp)
       case e: NewExpr =>
         referenceType(e.getType)
-        "new " + mangler.typeToCppNoRef(e.getType) + "()"
+        "new " + mangler.typeToStringNoRef(e.getType) + "()"
       case e: NewArrayExpr =>
         referenceType(e.getType)
-        "new " + mangler.typeToCppNoRef(e.getType) + "(" + doValue(e.getSize) + ")"
+        "new " + mangler.typeToStringNoRef(e.getType) + "(" + doValue(e.getSize) + ")"
       case e: NewMultiArrayExpr =>
         referenceType(e.getType)
-        "new " + mangler.typeToCppNoRef(e.getType) + (0 to e.getSizeCount - 1).map(i => "[" + e.getSize(i) + "]").mkString
+        "new " + mangler.typeToStringNoRef(e.getType) + (0 to e.getSizeCount - 1).map(i => "[" + e.getSize(i) + "]").mkString
       case e: InvokeExpr =>
         referenceType(e.getMethod.getDeclaringClass)
         val args = e.getArgs.asScala.map(i => doValue(i))
@@ -219,11 +219,11 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
   }
 
   def doCast(fromType:Type, toType:Type, value:Value): String = {
-    "((" + mangler.typeToCppRef(toType) + ")" + doValue(value) + ")"
+    "((" + mangler.typeToStringRef(toType) + ")" + doValue(value) + ")"
   }
 
   def doInstanceof(baseType:Type, checkType:Type, value:Value): String = {
-    doValue(value) + " instanceof " + mangler.typeToCppRef(checkType)
+    doValue(value) + " instanceof " + mangler.typeToStringRef(checkType)
   }
 
   def doBinop(kind:Type, left:Value, right:Value, op:String): String = {
@@ -244,7 +244,7 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
 
   def getParamName(index: Int) = s"p$index"
 
-  def doVariableAllocation(kind:Type, name:String) = mangler.typeToCppRef(kind) + " " + name + ";\n"
+  def doVariableAllocation(kind:Type, name:String) = mangler.typeToStringRef(kind) + " " + name + ";\n"
 
   def allocateLabelName: String = {
     val res = "label_" + lastLabelIndex

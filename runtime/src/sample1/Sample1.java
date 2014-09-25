@@ -64,6 +64,7 @@ public class Sample1 {
             win.swap();
             SDL.delay(20);
         }
+        renderer.dispose();
         win.dispose();
 
 		return 0;

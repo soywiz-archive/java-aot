@@ -2,7 +2,6 @@ package target.base
 
 import java.io.File
 
-import target.cpp.build.BuildMacOS
 import target.{FileBytes, OS, ProcessUtils}
 
 class BaseRunner {

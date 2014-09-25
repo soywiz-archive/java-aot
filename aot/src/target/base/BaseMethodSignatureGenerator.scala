@@ -3,10 +3,10 @@ package target.base
 import soot.SootMethod
 
 class BaseMethodSignatureGenerator(method: SootMethod, mangler:BaseMangler) {
-  val returnType = mangler.typeToCppRef(method.getReturnType)
+  val returnType = mangler.typeToStringRef(method.getReturnType)
   val mangledFullName = mangler.mangleFullName(method)
   val mangledBaseName = mangler.mangleBaseName(method)
-  val params = (0 to method.getParameterCount - 1).map(index => mangler.typeToCppRef(method.getParameterType(index)) + " " + getParamName(index)).mkString(", ")
+  val params = (0 to method.getParameterCount - 1).map(index => mangler.typeToStringRef(method.getParameterType(index)) + " " + getParamName(index)).mkString(", ")
 
   def generateHeader() = {
     var declaration = ""

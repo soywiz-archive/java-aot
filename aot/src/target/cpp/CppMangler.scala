@@ -12,18 +12,18 @@ object CppMangler extends BaseMangler {
   override def visibility(member:ClassMember):String = if (member.isPublic) "public" else if (member.isProtected) "protected" else "private"
   override def staticity(member:ClassMember):String = if (member.isStatic) "static" else ""
 
-  override def typeToCppRef(kind:Type): String = {
+  override def typeToStringRef(kind:Type): String = {
     kind match {
-      case r:RefType => typeToCppNoRef(kind) + "*"
-      case r:ArrayType => typeToCppNoRef(kind) + "*"
-      case _ => typeToCppNoRef(kind)
+      case r:RefType => typeToStringNoRef(kind) + "*"
+      case r:ArrayType => typeToStringNoRef(kind) + "*"
+      case _ => typeToStringNoRef(kind)
     }
   }
 
-  override def typeToCppNoRef(kind:Type): String = {
+  override def typeToStringNoRef(kind:Type): String = {
     kind match {
       case v:VoidType => "void"
-      case v:NullType => "Null"
+      case v:NullType => "NULL"
       case prim:PrimType =>
         prim match {
           case v:BooleanType => "bool"
@@ -35,7 +35,7 @@ object CppMangler extends BaseMangler {
           case v:FloatType => "float32"
           case v:DoubleType => "float64"
         }
-      case r:ArrayType => "Array<" + typeToCppRef(r.getElementType) + ">"
+      case r:ArrayType => "Array<" + typeToStringRef(r.getElementType) + ">"
       case r:RefType => mangleClassName(r.getClassName)
     }
   }

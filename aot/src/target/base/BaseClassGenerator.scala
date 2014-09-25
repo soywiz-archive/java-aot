@@ -2,7 +2,6 @@ package target.base
 
 import soot.{SootMethod, Scene, SootClass}
 import target.SootUtils
-import target.as3.As3Mangler
 import scala.collection.JavaConverters._
 
 import scala.collection.mutable.HashSet
@@ -64,7 +63,7 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
     declaration += " {\n"
 
     for (field <- clazz.getFields.asScala) {
-      declaration += mangler.visibility(field) + ": " + mangler.staticity(field) + " " + mangler.typeToCppRef(field.getType) + " " + mangler.mangle(field) + ";\n"
+      declaration += mangler.visibility(field) + ": " + mangler.staticity(field) + " " + mangler.typeToStringRef(field.getType) + " " + mangler.mangle(field) + ";\n"
     }
     for (result <- results) declaration += result.declaration + "\n"
     declaration += "};\n"
@@ -81,7 +80,7 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
 
     for (field <- clazz.getFields.asScala) {
       if (field.isStatic) {
-        definition += mangler.typeToCppRef(field.getType) + " " + mangler.mangleClassName(clazz.getName) + "::" + mangler.mangle(field) + " = (" + mangler.typeToCppRef(field.getType) + ")(void *)0;\n"
+        definition += mangler.typeToStringRef(field.getType) + " " + mangler.mangleClassName(clazz.getName) + "::" + mangler.mangle(field) + " = (" + mangler.typeToStringRef(field.getType) + ")(void *)0;\n"
       }
     }
 

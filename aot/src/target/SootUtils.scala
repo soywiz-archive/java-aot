@@ -8,7 +8,7 @@ import soot.tagkit.{AnnotationElem, AnnotationStringElem, Tag, VisibilityAnnotat
 import scala.collection.JavaConverters._
 
 object SootUtils {
-  def init(): Unit = {
+  def init(runtimeProvider:RuntimeProvider): Unit = {
     soot.G.reset
     Options.v.set_output_format(Options.output_format_jimple)
     Options.v.set_include_all(true)
@@ -19,16 +19,17 @@ object SootUtils {
 
     Options.v.set_keep_line_number(true)
 
-    val cl = this.getClass.getClassLoader
     val file_separator = OS.fileSeparator
 
-    println(s"file_separator: $file_separator")
+    println(s"file_separator: $file_separator ... PathSeparator: ${File.pathSeparator}")
 
-    val java_runtime_classes_path = "types\\.cpp$".r.replaceAllIn(cl.getResource("types.cpp").getPath, "/../../../out/production/java_runtime")
+    val java_runtime_classes_path = runtimeProvider.java_runtime_classes_path
+    val java_sample1_classes_path = runtimeProvider.java_sample1_classes_path
 
     println(s"java_runtime_classes_path: $java_runtime_classes_path")
+    println(s"java_sample1_classes_path: $java_sample1_classes_path")
 
-    Options.v.set_soot_classpath(List(java_runtime_classes_path).mkString(File.pathSeparator))
+    Options.v.set_soot_classpath(List(java_runtime_classes_path, java_sample1_classes_path).mkString(File.pathSeparator))
 
     Options.v.setPhaseOption("jb.dae", "enabled:false")
     Options.v.setPhaseOption("jb.uce", "enabled:false")

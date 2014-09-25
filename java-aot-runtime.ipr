@@ -151,11 +151,11 @@
   </component>
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/aot/aot.iml" filepath="$PROJECT_DIR$/aot/aot.iml" />
-      <module fileurl="file://$PROJECT_DIR$/soot/soot.iml" filepath="$PROJECT_DIR$/soot/soot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/runtime/runtime.iml" filepath="$PROJECT_DIR$/runtime/runtime.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sample1/sample1.iml" filepath="$PROJECT_DIR$/sample1/sample1.iml" />
     </modules>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true" project-jdk-name="1.8_nojdk" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
   <component name="VcsDirectoryMappings">

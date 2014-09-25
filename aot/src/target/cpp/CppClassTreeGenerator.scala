@@ -1,6 +1,9 @@
 package target.cpp
 
-import target.base.BaseClassTreeGenerator
+import soot.SootClass
+import target.RuntimeProvider
+import target.base.{BaseClassGenerator, BaseClassTreeGenerator}
 
-class CppClassTreeGenerator extends BaseClassTreeGenerator(CppMangler, CppCompiler, CppRunner) {
+class CppClassTreeGenerator(runtimeProvider:RuntimeProvider) extends BaseClassTreeGenerator(runtimeProvider, CppMangler, CppCompiler, CppRunner) {
+  override def createClassGenerator(item: SootClass): BaseClassGenerator = new CppClassGenerator(item)
 }

@@ -11,9 +11,9 @@ trait BaseMangler {
   def visibility(member:ClassMember):String
   def staticity(member:ClassMember):String
 
-  def typeToCppRef(kind:Type): String
+  def typeToStringRef(kind:Type): String
 
-  def typeToCppNoRef(kind:Type): String
+  def typeToStringNoRef(kind:Type): String
 
   def mangleBaseName(method: SootMethod): String = {
     val name = method.getName

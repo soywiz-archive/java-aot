@@ -4,14 +4,11 @@ import java.io.File
 import java.nio.charset.Charset
 
 import soot.{Scene, SootClass}
-import target.{ProcessUtils, FileBytes, OS}
-import target.as3.As3ClassGenerator
-import target.cpp.build.BuildMacOS
+import target.{RuntimeProvider, ProcessUtils, FileBytes, OS}
 
 import scala.collection.mutable
-import scala.io.Source
 
-abstract class BaseClassTreeGenerator(mangler:BaseMangler, compiler:BaseCompiler, runner:BaseRunner) {
+abstract class BaseClassTreeGenerator(runtimeProvider:RuntimeProvider, mangler:BaseMangler, compiler:BaseCompiler, runner:BaseRunner) {
   private val processedList = new mutable.HashSet[SootClass]
   private val toProcessList = new mutable.Queue[SootClass]
 
@@ -26,15 +23,18 @@ abstract class BaseClassTreeGenerator(mangler:BaseMangler, compiler:BaseCompiler
     }
   }
 
-  def run() = {
+  def createClassGenerator(item:SootClass):BaseClassGenerator
+
+  def run(mainClass:String) = {
     val utf8 = Charset.forName("UTF-8")
     val outputPath = System.getProperty("java.io.tmpdir")
 
     val cl = this.getClass.getClassLoader
     val file_separator = System.getProperty("file.separator")
 
-    FileBytes.write(new File(s"$outputPath/types.cpp"), FileBytes.read(new File(cl.getResource("types.cpp").getPath)))
-    FileBytes.write(new File(s"$outputPath/types.h"), FileBytes.read(new File(cl.getResource("types.h").getPath)))
+    val java_runtime_classes_path = runtimeProvider.java_runtime_classes_path
+    FileBytes.write(new File(s"$outputPath/types.cpp"), FileBytes.read(new File(s"$java_runtime_classes_path/types.cpp")))
+    FileBytes.write(new File(s"$outputPath/types.h"), FileBytes.read(new File(s"$java_runtime_classes_path/types.h")))
 
     val frameworks = new mutable.HashSet[String]
     val libraries = new mutable.HashSet[String]
@@ -43,7 +43,7 @@ abstract class BaseClassTreeGenerator(mangler:BaseMangler, compiler:BaseCompiler
     while (toProcessList.length > 0) {
       val item = toProcessList.dequeue()
       println("Processing class: " + item.getName)
-      val result = new As3ClassGenerator(item).doClass()
+      val result = createClassGenerator(item).doClass()
 
       if (result.nativeFramework != null) frameworks.add(result.nativeFramework)
       if (result.nativeLibrary != null) libraries.add(result.nativeLibrary)
@@ -61,7 +61,7 @@ abstract class BaseClassTreeGenerator(mangler:BaseMangler, compiler:BaseCompiler
     }
     println("Processed classes: " + processedList.size)
 
-    val (result, executableOutputPath) = compiler.compile(outputPath, libraries, frameworks, cflagsList, processedList)
+    val (result, executableOutputPath) = compiler.compile(outputPath, libraries, frameworks, cflagsList, processedList, mainClass)
     if (result) {
       runner.run(outputPath, executableOutputPath)
     }

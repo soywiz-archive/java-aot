@@ -12,11 +12,11 @@ object As3Mangler extends BaseMangler {
   override def visibility(member:ClassMember):String = if (member.isPublic) "public" else if (member.isProtected) "protected" else "private"
   override def staticity(member:ClassMember):String = if (member.isStatic) "static" else ""
 
-  override def typeToCppRef(kind:Type): String = {
-    typeToCppNoRef(kind)
+  override def typeToStringRef(kind:Type): String = {
+    typeToStringNoRef(kind)
   }
 
-  override def typeToCppNoRef(kind:Type): String = {
+  override def typeToStringNoRef(kind:Type): String = {
     kind match {
       case v:VoidType => "void"
       case v:NullType => "null"
@@ -31,7 +31,7 @@ object As3Mangler extends BaseMangler {
           case v:FloatType => "Number"
           case v:DoubleType => "Number"
         }
-      case r:ArrayType => "Array<" + typeToCppRef(r.getElementType) + ">"
+      case r:ArrayType => "Array<" + typeToStringRef(r.getElementType) + ">"
       case r:RefType => mangleClassName(r.getClassName)
     }
   }
