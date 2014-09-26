@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
+#include <math.h>
 #include <sys/time.h>
 
 #include "types.h"
@@ -51,3 +52,13 @@ char* JavaString_to_cstr_byte(java_lang_String*  str) {
     for (int n = 0; n < len; n++) bytes[n] = (char)str->charAt(n);
     return bytes;
 }
+
+int32 cmp(int64 l, int64 r) { return (l == r) ? 0 : ((l < r) ? -1 : +1); }
+int32 cmp(float32 l, float32 r) { return (l == r) ? 0 : ((l < r) ? -1 : +1); }
+int32 cmp(float64 l, float64 r) { return (l == r) ? 0 : ((l < r) ? -1 : +1); }
+
+int32 cmpl(float32 l, float32 r) { return (isnan(l) || isnan(r)) ? -1 : cmp(l, r); }
+int32 cmpr(float32 l, float32 r) { return (isnan(l) || isnan(r)) ? +1 : cmp(l, r); }
+int32 cmpl(float64 l, float64 r) { return (isnan(l) || isnan(r)) ? -1 : cmp(l, r); }
+int32 cmpr(float64 l, float64 r) { return (isnan(l) || isnan(r)) ? +1 : cmp(l, r); }
+

@@ -15,23 +15,22 @@ public class StringBuilder {
 		return this;
 	}
 
-	public StringBuilder append(long v) {
-		return append((int)v);
+	public StringBuilder append(int v) {
+		return append((long)v);
 	}
 
-	public StringBuilder append(int v) {
+	public StringBuilder append(long v) {
 		//String set = "0123456789abcdefghijklmnopqrtuvwxyz";
         String set = "0123456789";
 		char[] out = new char[128];
-		int index = out.length - 1;
+		int index = out.length;
 		int count = 0;
 		if (v == 0) return append(new String(new char[] { '0' }));
 		boolean isNegative = (v < 0);
         if (isNegative) v = -v;
 		while (v != 0) {
-			out[index] = set.charAt((int)(v % 10));
+			out[--index] = set.charAt((int)(v % 10));
             //Native.debugint(out[index]);
-            index--;
 			count++;
 			v /= 10;
 		}

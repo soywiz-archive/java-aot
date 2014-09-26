@@ -170,15 +170,15 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
           case k: UshrExpr => ">>>"
           case k: SubExpr => "-"
           case k: XorExpr => "^"
-          case k: CmpExpr => "=="
-          case k: CmplExpr => "<"
-          case k: CmpgExpr => ">"
           case k: EqExpr => "=="
           case k: NeExpr => "!="
           case k: GeExpr => ">="
           case k: LeExpr => "<="
           case k: LtExpr => "<"
           case k: GtExpr => ">"
+          case k: CmpExpr => "cmp"
+          case k: CmplExpr => "cmpl"
+          case k: CmpgExpr => "cmpg"
         })
       case e: CastExpr =>
         referenceType(e.getCastType)
@@ -227,7 +227,12 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
   }
 
   def doBinop(kind:Type, left:Value, right:Value, op:String): String = {
-    doValue(left) + " " + op + " " + doValue(right)
+    val l = doValue(left)
+    val r = doValue(right)
+    op match {
+      case "cmp" | "cmpl" | "cmpg" => s"$op($l, $r)"
+      case _ => s"$l $op $r"
+    }
   }
 
   def referenceType(kind: Type): scala.Unit = {

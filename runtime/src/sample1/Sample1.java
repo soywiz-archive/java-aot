@@ -25,8 +25,16 @@ public class Sample1 {
         System.out.println("123456789");
         System.out.println("" + 123456789);
 
-		System.out.println("" + System.currentTimeMillis());
-		System.out.println("" + System.currentTimeMillis());
+        int[] data2 = new int[10000000];
+
+        long start = System.currentTimeMillis();
+		System.out.println("start:" + start);
+        for (int m = 0; m < data2.length; m++) {
+            data2[m] = m * 2;
+        }
+        long end = System.currentTimeMillis();
+		System.out.println("end:" + end);
+        System.out.println("diff:" + (end - start));
 
 		for (int n = 0; n < len; n++) {
 			if ((n % 2) == 0) {

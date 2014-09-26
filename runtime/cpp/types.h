@@ -82,4 +82,12 @@ java_lang_String* cstr_to_JavaString(const wchar_t* str);
 wchar_t* JavaString_to_cstr(java_lang_String*  str);
 char* JavaString_to_cstr_byte(java_lang_String*  str);
 
+int32 cmp(int64 l, int64 r);
+
+int32 cmpl(float32 l, float32 r);
+int32 cmpr(float32 l, float32 r);
+
+int32 cmpl(float64 l, float64 r);
+int32 cmpr(float64 l, float64 r);
+
 #endif

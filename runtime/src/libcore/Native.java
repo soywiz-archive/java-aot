@@ -16,6 +16,9 @@ public class Native {
     @CPPMethod("void libcore_Native::putchar(wchar_t v) { ::putwchar(v); }")
     static public native void putchar(char v);
 
+    @CPPMethod("void libcore_Native::flush() { ::fflush(::stdout); }")
+    static public native void flush();
+
     @CPPMethod("void libcore_Native::debugint(int v) { ::printf(\"Int(%d)\", v); }")
     static public native void debugint(int v);
 
@@ -44,6 +47,6 @@ public class Native {
     @CPPMethod("void libcore_Native::gc() { }")
 	static public native void gc();
 
-    @CPPMethod("int64 libcore_Native::currentTimeMillis() { struct timeval tp; ::gettimeofday(&tp, NULL); return tp.tv_sec * 1000 + tp.tv_usec / 1000; }")
+    @CPPMethod("int64 libcore_Native::currentTimeMillis() { struct timeval tp; ::gettimeofday(&tp, NULL); int64 result = (int64)tp.tv_sec * 1000L + (int64)tp.tv_usec / 1000L; return result; }")
 	static public native long currentTimeMillis();
 }

@@ -12,6 +12,7 @@ public class SystemOut {
 		for (int n = 0; n < length; n++) {
 			Native.putchar(text.charAt(n));
 		}
+        Native.flush();
 	}
 
 }
