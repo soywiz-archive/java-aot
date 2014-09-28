@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef char int8;
-typedef short int16;
-typedef int int32;
-typedef long long int int64;
+typedef signed char int8;
+typedef signed short int16;
+typedef signed int int32;
+typedef signed long long int int64;
 typedef float float32;
 typedef double float64;
 

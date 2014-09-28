@@ -30,7 +30,7 @@ class BaseCompiler(runtimeProvider:RuntimeProvider, mangler:BaseMangler) {
       result += "int main(int argc, char **argv) {\n"
       result += "printf(\"Start!\\n\");"
       for (sc <- staticConstructors.reverse) {
-        result += mangler.mangle(sc.clazz) + "::__clinit__();\n"
+        //result += mangler.mangle(sc.clazz) + "::__clinit__();\n"
       }
       result += mainClassName + "::main(new Array<java_lang_String*>((java_lang_String**)0, 0));\n"
       result += "return 0;\n"

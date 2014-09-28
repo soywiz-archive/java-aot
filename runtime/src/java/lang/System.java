@@ -2,15 +2,14 @@ package java.lang;
 
 import libcore.Native;
 import libcore.StdoutOutputStream;
-import libcore.SystemOut;
 
 import java.io.PrintStream;
 
 public class System {
 	//public static final PrintStream err = new PrintStream(null);
-	//public static final PrintStream out = new PrintStream(new StdoutOutputStream());
+	public static final PrintStream out = new PrintStream(new StdoutOutputStream());
 
-	public static final SystemOut out = new SystemOut();
+	//public static final SystemOut out = new SystemOut();
 
 
 	public static void arraycopy(Object src, int srcOfs, Object dest, int destOfs, int len) {

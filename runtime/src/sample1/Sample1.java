@@ -56,9 +56,13 @@ public class Sample1 {
         System.out.println("test2:" + ti.test2());
         System.out.println("test3:" + ti.test3());
 
+        int mm = 1;
+
         try {
-            throw(new Exception());
+            if (mm == 1) throw(new Exception());
+            System.out.println("This shouldn't be shown");
         } catch (Exception e) {
+            System.out.println("Catch exception");
             e.printStackTrace();
         }
 

@@ -26,6 +26,16 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
     }
     referencedClasses.remove(this.clazz)
 
+    var staticConstructor:StaticConstructorResult = null
+
+    try {
+      val clinitMethod = clazz.getMethodByName("<clinit>")
+      val className = mangler.mangle(clazz)
+      staticConstructor = StaticConstructorResult(clazz)
+    } catch  {
+      case e:Exception =>
+    }
+
     val native_framework = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPPClass;", "framework").asInstanceOf[String]
     val native_library = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPPClass;", "library").asInstanceOf[String]
     val cflags = SootUtils.getTag(clazz.getTags.asScala, "Llibcore/CPPClass;", "cflags").asInstanceOf[String]
@@ -70,6 +80,12 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
       declaration += mangler.visibility(field) + ": " + mangler.staticity(field) + " " + mangler.typeToStringRef(field.getType) + " " + mangler.mangle(field) + ";\n"
     }
     for (result <- results) declaration += result.declaration + "\n"
+
+    if (staticConstructor != null) {
+      declaration += "class __StaticInit { public: __StaticInit(); };\n"
+      declaration += "private: static __StaticInit* __staticInit;\n"
+    }
+
     declaration += "};\n"
 
     declaration += "#endif\n"
@@ -82,11 +98,12 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
       }
     }
 
+    val mangledClassType = mangler.mangleClassName(clazz.getName)
+
     for (field <- clazz.getFields.asScala) {
       if (field.isStatic) {
         val isRefType = mangler.isRefType(field.getType)
         val mangledFieldType = mangler.typeToStringRef(field.getType)
-        val mangledClassType = mangler.mangleClassName(clazz.getName)
         val mangledFieldName = mangler.mangle(field)
         if (isRefType) {
           definition += s"$mangledFieldType $mangledClassType::$mangledFieldName = ($mangledFieldType)(void*)0;\n"
@@ -104,14 +121,10 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
       }
     }
 
-    var staticConstructor:StaticConstructorResult = null
+    if (staticConstructor != null) {
+      definition += s"$mangledClassType::__StaticInit::__StaticInit() { $mangledClassType::__clinit__(); }\n"
+      definition += s"$mangledClassType::__StaticInit* $mangledClassType::__staticInit = new $mangledClassType::__StaticInit();\n"
 
-    try {
-      val clinitMethod = clazz.getMethodByName("<clinit>")
-      val className = mangler.mangle(clazz)
-      staticConstructor = StaticConstructorResult(clazz)
-    } catch  {
-      case e:Exception =>
     }
 
     ClassResult(clazz, results, declaration, definition, referencedClasses.toList, native_framework, native_library, cflags, staticConstructor)

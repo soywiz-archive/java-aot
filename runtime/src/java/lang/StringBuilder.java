@@ -1,8 +1,5 @@
 package java.lang;
 
-import libcore.Native;
-import libcore.SystemOut;
-
 public class StringBuilder {
 	char[] value = new char[0];
 

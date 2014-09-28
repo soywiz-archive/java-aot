@@ -14,9 +14,9 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
   private val labels = new mutable.HashMap[Unit, String]
   private var lastLabelIndex = 0
 
-  private val tryList = new mutable.HashMap[Unit, SootClass]
-  private val catchList = new mutable.HashMap[Unit, SootClass]
-  private val endCatchList = new mutable.HashMap[Unit, SootClass]
+  private val tryList = new mutable.HashMap[Unit, Tuple2[Int, SootClass]]
+  private val catchList = new mutable.HashMap[Unit, Tuple2[Int, SootClass]]
+  private val endCatchList = new mutable.HashMap[Unit, Tuple2[Int, SootClass]]
   private val referencedClasses = new mutable.HashSet[SootClass]
 
   def getReferencedClasses = referencedClasses.toList
@@ -29,13 +29,17 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
     this.referenceType(method.getReturnType)
   }
 
+  var lastTrapId = 0
+
   def generateBody(): String = {
 
     val body = method.retrieveActiveBody
     for (trap <- body.getTraps.asScala) {
-      tryList(trap.getBeginUnit) = trap.getException
-      catchList(trap.getHandlerUnit) = trap.getException
-      endCatchList(trap.getEndUnit) = trap.getException
+      val trapId = lastTrapId
+      lastTrapId += 1
+      tryList(trap.getBeginUnit) = (trapId, trap.getException)
+      catchList(trap.getHandlerUnit) = (trapId, trap.getException)
+      endCatchList(trap.getEndUnit) = (trapId, trap.getException)
       //println(trap)
     }
     val units = body.getUnits
@@ -81,12 +85,18 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
   def doUnit(unit: soot.Unit): String = {
     var out = ""
     if (tryList.contains(unit)) out += "try {\n"
-    if (catchList.contains(unit)) {
-      usingExceptions = true
-      //catchList(unit).
-      out += "} catch (" + mangler.mangle(catchList(unit)) + "* __caughtexception__) { __caughtexception = __caughtexception__;\n"
+
+    if (endCatchList.contains(unit)) {
+      val (trapId, trapType) = endCatchList(unit)
+      out += "} catch (" + mangler.mangle(trapType) + s"* __caughtexception__) { __caughtexception = __caughtexception__; goto exception_handler_$trapId; }\n"
     }
-    if (endCatchList.contains(unit)) out += "}\n"
+
+    if (catchList.contains(unit)) {
+      val (trapId, trapType) = catchList(unit)
+      usingExceptions = true
+      out += s"exception_handler_$trapId:;\n"
+    }
+
     if (labels.contains(unit)) out += labels(unit) + ":; "
     out += _doUnit(unit)
     out
@@ -96,6 +106,7 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
     var stms = ""
     unit match {
       case s: DefinitionStmt =>
+        referenceType(s.getLeftOp.getType)
         if (s.getRightOp.getType.equals(s.getLeftOp.getType)) {
           doValue(s.getLeftOp) + " = " + doValue(s.getRightOp) + ";"
         } else {
@@ -140,11 +151,12 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
         t match {
           case c: NullConstant => "NULL"
           case c: StringConstant => "cstr_to_JavaString(L\"" + escapeString(c.value) + "\")"
-          case _ => t.toString()
+          case _ => t.toString
         }
       case t: ThisRef => "this"
       case t: ParameterRef => getParamName(t.getIndex)
       case t: CaughtExceptionRef =>
+        referenceType(t.getType)
         //"((void*)(__caughtexception))"
         //"((" + mangler.typeToStringRef(t.getType) + ")(__caughtexception))"
         "__caughtexception"
