@@ -47,7 +47,8 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
       stms += this.doUnit(unit) + "\n"
     }
 
-    var bodyString = ""
+    var bodyString = "\n"
+    if (usingExceptions) bodyString += "java_lang_Throwable* __caughtexception;"
     for (local2 <- locals) {
       val (local, name) = local2
       bodyString += doVariableAllocation(local.getType, name)
@@ -75,10 +76,16 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
     }
   }
 
+  var usingExceptions = false
+
   def doUnit(unit: soot.Unit): String = {
     var out = ""
     if (tryList.contains(unit)) out += "try {\n"
-    if (catchList.contains(unit)) out += "} catch (" + mangler.mangle(catchList(unit)) + " __caughtexception) {\n"
+    if (catchList.contains(unit)) {
+      usingExceptions = true
+      //catchList(unit).
+      out += "} catch (" + mangler.mangle(catchList(unit)) + "* __caughtexception__) { __caughtexception = __caughtexception__;\n"
+    }
     if (endCatchList.contains(unit)) out += "}\n"
     if (labels.contains(unit)) out += labels(unit) + ":; "
     out += _doUnit(unit)
@@ -88,7 +95,13 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
   def _doUnit(unit: soot.Unit): String = {
     var stms = ""
     unit match {
-      case s: DefinitionStmt => doValue(s.getLeftOp) + " = " + doValue(s.getRightOp) + ";"
+      case s: DefinitionStmt =>
+        if (s.getRightOp.getType.equals(s.getLeftOp.getType)) {
+          doValue(s.getLeftOp) + " = " + doValue(s.getRightOp) + ";"
+        } else {
+          // Exceptions for example!
+          doValue(s.getLeftOp) + " = ((" + mangler.typeToStringRef(s.getLeftOp.getType) + ")" + doValue(s.getRightOp) + ");"
+        }
       case s: ReturnStmt => "return " + doValue(s.getOp) + ";"
       case s: ReturnVoidStmt => "return;"
       case s: IfStmt => s"if (" + doValue(s.getCondition) + ") { goto " + labels(s.getTarget) + "; }"
@@ -131,7 +144,10 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
         }
       case t: ThisRef => "this"
       case t: ParameterRef => getParamName(t.getIndex)
-      case t: CaughtExceptionRef => "__caughtexception"
+      case t: CaughtExceptionRef =>
+        //"((void*)(__caughtexception))"
+        //"((" + mangler.typeToStringRef(t.getType) + ")(__caughtexception))"
+        "__caughtexception"
       case t: ArrayRef =>
         doValue(t.getBase) + "->get(" + doValue(t.getIndex) + ")"
       case t: InstanceFieldRef =>

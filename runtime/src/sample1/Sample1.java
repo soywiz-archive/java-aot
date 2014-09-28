@@ -42,6 +42,12 @@ public class Sample1 {
 
         test1(new TestImplementation());
 
+        try {
+            throw(new Exception());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
 		for (int n = 0; n < len; n++) {
 			if ((n % 2) == 0) {
 				System.out.println(("Hello world!" + n).toUpperCase());

@@ -16,6 +16,7 @@ object Main extends App {
   val generator = new CppClassTreeGenerator(runtimeProvider)
 
   //generator.enqueue("java.lang.System")
+  //generator.enqueue("java.lang.Exception")
   generator.enqueue("libgame.SDLApi")
   generator.enqueue("libcore.StdoutOutputStream")
   generator.enqueue("libcore.Native")
