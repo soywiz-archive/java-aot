@@ -39,12 +39,15 @@ abstract class BaseClassTreeGenerator(runtimeProvider:RuntimeProvider, mangler:B
     val frameworks = new mutable.HashSet[String]
     val libraries = new mutable.HashSet[String]
     val cflagsList = new mutable.ListBuffer[String]
+    var staticConstructors = new mutable.ListBuffer[StaticConstructorResult]
 
     while (toProcessList.length > 0) {
       val item = toProcessList.dequeue()
       println("Processing class: " + item.getName)
       val result = createClassGenerator(item).doClass()
 
+
+      if (result.staticConstructor != null) staticConstructors.append(result.staticConstructor)
       if (result.nativeFramework != null) frameworks.add(result.nativeFramework)
       if (result.nativeLibrary != null) libraries.add(result.nativeLibrary)
       if (result.cflags != null) cflagsList.append(result.cflags)
@@ -61,7 +64,7 @@ abstract class BaseClassTreeGenerator(runtimeProvider:RuntimeProvider, mangler:B
     }
     println("Processed classes: " + processedList.size)
 
-    val (result, executableOutputPath) = compiler.compile(outputPath, libraries, frameworks, cflagsList, processedList, mainClass)
+    val (result, executableOutputPath) = compiler.compile(outputPath, libraries, frameworks, cflagsList, processedList, mainClass, staticConstructors)
     if (result) {
       runner.run(outputPath, executableOutputPath)
     }

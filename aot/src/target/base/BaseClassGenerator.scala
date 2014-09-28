@@ -84,7 +84,15 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
 
     for (field <- clazz.getFields.asScala) {
       if (field.isStatic) {
-        definition += mangler.typeToStringRef(field.getType) + " " + mangler.mangleClassName(clazz.getName) + "::" + mangler.mangle(field) + " = (" + mangler.typeToStringRef(field.getType) + ")(void *)0;\n"
+        val isRefType = mangler.isRefType(field.getType)
+        val mangledFieldType = mangler.typeToStringRef(field.getType)
+        val mangledClassType = mangler.mangleClassName(clazz.getName)
+        val mangledFieldName = mangler.mangle(field)
+        if (isRefType) {
+          definition += s"$mangledFieldType $mangledClassType::$mangledFieldName = ($mangledFieldType)(void*)0;\n"
+        } else {
+          definition += s"$mangledFieldType $mangledClassType::$mangledFieldName = ($mangledFieldType)0;\n"
+        }
       }
     }
 
@@ -96,6 +104,16 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
       }
     }
 
-    ClassResult(clazz, results, declaration, definition, referencedClasses.toList, native_framework, native_library, cflags)
+    var staticConstructor:StaticConstructorResult = null
+
+    try {
+      val clinitMethod = clazz.getMethodByName("<clinit>")
+      val className = mangler.mangle(clazz)
+      staticConstructor = StaticConstructorResult(clazz)
+    } catch  {
+      case e:Exception =>
+    }
+
+    ClassResult(clazz, results, declaration, definition, referencedClasses.toList, native_framework, native_library, cflags, staticConstructor)
   }
 }

@@ -13,6 +13,14 @@ trait BaseMangler {
 
   def typeToStringRef(kind:Type): String
 
+  def isRefType(kind:Type): Boolean = {
+    kind match {
+      case r:RefType => true
+      case r:ArrayType => true
+      case _ => false
+    }
+  }
+
   def typeToStringNoRef(kind:Type): String
 
   def mangleBaseName(method: SootMethod): String = {

@@ -14,13 +14,31 @@ class BaseCompiler(runtimeProvider:RuntimeProvider, mangler:BaseMangler) {
   private val file_separator = System.getProperty("file.separator")
   private val cl = this.getClass.getClassLoader
 
-  def compile(outputPath:String, libraries:mutable.HashSet[String], frameworks:mutable.HashSet[String], cflagsList:mutable.ListBuffer[String], processedList:mutable.HashSet[SootClass], mainClass:String) = {
+  def compile(outputPath:String, libraries:mutable.HashSet[String], frameworks:mutable.HashSet[String], cflagsList:mutable.ListBuffer[String], processedList:mutable.HashSet[SootClass], mainClass:String, staticConstructors:mutable.ListBuffer[StaticConstructorResult]) = {
 
     var java_macos_embedded_frameworks = runtimeProvider.java_sample1_classes_path + "/frameworks/cpp"
     if (OS.isWindows) java_macos_embedded_frameworks = "^/+".r.replaceAllIn(java_macos_embedded_frameworks, "")
 
     val mainClassName = mangler.mangleClassName(mainClass)
-    FileBytes.write(new File(s"$outputPath/main.cpp"), utf8, "#include \"" + mainClassName + ".h\" \n int main(int argc, char **argv) { printf(\"Start!\\n\"); " + mainClassName + "::main(new Array<java_lang_String*>((java_lang_String**)0, 0)); return 0; }")
+
+    def createMain(): String = {
+      var result = ""
+      result += "#include \"" + mainClassName + ".h\"\n"
+      for (sc <- staticConstructors) {
+        result += "#include \"" + mangler.mangle(sc.clazz) + ".h\"\n"
+      }
+      result += "int main(int argc, char **argv) {\n"
+      result += "printf(\"Start!\\n\");"
+      for (sc <- staticConstructors.reverse) {
+        result += mangler.mangle(sc.clazz) + "::__clinit__();\n"
+      }
+      result += mainClassName + "::main(new Array<java_lang_String*>((java_lang_String**)0, 0));\n"
+      result += "return 0;\n"
+      result += "}\n"
+      result
+    }
+
+    FileBytes.write(new File(s"$outputPath/main.cpp"), utf8, createMain())
     val paths = processedList.filter(_.getName != "java.lang.Object").map(item => mangler.mangleFullClassName(item.getName) + ".cpp").mkString(" ")
     //FileBytes.write(new File(s"$outputPath/build.bat"), utf8, "@g++ -fpermissive -Wint-to-pointer-cast -g -ggdb -gstabs -gpubnames types.cpp main.cpp " + paths)
 

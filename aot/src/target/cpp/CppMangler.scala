@@ -9,7 +9,8 @@ object CppMangler extends BaseMangler {
   override def mangleClassName(name:String):String = name.replace('.', '_')
   override def mangleFullClassName(name:String):String = name.replace('.', '_')
 
-  override def visibility(member:ClassMember):String = if (member.isPublic) "public" else if (member.isProtected) "protected" else "private"
+  //override def visibility(member:ClassMember):String = if (member.isPublic) "public" else if (member.isProtected) "protected" else "private"
+  override def visibility(member:ClassMember):String = if (member.isPublic) "public" else if (member.isProtected) "public" else "public"
   override def staticity(member:ClassMember):String = if (member.isStatic) "static" else ""
 
   override def typeToStringRef(kind:Type): String = {

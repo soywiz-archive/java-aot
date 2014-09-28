@@ -10,6 +10,13 @@ public class Sample1 {
 		return sum;
 	}
 
+    static public TestInterface ti = new TestImplementation();
+    static int test = 1;
+
+    static {
+        test = -1;
+    }
+
     static public void test1(TestInterface test) {
         test.test();
     }
@@ -25,6 +32,8 @@ public class Sample1 {
 		int len = sum(list);
 
 		Native.putchar(':');
+
+        System.out.println("test:" + Sample1.test);
 
         System.out.println("123456789");
         System.out.println("" + 123456789);
@@ -68,6 +77,7 @@ public class Sample1 {
 		//	}
 		//}
 
+        /*
         SDL.init();
         SDLWindow win = SDL.createWindow("Hello SDL from java-aot!", 640, 480);
         SDLRenderer renderer = win.createRenderer();
@@ -91,6 +101,7 @@ public class Sample1 {
         }
         renderer.dispose();
         win.dispose();
+        */
 
 		return 0;
 	}
