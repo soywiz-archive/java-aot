@@ -53,13 +53,17 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
         declaration += "#include \"" + res + ".h\"\n"
       }
     }
+    for (res <- clazz.getInterfaces.asScala) {
+      declaration += "#include \"" + mangler.mangle(res) + ".h\"\n"
+    }
     declaration += "\n"
 
     for (rc <- referencedClasses) declaration += "class " + mangler.mangle(rc) + ";\n"
     declaration += "\n"
 
     declaration += "class " + mangler.mangle(clazz)
-    if (clazz.hasSuperclass) declaration += " : public " + mangler.mangle(clazz.getSuperclass)
+    if (clazz.hasSuperclass && !clazz.isInterface) declaration += " : public " + mangler.mangle(clazz.getSuperclass)
+    for (interface <- clazz.getInterfaces.asScala) declaration += ", public " + mangler.mangle(interface)
     declaration += " {\n"
 
     for (field <- clazz.getFields.asScala) {

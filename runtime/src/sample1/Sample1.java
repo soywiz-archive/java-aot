@@ -10,6 +10,10 @@ public class Sample1 {
 		return sum;
 	}
 
+    static public void test1(TestInterface test) {
+        test.test();
+    }
+
 	static public int main(String[] args) {
 		int[] list = new int[10];
 
@@ -35,6 +39,8 @@ public class Sample1 {
         long end = System.currentTimeMillis();
 		System.out.println("end:" + end);
         System.out.println("diff:" + (end - start));
+
+        test1(new TestImplementation());
 
 		for (int n = 0; n < len; n++) {
 			if ((n % 2) == 0) {

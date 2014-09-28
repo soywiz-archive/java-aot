@@ -9,8 +9,8 @@ import scala.sys.process.ProcessLogger
 object ProcessUtils {
   def runAndRedirect(command:String, currentDir:File): Int = {
     val logger = ProcessLogger(
-      (o: String) => println("out " + o),
-      (e: String) => println("err " + e))
+      (o: String) => println(s"$o"),
+      (e: String) => println(s"$e"))
 
     val pb = Process(command, currentDir)
 
