@@ -42,6 +42,11 @@ public class Sample1 {
 
         test1(new TestImplementation());
 
+        TestInheritance1 ti = new TestInheritance1();
+        System.out.println("test1:" + ti.test1());
+        System.out.println("test2:" + ti.test2());
+        System.out.println("test3:" + ti.test3());
+
         try {
             throw(new Exception());
         } catch (Exception e) {
