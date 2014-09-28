@@ -81,7 +81,16 @@ public class Sample1 {
 		//	}
 		//}
 
-        /*
+        final int seven = 7;
+        MyTestInterface v = new MyTestInterface() {
+            @Override
+            public int run() {
+                return -seven;
+            }
+        };
+
+        System.out.println("WOW. Inner class says minus seven is: " + v.run());
+
         SDL.init();
         SDLWindow win = SDL.createWindow("Hello SDL from java-aot!", 640, 480);
         SDLRenderer renderer = win.createRenderer();
@@ -105,8 +114,11 @@ public class Sample1 {
         }
         renderer.dispose();
         win.dispose();
-        */
 
 		return 0;
 	}
+}
+
+interface MyTestInterface {
+    int run();
 }
