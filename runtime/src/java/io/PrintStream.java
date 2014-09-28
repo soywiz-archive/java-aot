@@ -5,15 +5,19 @@ public class PrintStream extends FilterOutputStream {
         super(outputStream);
     }
 
-    public void println(String s) {
+    public void print(String s) {
         try {
             int length = s.length();
             for (int n = 0; n < length; n++) {
                 out.write(s.charAt(n));
             }
-            out.write((byte) '\n');
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void println(String s) {
+        print(s);
+        print("\n");
     }
 }

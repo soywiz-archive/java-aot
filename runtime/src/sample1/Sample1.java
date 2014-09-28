@@ -59,10 +59,10 @@ public class Sample1 {
         int mm = 1;
 
         try {
-            if (mm == 1) throw(new Exception());
+            if (mm == 1) throw(new Exception("hello world"));
             System.out.println("This shouldn't be shown");
         } catch (Exception e) {
-            System.out.println("Catch exception");
+            System.out.println("Catch exception: " + e.getMessage());
             e.printStackTrace();
         }
 
