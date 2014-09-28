@@ -4,6 +4,7 @@ import soot.SootClass;
 import soot.SootField;
 import soot.SootMethod;
 import soot.Unit;
+import soot.jimple.internal.JInvokeStmt;
 
 public interface SootVisitor {
 
@@ -15,4 +16,5 @@ public interface SootVisitor {
 
 	void on(SootClass sootClass, SootMethod sootMethod, Unit unit);
 
+	void on(SootClass sootClass, SootMethod sootMethod, JInvokeStmt jinvokestmt);
 }
