@@ -134,7 +134,7 @@ abstract public class DisplayObjectContainer extends DisplayObject {
     }
 
     public DisplayObject[] children() {
-        List<DisplayObject> buffer = new LinkedList<>();
+        List<DisplayObject> buffer = new LinkedList<DisplayObject>();
 
         DisplayObject child = this.first;
         while (child != null) {

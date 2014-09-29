@@ -36,6 +36,7 @@ object CppMangler extends BaseMangler {
           case v:FloatType => "float32"
           case v:DoubleType => "float64"
         }
+      //case r:ArrayType if r.getElementType.isInstanceOf[RefType] => "Array<java_lang_Object*>"
       case r:ArrayType => "Array<" + typeToStringRef(r.getElementType) + ">"
       case r:RefType => mangleClassName(r.getClassName)
     }

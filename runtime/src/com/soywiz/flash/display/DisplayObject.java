@@ -26,10 +26,10 @@ abstract public class DisplayObject extends DisplayObjectBase {
     String name = null;
     boolean updating = true;
     double updateSpeed = 1.0;
-    List<Updatable> components = new LinkedList<>();
+    List<Updatable> components = new LinkedList<Updatable>();
 
-    List<MouseUpdate> onMouseUpdate = new LinkedList<>();
-    List<SignalHandler<Point>> onMouseTapAny = new LinkedList<>();
+    List<MouseUpdate> onMouseUpdate = new LinkedList<MouseUpdate>();
+    List<SignalHandler<Point>> onMouseTapAny = new LinkedList<SignalHandler<Point>>();
 
     public boolean interactive() {
         return onMouseUpdate.size() > 0;

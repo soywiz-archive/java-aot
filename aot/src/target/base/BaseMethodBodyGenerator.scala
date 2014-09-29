@@ -6,6 +6,7 @@ import soot.jimple._
 
 import scala.collection.mutable
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 
 class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMangler) {
   private var locals = new mutable.HashMap[Local, String]
@@ -14,9 +15,9 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
   private val labels = new mutable.HashMap[Unit, String]
   private var lastLabelIndex = 0
 
-  private val tryList = new mutable.HashMap[Unit, Tuple2[Int, SootClass]]
-  private val catchList = new mutable.HashMap[Unit, Tuple2[Int, SootClass]]
-  private val endCatchList = new mutable.HashMap[Unit, Tuple2[Int, SootClass]]
+  private val tryList = new mutable.HashMap[Unit, mutable.ListBuffer[Tuple2[Int, SootClass]]]
+  private val catchList = new mutable.HashMap[Unit, mutable.ListBuffer[Tuple2[Int, SootClass]]]
+  private val endCatchList = new mutable.HashMap[Unit, mutable.ListBuffer[Tuple2[Int, SootClass]]]
   private val referencedClasses = new mutable.HashSet[SootClass]
 
   def getReferencedClasses = referencedClasses.toList
@@ -37,9 +38,13 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
     for (trap <- body.getTraps.asScala) {
       val trapId = lastTrapId
       lastTrapId += 1
-      tryList(trap.getBeginUnit) = (trapId, trap.getException)
-      catchList(trap.getHandlerUnit) = (trapId, trap.getException)
-      endCatchList(trap.getEndUnit) = (trapId, trap.getException)
+      println(s"handler: ${trap.getBeginUnit}, ${trap.getHandlerUnit}, ${trap.getEndUnit}")
+      if (!tryList.contains(trap.getBeginUnit)) tryList(trap.getBeginUnit) = new ListBuffer[Tuple2[Int, SootClass]]
+      if (!catchList.contains(trap.getHandlerUnit)) catchList(trap.getHandlerUnit) = new ListBuffer[Tuple2[Int, SootClass]]
+      if (!endCatchList.contains(trap.getEndUnit)) endCatchList(trap.getEndUnit) = new ListBuffer[Tuple2[Int, SootClass]]
+      tryList(trap.getBeginUnit).append((trapId, trap.getException))
+      catchList(trap.getHandlerUnit).append((trapId, trap.getException))
+      endCatchList(trap.getEndUnit).append((trapId, trap.getException))
       //println(trap)
     }
     val units = body.getUnits
@@ -90,18 +95,22 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
     }
 
     if (tryList.contains(unit)) {
-      out += "try {\n"
+      for (item <- tryList(unit)) out += "try {\n"
     }
 
     if (endCatchList.contains(unit)) {
-      val (trapId, trapType) = endCatchList(unit)
-      out += "} catch (" + mangler.mangle(trapType) + s"* __caughtexception__) { __caughtexception = __caughtexception__; goto exception_handler_$trapId; }\n"
+      for (item <- endCatchList(unit)) {
+        val (trapId, trapType) = item
+        out += "} catch (" + mangler.mangle(trapType) + s"* __caughtexception__) { __caughtexception = __caughtexception__; goto exception_handler_$trapId; }\n"
+      }
     }
 
     if (catchList.contains(unit)) {
-      val (trapId, trapType) = catchList(unit)
-      usingExceptions = true
-      out += s"exception_handler_$trapId:;\n"
+      for (item <- catchList(unit)) {
+        val (trapId, trapType) = item
+        usingExceptions = true
+        out += s"exception_handler_$trapId:;\n"
+      }
     }
 
     out += _doUnit(unit)
@@ -113,11 +122,21 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
     unit match {
       case s: DefinitionStmt =>
         referenceType(s.getLeftOp.getType)
-        if (s.getRightOp.getType.equals(s.getLeftOp.getType)) {
-          doValue(s.getLeftOp) + " = " + doValue(s.getRightOp) + ";"
-        } else {
-          // Exceptions for example!
-          doValue(s.getLeftOp) + " = ((" + mangler.typeToStringRef(s.getLeftOp.getType) + ")" + doValue(s.getRightOp) + ");"
+
+        // l-value
+        s.getLeftOp match {
+          case s2: ArrayRef =>
+            val base = doValue(s2.getBase)
+            val index = doValue(s2.getIndex)
+            val right = doValue(s.getRightOp)
+            s"$base->set($index, $right);"
+          case _ =>
+            if (s.getRightOp.getType.equals(s.getLeftOp.getType)) {
+              doValue(s.getLeftOp) + " = " + doValue(s.getRightOp) + ";"
+            } else {
+              // Exceptions for example!
+              doValue(s.getLeftOp) + " = ((" + mangler.typeToStringRef(s.getLeftOp.getType) + ")" + doValue(s.getRightOp) + ");"
+            }
         }
       case s: ReturnStmt => "return " + doValue(s.getOp) + ";"
       case s: ReturnVoidStmt => "return;"
@@ -156,8 +175,12 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
       case t: Immediate =>
         t match {
           case c: NullConstant => "NULL"
+          case c: IntConstant => t.toString
+          case c: LongConstant => t.toString
+          case c: FloatConstant => t.toString
+          case c: DoubleConstant => t.toString
           case c: StringConstant => "cstr_to_JavaString(L\"" + escapeString(c.value) + "\")"
-          case _ => t.toString
+          case c: ClassConstant => "NULL /* ClassConstant:" + c.getValue + "*/"
         }
       case t: ThisRef => "this"
       case t: ParameterRef => getParamName(t.getIndex)
@@ -167,7 +190,10 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
         //"((" + mangler.typeToStringRef(t.getType) + ")(__caughtexception))"
         "__caughtexception"
       case t: ArrayRef =>
-        doValue(t.getBase) + "->get(" + doValue(t.getIndex) + ")"
+        val base = doValue(t.getBase)
+        val index = doValue(t.getIndex)
+        s"$base->get($index)"
+        //"(" + mangler.typeToStringRef(t.getType) + ")(void *)(" + doValue(t.getBase) + "->get(" + doValue(t.getIndex) + "))"
       case t: InstanceFieldRef =>
         referenceType(t.getField.getDeclaringClass)
         doValue(t.getBase) + "->" + t.getField.getName
@@ -231,7 +257,11 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
         "new " + mangler.typeToStringNoRef(e.getType) + (0 to e.getSizeCount - 1).map(i => "[" + e.getSize(i) + "]").mkString
       case e: InvokeExpr =>
         referenceType(e.getMethod.getDeclaringClass)
-        val args = e.getArgs.asScala.map(i => doValue(i))
+        //val castTypes = e.getMethod.getParameterTypes.asScala
+        val args = e.getArgs.asScala.map(i => {
+          // @TODO: perform casting!
+          doValue(i)
+        })
         for (arg <- e.getArgs.asScala) {
           referenceType(arg.getType)
         }

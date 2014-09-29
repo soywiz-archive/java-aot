@@ -32,7 +32,7 @@ public class Native {
     @CPPMethod("void libcore_Native::putchar(wchar_t v) { ::putwchar(v); }")
     static public native void putchar(char v);
 
-    @CPPMethod("void libcore_Native::flush() { ::fflush(::stdout); }")
+    @CPPMethod("void libcore_Native::flush() { ::fflush(stdout); }")
     static public native void flush();
 
     @CPPMethod("void libcore_Native::debugint(int v) { ::printf(\"Int(%d)\", v); }")

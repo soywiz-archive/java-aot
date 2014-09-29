@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Signal<T> {
-    List<SignalHandler<T>> handlers = new LinkedList<>();
+    List<SignalHandler<T>> handlers = new LinkedList<SignalHandler<T>>();
 
     public void add(SignalHandler<T> handler) {
         handlers.add(handler);

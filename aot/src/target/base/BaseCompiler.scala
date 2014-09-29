@@ -40,7 +40,6 @@ class BaseCompiler(runtimeProvider:RuntimeProvider, mangler:BaseMangler) {
 
     FileBytes.write(new File(s"$outputPath/main.cpp"), utf8, createMain())
     val paths = processedList.filter(_.getName != "java.lang.Object").map(item => mangler.mangleFullClassName(item.getName) + ".cpp").mkString(" ")
-    //FileBytes.write(new File(s"$outputPath/build.bat"), utf8, "@g++ -fpermissive -Wint-to-pointer-cast -g -ggdb -gstabs -gpubnames types.cpp main.cpp " + paths)
 
     var frameworksAppend = ""
     if (OS.isMac) {
@@ -93,6 +92,7 @@ class BaseCompiler(runtimeProvider:RuntimeProvider, mangler:BaseMangler) {
     println(command)
     new File(outputExecutableFile).delete()
 
+    FileBytes.write(new File(s"$outputPath/build.bat"), utf8, command)
     FileBytes.write(new File(s"$outputPath/build.sh"), utf8, command)
 
     val result = ProcessUtils.runAndRedirect(command, new File(outputPath)) == 0

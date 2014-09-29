@@ -45,10 +45,13 @@ abstract public class EngineContext {
     }
 
     public byte[] readFile(String path) throws IOException {
-        try (InputStream is = openFile(path)) {
-            byte[] data = new byte[is.available()];
-            is.read(data);
-            return data;
-        }
+	    InputStream is = openFile(path);
+	    try {
+		    byte[] data = new byte[is.available()];
+		    is.read(data);
+		    return data;
+	    } finally {
+		    is.close();
+	    }
     }
 }

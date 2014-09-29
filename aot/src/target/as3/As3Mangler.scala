@@ -31,6 +31,7 @@ object As3Mangler extends BaseMangler {
           case v:FloatType => "Number"
           case v:DoubleType => "Number"
         }
+      case r:ArrayType if r.getElementType.isInstanceOf[RefType] => "Array<java_lang_Object*>"
       case r:ArrayType => "Array<" + typeToStringRef(r.getElementType) + ">"
       case r:RefType => mangleClassName(r.getClassName)
     }
