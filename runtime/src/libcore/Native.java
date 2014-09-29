@@ -26,7 +26,7 @@ public class Native {
     @CPPMethod("float32 libcore_Native::intBitsToFloat(int32 v) { return *(float32*)&v; }")
     static public native float intBitsToFloat(int v);
 
-    @CPPMethod("bool libcore_Native::isNaN(float32 v) { return ::isnan(v); }")
+    @CPPMethod("bool libcore_Native::isNaN(float32 v) { return isnan(v); }")
     static public native boolean isNaN(float v);
 
     @CPPMethod("void libcore_Native::putchar(wchar_t v) { ::putwchar(v); }")

@@ -84,7 +84,14 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
 
   def doUnit(unit: soot.Unit): String = {
     var out = ""
-    if (tryList.contains(unit)) out += "try {\n"
+
+    if (labels.contains(unit)) {
+      out += labels(unit) + ":; "
+    }
+
+    if (tryList.contains(unit)) {
+      out += "try {\n"
+    }
 
     if (endCatchList.contains(unit)) {
       val (trapId, trapType) = endCatchList(unit)
@@ -97,7 +104,6 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
       out += s"exception_handler_$trapId:;\n"
     }
 
-    if (labels.contains(unit)) out += labels(unit) + ":; "
     out += _doUnit(unit)
     out
   }
