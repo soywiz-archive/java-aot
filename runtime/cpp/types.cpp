@@ -58,7 +58,7 @@ int32 cmp(float32 l, float32 r) { return (l == r) ? 0 : ((l < r) ? -1 : +1); }
 int32 cmp(float64 l, float64 r) { return (l == r) ? 0 : ((l < r) ? -1 : +1); }
 
 int32 cmpl(float32 l, float32 r) { return (isnan(l) || isnan(r)) ? -1 : cmp(l, r); }
-int32 cmpr(float32 l, float32 r) { return (isnan(l) || isnan(r)) ? +1 : cmp(l, r); }
+int32 cmpg(float32 l, float32 r) { return (isnan(l) || isnan(r)) ? +1 : cmp(l, r); }
 int32 cmpl(float64 l, float64 r) { return (isnan(l) || isnan(r)) ? -1 : cmp(l, r); }
-int32 cmpr(float64 l, float64 r) { return (isnan(l) || isnan(r)) ? +1 : cmp(l, r); }
+int32 cmpg(float64 l, float64 r) { return (isnan(l) || isnan(r)) ? +1 : cmp(l, r); }
 

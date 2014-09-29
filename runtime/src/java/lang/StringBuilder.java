@@ -12,7 +12,19 @@ public class StringBuilder {
 		return this;
 	}
 
-	public StringBuilder append(int v) {
+    public StringBuilder append(Object v) {
+        if (v == null) return append("null"); return append(v.toString());
+    }
+
+    public StringBuilder append(float v) {
+        return append((int)v);
+    }
+
+    public StringBuilder append(double v) {
+        return append((int)v);
+    }
+
+    public StringBuilder append(int v) {
 		return append((long)v);
 	}
 

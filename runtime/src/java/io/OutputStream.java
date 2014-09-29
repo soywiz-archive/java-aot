@@ -1,6 +1,6 @@
 package java.io;
 
-abstract public class OutputStream implements Closeable {
+abstract public class OutputStream implements Closeable, AutoCloseable {
 	public void close() throws IOException {
 	}
 

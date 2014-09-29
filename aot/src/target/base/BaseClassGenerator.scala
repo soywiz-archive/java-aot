@@ -4,7 +4,7 @@ import soot.{SootMethod, Scene, SootClass}
 import target.SootUtils
 import scala.collection.JavaConverters._
 
-import scala.collection.mutable.HashSet
+import scala.collection.mutable.{ListBuffer, HashSet}
 
 abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
   def this(className: String, mangler:BaseMangler) = {
@@ -72,8 +72,10 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
     declaration += "\n"
 
     declaration += "class " + mangler.mangle(clazz)
-    if (clazz.hasSuperclass && !clazz.isInterface) declaration += " : public " + mangler.mangle(clazz.getSuperclass)
-    for (interface <- clazz.getInterfaces.asScala) declaration += ", public " + mangler.mangle(interface)
+    val extendItems = new ListBuffer[String]
+    if (clazz.hasSuperclass && !clazz.isInterface) extendItems.append("public " + mangler.mangle(clazz.getSuperclass))
+    for (interface <- clazz.getInterfaces.asScala) extendItems.append("public " + mangler.mangle(interface))
+    if (extendItems.nonEmpty) declaration += " : " + extendItems.mkString(", ")
     declaration += " {\n"
 
     for (field <- clazz.getFields.asScala) {

@@ -19,4 +19,8 @@ public class Throwable {
         System.out.println("StackTrace:" + message);
         //printStackTrace(System.err);
     }
+
+    public final void addSuppressed(Throwable exception) {
+
+    }
 }

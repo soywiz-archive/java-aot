@@ -85,9 +85,9 @@ char* JavaString_to_cstr_byte(java_lang_String*  str);
 int32 cmp(int64 l, int64 r);
 
 int32 cmpl(float32 l, float32 r);
-int32 cmpr(float32 l, float32 r);
+int32 cmpg(float32 l, float32 r);
 
 int32 cmpl(float64 l, float64 r);
-int32 cmpr(float64 l, float64 r);
+int32 cmpg(float64 l, float64 r);
 
 #endif

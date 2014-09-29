@@ -1,7 +1,9 @@
 package sample1;
 
+import com.soywiz.flash.display.Quad;
+import com.soywiz.flash.util.Color;
 import libcore.Native;
-import libgame.*;
+//import libgame.*;
 
 public class Sample1 {
 	static public int sum(int[] args) {
@@ -91,6 +93,13 @@ public class Sample1 {
 
         System.out.println("WOW. Inner class says minus seven is: " + v.run());
 
+
+
+        Quad quad = new Quad();
+        quad.color = Color.red;
+
+
+        /*
         SDL.init();
         SDLWindow win = SDL.createWindow("Hello SDL from java-aot!", 640, 480);
         SDLRenderer renderer = win.createRenderer();
@@ -114,6 +123,7 @@ public class Sample1 {
         }
         renderer.dispose();
         win.dispose();
+        */
 
 		return 0;
 	}

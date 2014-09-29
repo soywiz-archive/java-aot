@@ -4,6 +4,7 @@ package libcore;
     "#include <wchar.h>\n" +
     "#include <sys/time.h>\n" +
     "#include <stdio.h>\n" +
+    "#include <math.h>\n" +
     "#include <stdlib.h>\n"
 )
 public class Native {
@@ -12,6 +13,21 @@ public class Native {
 
     @CPPMethod("wchar_t libcore_Native::upper(wchar_t v) { return ::towupper(v); }")
 	static public native char upper(char v);
+
+    @CPPMethod("float64 libcore_Native::atan(float64 v) { return ::atan(v); }")
+    static public native double atan(double v);
+
+    @CPPMethod("float64 libcore_Native::cos(float64 v) { return ::cos(v); }")
+    static public native double cos(double v);
+
+    @CPPMethod("float64 libcore_Native::sin(float64 v) { return ::sin(v); }")
+    static public native double sin(double v);
+
+    @CPPMethod("float32 libcore_Native::intBitsToFloat(int32 v) { return *(float32*)&v; }")
+    static public native float intBitsToFloat(int v);
+
+    @CPPMethod("bool libcore_Native::isNaN(float32 v) { return ::isnan(v); }")
+    static public native boolean isNaN(float v);
 
     @CPPMethod("void libcore_Native::putchar(wchar_t v) { ::putwchar(v); }")
     static public native void putchar(char v);
