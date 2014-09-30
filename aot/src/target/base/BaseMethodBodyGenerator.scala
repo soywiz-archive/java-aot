@@ -257,11 +257,15 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
         "new " + mangler.typeToStringNoRef(e.getType) + (0 to e.getSizeCount - 1).map(i => "[" + e.getSize(i) + "]").mkString
       case e: InvokeExpr =>
         referenceType(e.getMethod.getDeclaringClass)
-        //val castTypes = e.getMethod.getParameterTypes.asScala
-        val args = e.getArgs.asScala.map(i => {
-          // @TODO: perform casting!
-          doValue(i)
-        })
+        val argsList = e.getArgs.asScala.toList
+        val castTypes = e.getMethod.getParameterTypes.asScala.map(_.asInstanceOf[Type]).toList
+        val args = (argsList, castTypes).zipped.map((value, expectedType) => {
+          if (expectedType.equals(value.getType)) {
+            doValue(value)
+          } else {
+            "((" + mangler.typeToStringRef(expectedType) + ")" + doValue(value) + ")"
+          }
+        }).toList
         for (arg <- e.getArgs.asScala) {
           referenceType(arg.getType)
         }
@@ -272,7 +276,13 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
             i match {
               case i: InterfaceInvokeExpr =>
                 doValue(i.getBase) + "->" + mangler.mangleBaseName(e.getMethod) + "(" + argsCall + ")"
-              case i: VirtualInvokeExpr => doValue(i.getBase) + "->" + mangler.mangleBaseName(e.getMethod) + "(" + argsCall + ")"
+              case i: VirtualInvokeExpr =>
+                if (e.getMethod.getDeclaringClass.getName == "java.lang.Object") {
+                  // Required for interfaces not extending Object directly
+                  "((java_lang_Object*)(" + doValue(i.getBase) + "))->" + mangler.mangleBaseName(e.getMethod) + "(" + argsCall + ")"
+                } else {
+                  doValue(i.getBase) + "->" + mangler.mangleBaseName(e.getMethod) + "(" + argsCall + ")"
+                }
               case i: SpecialInvokeExpr =>
                 doValue(i.getBase) + "->" + mangler.mangle(i.getMethod.getDeclaringClass) + "::" + mangler.mangleBaseName(e.getMethod) + "(" + argsCall + ")"
             }

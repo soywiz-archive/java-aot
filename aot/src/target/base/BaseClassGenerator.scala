@@ -74,6 +74,7 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
     declaration += "class " + mangler.mangle(clazz)
     val extendItems = new ListBuffer[String]
     if (clazz.hasSuperclass && !clazz.isInterface) extendItems.append("public " + mangler.mangle(clazz.getSuperclass))
+    //if (clazz.hasSuperclass) extendItems.append("public " + mangler.mangle(clazz.getSuperclass))
     for (interface <- clazz.getInterfaces.asScala) extendItems.append("public " + mangler.mangle(interface))
     if (extendItems.nonEmpty) declaration += " : " + extendItems.mkString(", ")
     declaration += " {\n"
