@@ -68,7 +68,11 @@ int32 libgame_GL::useProgram(int program) {
     return 0;
 }
 
-GLfloat vVertices[] = {0.0f, 0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f};
+GLfloat vVertices[] = {
+    0.0f, 0.5f, 0.0f,
+    -0.5f, -0.5f, 0.0f,
+    0.5f, -0.5f, 0.0f
+};
 
 void libgame_GL::initTest() {
     glDisable(GL_DEPTH_TEST);
@@ -88,10 +92,11 @@ void libgame_GL::initTest() {
     float lookat_x = 0.0f;
     float lookat_y = 0.0f;
     float lookat_z = 0.0f;
-    gluLookAt(camera_x, camera_y, camera_z, lookat_x, lookat_y, lookat_z, up_x,     up_y,     up_z);
+    gluLookAt(camera_x, camera_y, camera_z, lookat_x, lookat_y, lookat_z, up_x, up_y, up_z);
 }
 
 void libgame_GL::drawTestTriangle() {
+/*
     glBegin(GL_TRIANGLES);
         glColor3f(1.0f, 0.0f, 0.0f);
         glVertex3f(0.0f, 0.0f, 0.0f);
@@ -102,7 +107,7 @@ void libgame_GL::drawTestTriangle() {
         glColor3f(0.0f, 0.0f, 1.0f);
         glVertex3f(0.0f, 0.3f, 0.0f);
     glEnd();
-
+*/
     /*
     glBegin( GL_QUADS );
         glVertex2f( -0.5f, -0.5f );
@@ -111,9 +116,18 @@ void libgame_GL::drawTestTriangle() {
         glVertex2f( -0.5f, 0.5f );
     glEnd();
     */
-    /*
+    ///*
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vVertices);
     glEnableVertexAttribArray(0);
     glDrawArrays(GL_TRIANGLES, 0, 3);
-    */
+    //*/
+}
+
+void libgame_GL::drawTestTriangles(Array<float32>* vertices) {
+    int floats = vertices->len;
+    int vcount = floats / 3;
+    float* vptr = vertices->items;
+    glVertexAttribPointer(0, vcount, GL_FLOAT, GL_FALSE, 0, vptr);
+    glEnableVertexAttribArray(0);
+    glDrawArrays(GL_TRIANGLES, 0, vcount);
 }

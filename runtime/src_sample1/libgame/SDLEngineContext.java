@@ -5,11 +5,17 @@ import jflash.backend.RawEngineContext;
 import jflash.util.Color;
 
 public class SDLEngineContext extends RawEngineContext {
+    static float[] vertices = {
+        0.0f, 0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f
+    };
+
     @Override
     public void drawSolid(int width, int height, Color color) {
         System.out.println("drawSolid(" + width + ", " + height + ")");
         //GL.drawSimple();
-        GL.drawTestTriangle();
+        GL.drawTestTriangles(vertices);
         super.drawSolid(width, height, color);
     }
 

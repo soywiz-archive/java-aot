@@ -53,4 +53,5 @@ public class GL {
 
     static public native void initTest();
     static public native void drawTestTriangle();
+    static public native void drawTestTriangles(float[] vertices);
 }
