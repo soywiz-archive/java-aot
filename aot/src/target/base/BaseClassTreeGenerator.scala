@@ -26,6 +26,7 @@ abstract class BaseClassTreeGenerator(runtimeProvider:RuntimeProvider, mangler:B
   def createClassGenerator(item:SootClass):BaseClassGenerator
 
   def run(mainClass:String) = {
+    enqueue(mainClass)
     val utf8 = Charset.forName("UTF-8")
     val outputPath = System.getProperty("java.io.tmpdir")
 

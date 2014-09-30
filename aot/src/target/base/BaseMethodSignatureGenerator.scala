@@ -14,10 +14,7 @@ class BaseMethodSignatureGenerator(method: SootMethod, mangler:BaseMangler) {
     if (method.isStatic) {
       declaration += "static "
     } else {
-      //declaration += "virtual "
-      if (method.isAbstract) {
-        declaration += "virtual "
-      }
+      declaration += "virtual "
     }
     declaration += s"$returnType $mangledBaseName($params)"
     if (method.isAbstract) {
