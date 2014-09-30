@@ -8,14 +8,29 @@ public class SDLEngineContext extends RawEngineContext {
     @Override
     public void drawSolid(int width, int height, Color color) {
         System.out.println("drawSolid(" + width + ", " + height + ")");
+        //GL.drawSimple();
+        GL.drawTestTriangle();
         super.drawSolid(width, height, color);
     }
+
+    int program;
 
     @Override
     public void loop(Component root) {
         SDL.init();
+
         SDLWindow win = SDL.createWindow("Hello SDL from java-aot!", 640, 480);
         SDLRenderer renderer = win.createRenderer();
+
+        GL.initTest();
+        /*
+        program = GL.createProgram(
+                "attribute vec4 vPosition; void main() { gl_Position = vPosition; }",
+                "precision mediump float; void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }"
+        );
+        GL.useProgram(program);
+        */
+
         boolean running = true;
         while (true) {
             SDLEvent event;

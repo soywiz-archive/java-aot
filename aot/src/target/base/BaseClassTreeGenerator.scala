@@ -34,8 +34,10 @@ abstract class BaseClassTreeGenerator(runtimeProvider:RuntimeProvider, mangler:B
     val file_separator = System.getProperty("file.separator")
 
     val java_runtime_classes_path = runtimeProvider.java_runtime_classes_path
-    FileBytes.write(new File(s"$outputPath/types.cpp"), FileBytes.read(new File(s"$java_runtime_classes_path/types.cpp")))
-    FileBytes.write(new File(s"$outputPath/types.h"), FileBytes.read(new File(s"$java_runtime_classes_path/types.h")))
+
+    for (file <- List("types.cpp", "types.h", "gl.cpp")) {
+      FileBytes.write(new File(s"$outputPath/$file"), FileBytes.read(new File(s"$java_runtime_classes_path/$file")))
+    }
 
     val frameworks = new mutable.HashSet[String]
     val libraries = new mutable.HashSet[String]

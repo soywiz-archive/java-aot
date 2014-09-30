@@ -15,7 +15,6 @@ public class SDLWindow {
         return new SDLRenderer(SDLApi.createRenderer(id));
     }
 
-
     public void dispose() {
         SDLApi.destroyWindow(id);
     }

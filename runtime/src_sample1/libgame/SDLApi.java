@@ -11,13 +11,18 @@ import libcore.CPPMethod;
     header = "#include <SDL.h>"
 )
 class SDLApi {
-    @CPPMethod("void libgame_SDLApi::init() { SDL_Init(SDL_INIT_EVERYTHING); }")
+    @CPPMethod("void libgame_SDLApi::init() {" +
+            "SDL_Init(SDL_INIT_EVERYTHING);" +
+            "SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);\n" +
+            "SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);" +
+            "}")
     static public native void init();
 
     @CPPMethod(
             "int64 libgame_SDLApi::createWindow(java_lang_String *title, int32 width, int32 height) {" +
                     "   char *title_cptr = JavaString_to_cstr_byte(title);" +
                     "   SDL_Window *win = SDL_CreateWindow(title_cptr, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL);" +
+                    "   SDL_GL_CreateContext(win); SDL_GL_SetSwapInterval(1); \n" +
                     "   delete title_cptr;" +
                     "   return (int64)(void *)win;" +
                     "   " +

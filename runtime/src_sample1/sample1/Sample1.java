@@ -1,10 +1,10 @@
 package sample1;
 
-import jflash.backend.EngineContext;
 import jflash.display.Quad;
 import jflash.display.Stage;
 import jflash.util.Color;
 import libcore.Native;
+import libgame.GL;
 import libgame.SDLEngineContext;
 //import libgame.*;
 
