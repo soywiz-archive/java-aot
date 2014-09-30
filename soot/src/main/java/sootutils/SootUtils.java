@@ -10,6 +10,7 @@ import soot.SootClass;
 import soot.SootField;
 import soot.SootMethod;
 import soot.Unit;
+import soot.jimple.internal.JInvokeStmt;
 import soot.options.Options;
 
 public class SootUtils {
@@ -47,23 +48,34 @@ public class SootUtils {
 		Options.v().setPhaseOption("jop.ule", "enabled:false");
 		Scene.v().loadNecessaryClasses();
 	}
-	
+
 	public static void visit(SootVisitor sootVisitor, String className) {
 		SootClass sootClass = Scene.v().loadClassAndSupport(className);
-		
+
 		sootVisitor.on(sootClass);
-		
+
 		for (SootField sootField : sootClass.getFields()) {
 			sootVisitor.on(sootClass, sootField);
 		}
-		
+
 		for (SootMethod sootMethod : sootClass.getMethods()) {
-			sootVisitor.on(sootClass, sootMethod);
-			
-			Body body = sootMethod.retrieveActiveBody();
-			for (Unit unit : body.getUnits()) {
+			visit(sootVisitor, sootMethod);
+		}
+	}
+
+	public static void visit(SootVisitor sootVisitor, SootMethod sootMethod) {
+		SootClass sootClass = sootMethod.getDeclaringClass();
+		
+		sootVisitor.on(sootClass, sootMethod);
+
+		Body body = sootMethod.retrieveActiveBody();
+		for (Unit unit : body.getUnits()) {
+			if (unit instanceof JInvokeStmt) {
+				sootVisitor.on(sootClass, sootMethod, (JInvokeStmt) unit);
+			} else {
 				sootVisitor.on(sootClass, sootMethod, unit);
 			}
 		}
+
 	}
 }
