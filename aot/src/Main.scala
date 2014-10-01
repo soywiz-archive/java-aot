@@ -27,7 +27,8 @@ object Main extends App {
     val entryPoint = "sample1.Sample1"
     val dependencies = getRefClassesTree(entryPoint)
 
-    for (dependency <- dependencies) {
+    for (dependency <- dependencies.reverse) {
+      //println(dependency)
       generator.enqueue(dependency)
     }
     generator.run(entryPoint)
@@ -91,16 +92,20 @@ object Main extends App {
       for (arg <- kind.getArgumentTypes) processType(arg)
     }
 
+    def processClassName(className:String): Unit = {
+      processType(Type.getType("L" + className + ";"))
+    }
+
     if (cn.superName != null) {
-      processType(Type.getType(cn.superName))
+      processClassName(cn.superName)
     }
 
     for (interfaceName <- cn.interfaces.asScala.map(_.asInstanceOf[String])) {
-      processType(Type.getType(interfaceName))
+      processClassName(interfaceName)
     }
 
     for (innerClass <- cn.innerClasses.asScala.map(_.asInstanceOf[InnerClassNode])) {
-      processType(Type.getType(innerClass.name))
+      processClassName(innerClass.name)
     }
 
     for (field <- cn.fields.asScala.map(_.asInstanceOf[FieldNode])) {
@@ -120,7 +125,7 @@ object Main extends App {
             if (i.desc.startsWith("[")) {
               processType(Type.getType(i.desc))
             } else {
-              processType(Type.getType(s"L${i.desc};"))
+              processClassName(i.desc)
             }
           case i:MethodInsnNode =>
             //if (method.name == "children") println("  + " + i.desc)
@@ -130,7 +135,7 @@ object Main extends App {
             processMethodType(Type.getType(i.desc))
           case i:FieldInsnNode =>
             //if (method.name == "children") println("  + " + i.owner + " : " + i.desc)
-            processType(Type.getType("L" + i.owner + ";"))
+            processClassName(i.owner)
             processType(Type.getType(i.desc))
           case _ =>
         }

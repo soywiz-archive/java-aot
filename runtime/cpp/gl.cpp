@@ -39,6 +39,10 @@ int myCreateShader(char* shaderSrc, int type) {
 int32 libgame_GL::createProgram(java_lang_String *vs, java_lang_String *fs) {
     char* vs_str = JavaString_to_cstr_byte(vs);
     char* fs_str = JavaString_to_cstr_byte(fs);
+
+    printf("vs:'%s'\n", vs_str);
+    printf("fs:'%s'\n", fs_str);
+
     int vertexShader = myCreateShader(vs_str, GL_VERTEX_SHADER);
     int fragmentShader = myCreateShader(fs_str, GL_FRAGMENT_SHADER);
     GLuint programObject = glCreateProgram();

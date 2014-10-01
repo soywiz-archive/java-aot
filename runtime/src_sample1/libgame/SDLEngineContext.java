@@ -29,13 +29,11 @@ public class SDLEngineContext extends RawEngineContext {
         SDLRenderer renderer = win.createRenderer();
 
         GL.initTest();
-        /*
         program = GL.createProgram(
-                "attribute vec4 vPosition; void main() { gl_Position = vPosition; }",
-                "precision mediump float; void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }"
+            "attribute vec4 vPosition; void main() { gl_Position = vPosition; }",
+            "/*precision mediump float;*/ void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }"
         );
         GL.useProgram(program);
-        */
 
         boolean running = true;
         while (true) {

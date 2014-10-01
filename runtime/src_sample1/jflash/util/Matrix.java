@@ -127,11 +127,12 @@ public class Matrix {
         ty *= sy;
     }
 
+    static private Matrix translateM = new Matrix();
+
     public void translate(float dx, float dy) {
-        Matrix m = new Matrix();
-        m.tx = dx;
-        m.ty = dy;
-        this.concat(m);
+        translateM.tx = dx;
+        translateM.ty = dy;
+        this.concat(translateM);
     }
 
     public Point transformPoint(Point pos) {
