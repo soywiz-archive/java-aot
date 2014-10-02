@@ -31,6 +31,7 @@ object Main extends App {
       //println(dependency)
       generator.enqueue(dependency)
     }
+    generator.enqueue("java.lang.StringBuilder")
     generator.run(entryPoint)
   }
 

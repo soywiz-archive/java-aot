@@ -15,8 +15,8 @@ object CppMangler extends BaseMangler {
 
   override def typeToStringRef(kind:Type): String = {
     kind match {
-      case r:RefType => typeToStringNoRef(kind) + "*"
-      case r:ArrayType => typeToStringNoRef(kind) + "*"
+      case r:RefType => "std::shared_ptr< " + typeToStringNoRef(kind) + " >"
+      case r:ArrayType => "std::shared_ptr< " + typeToStringNoRef(kind) + " >"
       case _ => typeToStringNoRef(kind)
     }
   }
@@ -37,7 +37,7 @@ object CppMangler extends BaseMangler {
           case v:DoubleType => "float64"
         }
       //case r:ArrayType if r.getElementType.isInstanceOf[RefType] => "Array<java_lang_Object*>"
-      case r:ArrayType => "Array<" + typeToStringRef(r.getElementType) + ">"
+      case r:ArrayType => "Array< " + typeToStringRef(r.getElementType) + " >"
       case r:RefType => mangleClassName(r.getClassName)
     }
   }

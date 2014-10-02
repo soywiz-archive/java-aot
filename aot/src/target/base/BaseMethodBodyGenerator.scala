@@ -57,7 +57,7 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
     }
 
     var bodyString = "\n"
-    if (usingExceptions) bodyString += "java_lang_Throwable* __caughtexception;"
+    if (usingExceptions) bodyString += "std::shared_ptr< java_lang_Throwable > __caughtexception;"
     for (local2 <- locals) {
       val (local, name) = local2
       bodyString += doVariableAllocation(local.getType, name)
@@ -101,7 +101,7 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
     if (endCatchList.contains(unit)) {
       for (item <- endCatchList(unit)) {
         val (trapId, trapType) = item
-        out += "} catch (" + mangler.mangle(trapType) + s"* __caughtexception__) { __caughtexception = __caughtexception__; goto exception_handler_$trapId; }\n"
+        out += "} catch (std::shared_ptr<" + mangler.mangle(trapType) + s"> __caughtexception__) { __caughtexception = __caughtexception__; goto exception_handler_$trapId; }\n"
       }
     }
 
@@ -135,10 +135,11 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
               doValue(s.getLeftOp) + " = " + doValue(s.getRightOp) + ";"
             } else {
               // Exceptions for example!
-              doValue(s.getLeftOp) + " = ((" + mangler.typeToStringRef(s.getLeftOp.getType) + ")" + doValue(s.getRightOp) + ");"
+              doValue(s.getLeftOp) + " = " + doCast(s.getRightOp.getType, s.getLeftOp.getType, s.getRightOp) + ";"
             }
         }
-      case s: ReturnStmt => "return " + doValue(s.getOp) + ";"
+      case s: ReturnStmt =>
+        "return " + doCastIfNeeded(method.getReturnType, s.getOp) + ";"
       case s: ReturnVoidStmt => "return;"
       case s: IfStmt => s"if (" + doValue(s.getCondition) + ") { goto " + labels(s.getTarget) + "; }"
       case s: LookupSwitchStmt =>
@@ -174,7 +175,9 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
       case t: Local => allocateLocal(t)
       case t: Immediate =>
         t match {
-          case c: NullConstant => "NULL"
+          case c: NullConstant =>
+            //doWrapRefType(value.getType, "NULL")
+            "std::shared_ptr<void*>(NULL)"
           case c: IntConstant => t.toString
           case c: LongConstant => t.toString
           case c: FloatConstant => t.toString
@@ -182,7 +185,7 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
           case c: StringConstant => "cstr_to_JavaString(L\"" + escapeString(c.value) + "\")"
           case c: ClassConstant => "NULL /* ClassConstant:" + c.getValue + "*/"
         }
-      case t: ThisRef => "this"
+      case t: ThisRef => doWrapRefType(method.getDeclaringClass, "this")
       case t: ParameterRef => getParamName(t.getIndex)
       case t: CaughtExceptionRef =>
         referenceType(t.getType)
@@ -248,10 +251,11 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
         doInstanceof(e.getType, e.getCheckType, e.getOp)
       case e: NewExpr =>
         referenceType(e.getType)
-        "new " + mangler.typeToStringNoRef(e.getType) + "()"
+        val newType = mangler.typeToStringNoRef(e.getType)
+        s"std::shared_ptr< $newType >(new $newType())"
       case e: NewArrayExpr =>
-        referenceType(e.getType)
-        "new " + mangler.typeToStringNoRef(e.getType) + "(" + doValue(e.getSize) + ")"
+        referenceType(e.getType.getArrayType)
+        "std::shared_ptr< " + mangler.typeToStringNoRef(e.getType) + " >(new " + mangler.typeToStringNoRef(e.getType) + "(" + doValue(e.getSize) + "))"
       case e: NewMultiArrayExpr =>
         referenceType(e.getType)
         "new " + mangler.typeToStringNoRef(e.getType) + (0 to e.getSizeCount - 1).map(i => "[" + e.getSize(i) + "]").mkString
@@ -279,7 +283,7 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
               case i: VirtualInvokeExpr =>
                 if (e.getMethod.getDeclaringClass.getName == "java.lang.Object") {
                   // Required for interfaces not extending Object directly
-                  "((java_lang_Object*)(" + doValue(i.getBase) + "))->" + mangler.mangleBaseName(e.getMethod) + "(" + argsCall + ")"
+                  "((std::dynamic_pointer_cast<java_lang_Object>)(" + doValue(i.getBase) + "))->" + mangler.mangleBaseName(e.getMethod) + "(" + argsCall + ")"
                 } else {
                   doValue(i.getBase) + "->" + mangler.mangleBaseName(e.getMethod) + "(" + argsCall + ")"
                 }
@@ -292,8 +296,29 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
     }
   }
 
+  def doWrapRefType(toType:SootClass, value: String): String = {
+    "std::shared_ptr< " + mangler.mangle(toType) + " >(" + value + ")"
+  }
+
+  def doWrapRefType(toType:Type, value: String): String = {
+    "std::shared_ptr< " + mangler.typeToStringNoRef(toType) + " >(" + value + ")"
+  }
+
+  def doCastIfNeeded(toType:Type, value:Value): String = {
+    if (value.getType.equals(toType)) {
+      doValue(value)
+    } else {
+      doCast(value.getType, toType, value)
+    }
+  }
+
   def doCast(fromType:Type, toType:Type, value:Value): String = {
-    "((" + mangler.typeToStringRef(toType) + ")" + doValue(value) + ")"
+    //"((" + mangler.typeToStringRef(toType) + ")" + doValue(value) + ")"
+    if (mangler.isRefType(toType)) {
+      "(std::dynamic_pointer_cast< " + mangler.typeToStringNoRef(toType) + " >(" + doValue(value) + "))"
+    } else {
+      "((" + mangler.typeToStringRef(toType) + ")" + doValue(value) + ")"
+    }
   }
 
   def doInstanceof(baseType:Type, checkType:Type, value:Value): String = {
@@ -301,11 +326,14 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
   }
 
   def doBinop(kind:Type, left:Value, right:Value, op:String): String = {
-    val l = doValue(left)
-    val r = doValue(right)
+    var l = doValue(left)
+    var r = doValue(right)
+    if (mangler.isRefType(left.getType)) l = s"$l.get()"
+    if (mangler.isRefType(right.getType)) r = s"$r.get()"
     op match {
       case "cmp" | "cmpl" | "cmpg" => s"$op($l, $r)"
-      case _ => s"$l $op $r"
+      case _ =>
+        s"$l $op $r"
     }
   }
 

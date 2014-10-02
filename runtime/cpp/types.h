@@ -2,6 +2,7 @@
 #define types_h_def
 #include <stdio.h>
 #include <stdlib.h>
+#include <memory>
 
 typedef signed char int8;
 typedef signed short int16;
@@ -15,11 +16,11 @@ class java_lang_Object;
 class java_lang_Class;
 
 class java_lang_Object {
-    public:  void __init__();
-    public:  bool equals(java_lang_Object* p0);
-    public:  int32 hashCode();
-    public:  java_lang_Class* getClass();
-    public:  java_lang_String* toString();
+    public: void __init__();
+    public: bool equals(std::shared_ptr<java_lang_Object> p0);
+    public: int32 hashCode();
+    public: std::shared_ptr<java_lang_Class> getClass();
+    public: std::shared_ptr<java_lang_String> toString();
 };
 
 class ArrayBase : public java_lang_Object {
@@ -32,30 +33,40 @@ template <class T> class Array : public ArrayBase {
 public:
     T* items;
     int len;
+    int alloc;
 
     Array(int len) {
-        this->items = new T[len + 1];
+        int len1 = len + 1;
+        this->items = new T[len1];
+        this->alloc = 1;
         this->len = len;
-        for (int n = 0; n < len + 1; n++) this->items[n] = 0;
+        memset(0, len1, sizeof(T));
+        //for (int n = 0; n < len1; n++) this->items[n] = 0;
+    }
+
+    ~Array() {
+        if (alloc) {
+            delete this->items;
+            this->items = NULL;
+            this->len = 0;
+            this->alloc = 0;
+        }
     }
 
     Array(T* items, int len) {
         this->items = items;
         this->len = len;
+        this->alloc = 0;
     }
     Array(const T* items, int len) {
         this->items = (T*)items;
         this->len = len;
+        this->alloc = 0;
     }
 
-    void set(int index, T value) {
-        items[index] = value;
-    }
+    int size() { return len; }
 
-    int size() {
-        return len;
-    }
-
+    void set(int index, T value) { items[index] = value; }
     T& get(int index) {
         if (index < 0 || index >= len) {
             fprintf(stderr, "Array access out of bounds index(%d) bounds(0, %d)", index, len);
@@ -64,23 +75,15 @@ public:
         return items[index];
     }
 
-    T& operator[](int index) {
-        return items[index];
-    }
-
-    void __set_object(int index, void* value) {
-        items[index] = (T)(int64)(void *)(value);
-    }
-
-    void* __get_object(int index) {
-        return (void *)(int64)items[index];
-    }
-
+    T& operator[](int index) { return items[index]; }
+    void __set_object(int index, void* value) { items[index] = (T)(int64)(void *)(value); }
+    void* __get_object(int index) { return (void *)(int64)items[index]; }
 };
 
-java_lang_String* cstr_to_JavaString(const wchar_t* str);
-wchar_t* JavaString_to_cstr(java_lang_String*  str);
-char* JavaString_to_cstr_byte(java_lang_String*  str);
+std::shared_ptr<java_lang_String> cstr_to_JavaString(const wchar_t* str);
+std::shared_ptr<java_lang_String> cstr_byte_to_JavaString(const char* str);
+wchar_t* JavaString_to_cstr(std::shared_ptr<java_lang_String> str);
+char* JavaString_to_cstr_byte(std::shared_ptr<java_lang_String> str);
 
 int32 cmp(int64 l, int64 r);
 

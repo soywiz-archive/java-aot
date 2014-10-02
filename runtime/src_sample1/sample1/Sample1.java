@@ -27,6 +27,9 @@ public class Sample1 {
     }
 
 	static public int main(String[] args) {
+        System.out.println("Hello world!");
+        //libcore.Native.putchar('H');
+        //return -1;
 		int[] list = new int[10];
 
 		list[0] = 1;
@@ -108,32 +111,6 @@ public class Sample1 {
         });
 
         context.loop(stage);
-
-        /*
-        SDL.init();
-        SDLWindow win = SDL.createWindow("Hello SDL from java-aot!", 640, 480);
-        SDLRenderer renderer = win.createRenderer();
-        boolean running = true;
-        while (true) {
-            SDLEvent event;
-            while ((event = SDL.pollEvent()) != null) {
-                if (event.getType() == SDLEventType.SDL_QUIT) {
-                    running = false;
-                    break;
-                }
-                System.out.println("" + event.getCode());
-            }
-
-            if (!running) break;
-
-            GL.clearColor(1f, 1f, 0f, 1f);
-            GL.clear();
-            win.swap();
-            SDL.delay(20);
-        }
-        renderer.dispose();
-        win.dispose();
-        */
 
 		return 0;
 	}
