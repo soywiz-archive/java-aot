@@ -26,6 +26,7 @@
     <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.1" level="project" />
     <orderEntry type="module" module-name="soot" />
     <orderEntry type="library" name="Maven: org.ow2.asm:asm-all:5.0.3" level="project" />
+    <orderEntry type="module" module-name="runtime" />
   </component>
 </module>
 

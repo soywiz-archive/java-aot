@@ -3,6 +3,7 @@
 #include <wchar.h>
 #include <math.h>
 #include <sys/time.h>
+#include <memory>
 
 #include "types.h"
 #include "java_lang_String.h"

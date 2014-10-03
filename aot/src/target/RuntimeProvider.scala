@@ -9,6 +9,7 @@ class RuntimeProvider {
 
   val java_runtime_classes_path = s"$javaAotProjectPath/../../out_runtime"
   val java_sample1_classes_path = s"$javaAotProjectPath/../../out_sample1"
+  val cpp_classes_path = s"$javaAotProjectPath/../../out_cpp"
 
   def getClassPath(className:String): String = {
     return java_runtime_classes_path + "/" + className.replace('.', '/') + ".class"

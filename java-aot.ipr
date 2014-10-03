@@ -49,6 +49,11 @@
         <option value="$PROJECT_DIR$/pom.xml" />
       </list>
     </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/pom.xml" />
+      </set>
+    </option>
   </component>
   <component name="Palette2">
     <group name="Swing">
@@ -174,7 +179,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/aot/aot.iml" filepath="$PROJECT_DIR$/aot/aot.iml" />
-      <module fileurl="file://$PROJECT_DIR$/java-aot-pom.iml" filepath="$PROJECT_DIR$/java-aot-pom.iml" />
+      <module fileurl="file://$PROJECT_DIR$/runtime/runtime.iml" filepath="$PROJECT_DIR$/runtime/runtime.iml" />
       <module fileurl="file://$PROJECT_DIR$/soot/soot.iml" filepath="$PROJECT_DIR$/soot/soot.iml" />
     </modules>
   </component>
@@ -182,7 +187,7 @@
     <output url="file://$PROJECT_DIR$/out" />
   </component>
   <component name="VcsDirectoryMappings">
-    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="" vcs="" />
   </component>
   <component name="libraryTable">
     <library name="Maven: org.ow2.asm:asm-all:5.0.3">

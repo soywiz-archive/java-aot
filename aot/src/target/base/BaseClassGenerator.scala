@@ -120,7 +120,7 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
       if (result.definition != null) {
         definition += result.definition + "\n"
       } else {
-        definition += "// Native method: " + result.method + "\n"
+        definition += s"// Not implemented method: {$result.method} (abstract, interface or native)\n"
       }
     }
 
