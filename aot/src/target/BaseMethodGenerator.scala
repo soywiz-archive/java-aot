@@ -1,14 +1,13 @@
-package target.base
+package target
 
+import _root_.util.SootUtils
 import soot._
-import soot.jimple._
-import target.SootUtils
+import target.result.MethodResult
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 abstract class BaseMethodGenerator(method: SootMethod, mangler: BaseMangler) {
-  val bodyGenerator:BaseMethodBodyGenerator
+  val bodyGenerator:TargetBase
   val signatureGenerator:BaseMethodSignatureGenerator
 
   def doMethod(): MethodResult = {
@@ -18,7 +17,7 @@ abstract class BaseMethodGenerator(method: SootMethod, mangler: BaseMangler) {
       if (method.isAbstract || method.isNative) {
         SootUtils.getTag(method.getTags.asScala, "Llibcore/CPPMethod;", "value").asInstanceOf[String]
       } else {
-        signatureGenerator.generateBody(bodyGenerator.generateBody())
+        signatureGenerator.generateBody(bodyGenerator.doMethodBody())
       }
     }
 

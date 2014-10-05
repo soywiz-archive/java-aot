@@ -1,10 +1,8 @@
-package target
+package util
 
-import java.io.{File, IOException, BufferedReader, InputStreamReader}
+import java.io.File
 
-import scala.io.Source
-import scala.sys.process._
-import scala.sys.process.ProcessLogger
+import scala.sys.process.{ProcessLogger, _}
 
 object ProcessUtils {
   def runAndRedirect(command:String, currentDir:File): Int = {

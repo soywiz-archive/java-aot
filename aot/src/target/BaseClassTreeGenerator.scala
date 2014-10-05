@@ -1,10 +1,11 @@
-package target.base
+package target
 
 import java.io.File
 import java.nio.charset.Charset
 
 import soot.{Scene, SootClass}
-import target.{RuntimeProvider, ProcessUtils, FileBytes, OS}
+import target.result.StaticConstructorResult
+import util.{FileBytes, RuntimeProvider}
 
 import scala.collection.mutable
 

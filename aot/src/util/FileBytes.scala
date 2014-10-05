@@ -1,6 +1,6 @@
-package target
+package util
 
-import java.io.{FileOutputStream, FileInputStream, File}
+import java.io.{File, FileInputStream, FileOutputStream}
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 

@@ -1,4 +1,4 @@
-package target
+package util
 
 import java.io.File
 
@@ -11,7 +11,5 @@ class RuntimeProvider {
   val java_sample1_classes_path = s"$javaAotProjectPath/../../out_sample1"
   val cpp_classes_path = s"$javaAotProjectPath/../../out_cpp"
 
-  def getClassPath(className:String): String = {
-    return java_runtime_classes_path + "/" + className.replace('.', '/') + ".class"
-  }
+  def getClassPath(className:String): String = java_runtime_classes_path + "/" + className.replace('.', '/') + ".class"
 }

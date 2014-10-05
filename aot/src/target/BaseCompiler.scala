@@ -1,11 +1,11 @@
-package target.base
+package target
 
 import java.io.File
 import java.nio.charset.Charset
 
 import soot.SootClass
-import target.cpp.build.BuildMacOS
-import target.{RuntimeProvider, ProcessUtils, OS, FileBytes}
+import target.result.StaticConstructorResult
+import util.{FileBytes, OS, ProcessUtils, RuntimeProvider}
 
 import scala.collection.mutable
 
@@ -88,7 +88,7 @@ class BaseCompiler(runtimeProvider:RuntimeProvider, mangler:BaseMangler) {
     if (result) {
       if (OS.isMac) {
         val png512 = FileBytes.read(new File(runtimeProvider.java_runtime_classes_path + "/emptyicon.png"))
-        BuildMacOS.createAPP(s"$outputPath/test.app", "sampleapp", FileBytes.read(new File(outputExecutableFile)), png512)
+        CppGeneratorBuildMacOS.createAPP(s"$outputPath/test.app", "sampleapp", FileBytes.read(new File(outputExecutableFile)), png512)
       }
     }
 

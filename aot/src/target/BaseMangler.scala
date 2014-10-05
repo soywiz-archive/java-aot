@@ -1,4 +1,4 @@
-package target.base
+package target
 
 import soot._
 

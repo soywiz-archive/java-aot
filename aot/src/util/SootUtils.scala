@@ -1,10 +1,11 @@
-package target
+package util
 
 import java.io.File
 
 import soot.Scene
 import soot.options.Options
 import soot.tagkit.{AnnotationElem, AnnotationStringElem, Tag, VisibilityAnnotationTag}
+
 import scala.collection.JavaConverters._
 
 object SootUtils {
