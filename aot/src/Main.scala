@@ -1,4 +1,4 @@
-import target.TargetCpp
+import target.{TargetAs3, TargetCpp}
 import util.{ClassDependencyWalker, OS, RuntimeProvider, SootUtils}
 import vfs.FileVfsNode
 
@@ -14,14 +14,15 @@ object Main extends App {
 
   val entryPoint = "sample1.Sample1"
 
-  //val generator = new As3ClassTreeGenerator()
-  val target = new TargetCpp()
+  //val target = new TargetCpp()
+  val target = new TargetAs3()
   print("Calculating dependency tree...")
   val dependencies = new ClassDependencyWalker(runtimeProvider).getRefClassesTree(entryPoint)
   //dependencies.sorted.foreach(println)
   println("" + dependencies.length + "...Ok")
+  println(s"target:${target.targetName}")
 
   //System.exit(-1)
 
-  target.buildAndRun(dependencies, entryPoint, runtimeProvider, new FileVfsNode(runtimeProvider.cpp_classes_path))
+  target.buildAndRun(dependencies, entryPoint, runtimeProvider, new FileVfsNode(s"${runtimeProvider.project_root}/out_${target.targetName}"))
 }

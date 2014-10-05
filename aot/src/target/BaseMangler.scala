@@ -23,13 +23,10 @@ trait BaseMangler {
 
   def typeToStringNoRef(kind:Type): String
 
-  def mangleBaseName(method: SootMethod): String = {
-    val name = method.getName
-    name.replace('.', '_').replace('(', '_').replace(')', '_').replace("<", "__").replace(">", "__").replace(" ", "")
+  def escapeSpecialChars(name: String): String = {
+    name.replace('.', '_').replace(',', '_').replace('(', '_').replace(')', '_').replace("<", "__").replace(">", "__").replace("[]", "$Array").replace("[", "_").replace("]", "_").replace(" ", "")
   }
 
-  def mangleFullName(method: SootMethod): String = {
-    val name = method.getDeclaringClass.getName + "::" + method.getName
-    name.replace('.', '_').replace('(', '_').replace(')', '_').replace("<", "__").replace(">", "__").replace(" ", "")
-  }
+  def mangleMethodName(method: SootMethod): String = escapeSpecialChars(method.getName)
+  def mangleFullMethodName(method: SootMethod): String = escapeSpecialChars(method.getDeclaringClass.getName) + "::" + mangleMethodName(method)
 }

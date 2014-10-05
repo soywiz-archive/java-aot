@@ -13,7 +13,9 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
-class TargetCpp extends TargetBase {
+class TargetCpp extends Target {
+  val targetName = "cpp"
+
   override def generateProject(context: BaseProjectContext): scala.Unit = {
     val runtimeVfs = context.runtime.runtimeClassesVfs
     val outputVfs = context.output
@@ -148,7 +150,7 @@ class TargetCpp extends TargetBase {
   def doMethodDeclaration(context:BaseMethodContext): String = {
     val method = context.method
     val returnType = mangler.typeToStringRef(method.getReturnType)
-    val mangledBaseName = mangler.mangleBaseName(method)
+    val mangledBaseName = mangler.mangleMethodName(method)
     val params = getMethodParams(method)
 
     val visibility = mangler.visibility(method) + ": "
@@ -160,7 +162,7 @@ class TargetCpp extends TargetBase {
   def doMethodDefinitionHead(context:BaseMethodContext): String = {
     val method = context.method
     val returnType = mangler.typeToStringRef(method.getReturnType)
-    val mangledFullName = mangler.mangleFullName(method)
+    val mangledFullName = mangler.mangleFullMethodName(method)
     val params = getMethodParams(method)
     s"$returnType $mangledFullName($params)"
   }
@@ -327,7 +329,6 @@ class TargetCpp extends TargetBase {
   // negate is - or ~
   override def doNegate(value:Value, context:BaseMethodContext):String = "-(" + doValue(value, context) + ")"
   override def doLength(value:Value, context:BaseMethodContext):String = "((" + doValue(value, context) + ")->size())"
-  override def doStringLiteral(s: String, context:BaseMethodContext): String = "cstr_to_JavaString(L\"" + escapeString(s) + "\")"
   override def doVariableAllocation(kind:Type, name:String, context:BaseMethodContext):String = {
     mangler.typeToStringRef(kind) + " " + name + ";\n"
   }
@@ -337,8 +338,8 @@ class TargetCpp extends TargetBase {
     "new " + mangler.typeToStringNoRef(kind) + "(" + doValue(size, context) + ")"
   }
 
-  override def doNewMultiArray(kind: Type, values: Array[Value], context:BaseMethodContext): String = {
-    "new " + mangler.typeToStringNoRef(kind) + values.map(i => "[" + doValue(i, context) + "]").mkString
+  override def doNewMultiArray(kind: Type, sizes: Array[Value], context:BaseMethodContext): String = {
+    "new " + mangler.typeToStringNoRef(kind) + sizes.map(i => "[" + doValue(i, context) + "]").mkString
   }
 
   override def doNop(context:BaseMethodContext): String = s";"
@@ -371,7 +372,7 @@ class TargetCpp extends TargetBase {
   override def doConstantLong(value: Long, context:BaseMethodContext): String = s"${value}L"
   override def doConstantFloat(value: Float, context:BaseMethodContext): String = s"${value}f"
   override def doConstantDouble(value: Double, context:BaseMethodContext): String = s"$value"
-  override def doConstantString(value: String, context:BaseMethodContext): String = "cstr_byte_to_JavaString(\"" + escapeString(value) + "\")"
+  override def doConstantString(value: String, context:BaseMethodContext): String = "cstr_to_JavaString(L\"" + escapeString(value) + "\")"
 
   override def doThrow(value: Value, context:BaseMethodContext): String = "throw(" + doValue(value, context) + ");"
   override def doLabel(labelName: String, context:BaseMethodContext): String = s"$labelName:; "
@@ -418,19 +419,19 @@ class TargetCpp extends TargetBase {
   override def doEnterMonitor(value: Value, context:BaseMethodContext): String = "RuntimeEnterMonitor(" + doValue(value, context) + ")"
   override def doExitMonitor(value: Value, context:BaseMethodContext): String = "RuntimeExitMonitor(" + doValue(value, context) + ")"
 
-  override def doInvokeStatic(method: SootMethod, args: Seq[String], context:BaseMethodContext): String = mangler.mangleFullName(method) + "(" + args.mkString(", ") + ")"
+  override def doInvokeStatic(method: SootMethod, args: Seq[String], context:BaseMethodContext): String = mangler.mangleFullMethodName(method) + "(" + args.mkString(", ") + ")"
 
   override def doInvokeInstance(base: Value, method: SootMethod, args: List[String], special:Boolean, context:BaseMethodContext): String = {
     val argsCall = args.mkString(", ")
     if (special) {
-      doValue(base, context) + "->" + mangler.mangle(method.getDeclaringClass) + "::" + mangler.mangleBaseName(method) + "(" + argsCall + ")"
+      doValue(base, context) + "->" + mangler.mangle(method.getDeclaringClass) + "::" + mangler.mangleMethodName(method) + "(" + argsCall + ")"
     } else {
       if (method.getDeclaringClass.getName == "java.lang.Object") {
         // Required for interfaces not extending Object directly
         //"((std::dynamic_pointer_cast<java_lang_Object>)(" + doValue(base, context) + "))->" + mangler.mangleBaseName(method) + "(" + argsCall + ")"
-        "((java_lang_Object *)(" + doValue(base, context) + "))->" + mangler.mangleBaseName(method) + "(" + argsCall + ")"
+        "((java_lang_Object *)(" + doValue(base, context) + "))->" + mangler.mangleMethodName(method) + "(" + argsCall + ")"
       } else {
-        doValue(base, context) + "->" + mangler.mangleBaseName(method) + "(" + argsCall + ")"
+        doValue(base, context) + "->" + mangler.mangleMethodName(method) + "(" + argsCall + ")"
       }
     }
   }
@@ -481,17 +482,14 @@ class TargetCpp extends TargetBase {
       kind match {
         case v:VoidType => "void"
         case v:NullType => "NULL"
-        case prim:PrimType =>
-          prim match {
-            case v:BooleanType => "bool"
-            case v:ByteType => "int8"
-            case v:CharType => "wchar_t"
-            case v:ShortType => "int16"
-            case v:IntType => "int32"
-            case v:LongType => "int64"
-            case v:FloatType => "float32"
-            case v:DoubleType => "float64"
-          }
+        case v:BooleanType => "bool"
+        case v:ByteType => "int8"
+        case v:CharType => "wchar_t"
+        case v:ShortType => "int16"
+        case v:IntType => "int32"
+        case v:LongType => "int64"
+        case v:FloatType => "float32"
+        case v:DoubleType => "float64"
         //case r:ArrayType if r.getElementType.isInstanceOf[RefType] => "Array<java_lang_Object*>"
         case r:ArrayType => "Array< " + typeToStringRef(r.getElementType) + " >"
         case r:RefType => mangleClassName(r.getClassName)

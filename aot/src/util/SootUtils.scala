@@ -2,7 +2,7 @@ package util
 
 import java.io.File
 
-import soot.Scene
+import soot.{SootClass, SootMethod, Scene}
 import soot.options.Options
 import soot.tagkit.{AnnotationElem, AnnotationStringElem, Tag, VisibilityAnnotationTag}
 
@@ -86,5 +86,35 @@ object SootUtils {
       //println(tag.getValue)
     }
     null
+  }
+
+  def classAncestors(clazz:SootClass): List[SootClass] = {
+    def int(clazz:SootClass): List[SootClass] = {
+      if (!clazz.hasSuperclass) {
+        List(clazz)
+      } else {
+        classAncestors(clazz.getSuperclass) :+ clazz
+      }
+    }
+    if (!clazz.hasSuperclass) {
+      List()
+    } else {
+      int(clazz.getSuperclass)
+    }
+  }
+
+  def isMethodOverriding(method:SootMethod): Boolean = {
+    val parameterTypes = method.getParameterTypes
+    val ancestors = classAncestors(method.getDeclaringClass)
+    for (clazz <- ancestors) {
+      try {
+        if (clazz.getMethod(method.getName) != null) {
+          return true
+        }
+      } catch {
+        case _:Throwable =>
+      }
+    }
+    false
   }
 }
