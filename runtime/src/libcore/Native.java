@@ -42,16 +42,16 @@ public class Native {
     static public native void exit(int status);
 
     @CPPMethod(
-        "void libcore_Native::arraycopy(java_lang_Object* src, int srcOfs, java_lang_Object* dest, int destOfs, int len) {\n"+
-        "    if (src == NULL) return;\n"+
-        "    if (dest == NULL) return;\n"+
+        "void libcore_Native::arraycopy(std::shared_ptr<java_lang_Object> src, int srcOfs, std::shared_ptr<java_lang_Object> dest, int destOfs, int len) {\n"+
+        "    if (src.get() == NULL) return;\n"+
+        "    if (dest.get() == NULL) return;\n"+
         "    //Array<int> *src_int = dynamic_cast< Array<int>*>(src);\n"+
         "    //Array<int> *dest_int = dynamic_cast< Array<int>*>(dest);\n"+
         "    //if ((src_int != NULL) && (dest_int != NULL)) {\n"+
         "    //    printf(\"Copying integer list!\\n\");\n"+
         "    //} else {\n"+
-        "        ArrayBase *_src = (ArrayBase *)src;\n"+
-        "        ArrayBase *_dest = (ArrayBase *)dest;\n"+
+        "        ArrayBase *_src = (ArrayBase *)(java_lang_Object*)src.get();\n"+
+        "        ArrayBase *_dest = (ArrayBase *)(java_lang_Object*)dest.get();\n"+
         "        for (int n = 0; n < len; n++) {\n"+
         "            _dest->__set_object(destOfs + n, _dest->__get_object(srcOfs + n));\n"+
         "        }\n"+

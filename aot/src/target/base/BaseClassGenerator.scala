@@ -109,7 +109,7 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
         val mangledFieldType = mangler.typeToStringRef(field.getType)
         val mangledFieldName = mangler.mangle(field)
         if (isRefType) {
-          definition += s"$mangledFieldType $mangledClassType::$mangledFieldName = ($mangledFieldType)(void*)0;\n"
+          definition += s"$mangledFieldType $mangledClassType::$mangledFieldName = $mangledFieldType(NULL);\n"
         } else {
           definition += s"$mangledFieldType $mangledClassType::$mangledFieldName = ($mangledFieldType)0;\n"
         }
@@ -120,7 +120,7 @@ abstract class BaseClassGenerator(clazz: SootClass, mangler:BaseMangler) {
       if (result.definition != null) {
         definition += result.definition + "\n"
       } else {
-        definition += "// Native method: " + result.method + "\n"
+        definition += s"// Not implemented method: {$result.method} (abstract, interface or native)\n"
       }
     }
 

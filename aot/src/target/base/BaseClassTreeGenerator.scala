@@ -28,13 +28,15 @@ abstract class BaseClassTreeGenerator(runtimeProvider:RuntimeProvider, mangler:B
   def run(mainClass:String) = {
     enqueue(mainClass)
     val utf8 = Charset.forName("UTF-8")
-    val outputPath = System.getProperty("java.io.tmpdir")
+    //val outputPath = OS.tempDir
+    val outputPath = runtimeProvider.cpp_classes_path
 
     val cl = this.getClass.getClassLoader
     val file_separator = System.getProperty("file.separator")
 
     val java_runtime_classes_path = runtimeProvider.java_runtime_classes_path
 
+    try { new File(outputPath).mkdirs() } finally {}
     for (file <- List("types.cpp", "types.h", "gl.cpp")) {
       FileBytes.write(new File(s"$outputPath/$file"), FileBytes.read(new File(s"$java_runtime_classes_path/$file")))
     }
@@ -42,7 +44,7 @@ abstract class BaseClassTreeGenerator(runtimeProvider:RuntimeProvider, mangler:B
     val frameworks = new mutable.HashSet[String]
     val libraries = new mutable.HashSet[String]
     val cflagsList = new mutable.ListBuffer[String]
-    var staticConstructors = new mutable.ListBuffer[StaticConstructorResult]
+    val staticConstructors = new mutable.ListBuffer[StaticConstructorResult]
 
     while (toProcessList.length > 0) {
       val item = toProcessList.dequeue()
@@ -67,7 +69,7 @@ abstract class BaseClassTreeGenerator(runtimeProvider:RuntimeProvider, mangler:B
     }
     println("Processed classes: " + processedList.size)
 
-    val (result, executableOutputPath) = compiler.compile(outputPath, libraries, frameworks, cflagsList, processedList, mainClass, staticConstructors)
+    val (result, executableOutputPath) = compiler.compile(runtimeProvider, outputPath, libraries, frameworks, cflagsList, processedList, mainClass, staticConstructors)
     if (result) {
       runner.run(outputPath, executableOutputPath)
     }

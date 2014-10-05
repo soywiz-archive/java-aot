@@ -14,7 +14,7 @@ class BaseCompiler(runtimeProvider:RuntimeProvider, mangler:BaseMangler) {
   private val file_separator = System.getProperty("file.separator")
   private val cl = this.getClass.getClassLoader
 
-  def compile(outputPath:String, libraries:mutable.HashSet[String], frameworks:mutable.HashSet[String], cflagsList:mutable.ListBuffer[String], processedList:mutable.HashSet[SootClass], mainClass:String, staticConstructors:mutable.ListBuffer[StaticConstructorResult]) = {
+  def compile(runtimeProvider:RuntimeProvider, outputPath:String, libraries:mutable.HashSet[String], frameworks:mutable.HashSet[String], cflagsList:mutable.ListBuffer[String], processedList:mutable.HashSet[SootClass], mainClass:String, staticConstructors:mutable.ListBuffer[StaticConstructorResult]) = {
 
     var java_macos_embedded_frameworks = runtimeProvider.java_sample1_classes_path + "/frameworks/cpp"
     if (OS.isWindows) java_macos_embedded_frameworks = "^/+".r.replaceAllIn(java_macos_embedded_frameworks, "")
@@ -22,20 +22,9 @@ class BaseCompiler(runtimeProvider:RuntimeProvider, mangler:BaseMangler) {
     val mainClassName = mangler.mangleClassName(mainClass)
 
     def createMain(): String = {
-      var result = ""
-      result += "#include \"" + mainClassName + ".h\"\n"
-      for (sc <- staticConstructors) {
-        result += "#include \"" + mangler.mangle(sc.clazz) + ".h\"\n"
-      }
-      result += "int main(int argc, char **argv) {\n"
-      result += "printf(\"Start!\\n\");"
-      for (sc <- staticConstructors.reverse) {
-        //result += mangler.mangle(sc.clazz) + "::__clinit__();\n"
-      }
-      result += mainClassName + "::main(new Array<java_lang_String*>((java_lang_String**)0, 0));\n"
-      result += "return 0;\n"
-      result += "}\n"
-      result
+      val java_runtime_classes_path = runtimeProvider.java_runtime_classes_path
+      val main_cpp = FileBytes.read(new File(s"$java_runtime_classes_path/main.cpp"), utf8)
+      s"#define __ENTRY_POINT_METHOD__ $mainClassName::main\n$main_cpp"
     }
 
     FileBytes.write(new File(s"$outputPath/main.cpp"), utf8, createMain())
@@ -77,11 +66,11 @@ class BaseCompiler(runtimeProvider:RuntimeProvider, mangler:BaseMangler) {
     val cflagsAppend = cflagsList.mkString(" ")
     var command = s"g++ -fpermissive -Wint-to-pointer-cast -O2 types.cpp main.cpp $paths $frameworksAppend $libraryAppend $cflagsAppend"
     if (OS.isMac) {
-      command += " -framework Cocoa -framework CoreAudio -F/Library/Frameworks -F$java_macos_embedded_frameworks"
-      command += " -D_THREAD_SAFE -lm -liconv -Wl,-framework,OpenGL -Wl,-framework,ForceFeedback -lobjc -Wl,-framework,Cocoa -Wl,-framework,Carbon -Wl,-framework,IOKit -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit"
+      command += s" -framework Cocoa -framework CoreAudio -F/Library/Frameworks -F$java_macos_embedded_frameworks"
+      command += s" -D_THREAD_SAFE -lm -liconv -Wl,-framework,OpenGL -Wl,-framework,ForceFeedback -lobjc -Wl,-framework,Cocoa -Wl,-framework,Carbon -Wl,-framework,IOKit -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit"
     }
     if (OS.isWindows) {
-      command += " -static-libstdc++ -static-libgcc -L. -lopengl32 -lshell32 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -lkernel32 -lversion -lOleAut32 -lstdc++"
+      command += s" -static-libstdc++ -static-libgcc -L. -lopengl32 -lshell32 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -lkernel32 -lversion -lOleAut32 -lstdc++"
     }
 
     val outputExecutableFile = if (OS.isWindows) {
