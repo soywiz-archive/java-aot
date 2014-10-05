@@ -8,11 +8,11 @@ import scala.collection.mutable
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
-class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMangler) {
-  private var locals = new mutable.HashMap[Local, String]
+abstract class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMangler) {
+  private val locals = new mutable.HashMap[Local, String]
   private var lastLocalId = 0
 
-  private val labels = new mutable.HashMap[Unit, String]
+  protected val labels = new mutable.HashMap[Unit, String]
   private var lastLabelIndex = 0
 
   private val tryList = new mutable.HashMap[Unit, mutable.ListBuffer[Tuple2[Int, SootClass]]]
@@ -57,7 +57,9 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
     }
 
     var bodyString = "\n"
-    if (usingExceptions) bodyString += "std::shared_ptr< java_lang_Throwable > __caughtexception;"
+    if (usingExceptions) {
+      bodyString += doVariableAllocation(RefType.v("java.lang.Throwable"), "__caughtexception")
+    }
     for (local2 <- locals) {
       val (local, name) = local2
       bodyString += doVariableAllocation(local.getType, name)
@@ -70,12 +72,10 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
     for (unit <- units) {
       unit match {
         case s: GotoStmt => labels(s.getTarget) = allocateLabelName
-        //case s: IfStmt => getLabels(List(s.getTarget))
         case s: IfStmt => labels(s.getTarget) = allocateLabelName
         case s: LookupSwitchStmt =>
-          for (i <- 0 to s.getTargetCount - 1) {
-            labels(s.getTarget(i).asInstanceOf[Unit]) = allocateLabelName
-          }
+          val targets = (0 to s.getTargetCount - 1).map(s.getTarget(_).asInstanceOf[Unit])
+          for (target <- targets) labels(target) = allocateLabelName
           if (s.getDefaultTarget != null) labels(s.getDefaultTarget) = allocateLabelName
         case s: TableSwitchStmt =>
           for (target <- s.getTargets.asScala) labels(target.asInstanceOf[Unit]) = allocateLabelName
@@ -87,224 +87,132 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
 
   var usingExceptions = false
 
-  def doUnit(unit: soot.Unit): String = {
-    var out = ""
-
-    if (labels.contains(unit)) {
-      out += labels(unit) + ":; "
-    }
-
-    if (tryList.contains(unit)) {
-      for (item <- tryList(unit)) out += "try {\n"
-    }
-
-    if (endCatchList.contains(unit)) {
-      for (item <- endCatchList(unit)) {
-        val (trapId, trapType) = item
-        out += "} catch (std::shared_ptr<" + mangler.mangle(trapType) + s"> __caughtexception__) { __caughtexception = __caughtexception__; goto exception_handler_$trapId; }\n"
+  final def doUnit(unit: soot.Unit): String = {
+    def processLabel = if (labels.contains(unit)) doLabel(labels(unit)) else ""
+    def processTry = if (tryList.contains(unit)) tryList(unit).map(_ => doTryStart()).mkString else ""
+    def processEndCatch = {
+      if (endCatchList.contains(unit)) {
+        endCatchList(unit).map(item => {
+          val (trapId, trapType) = item
+          doCatchAndGoto(trapType, s"exception_handler_$trapId")
+        }).mkString
+      } else {
+        ""
       }
     }
-
-    if (catchList.contains(unit)) {
-      for (item <- catchList(unit)) {
-        val (trapId, trapType) = item
-        usingExceptions = true
-        out += s"exception_handler_$trapId:;\n"
+    def processExceptionHandler = {
+      if (catchList.contains(unit)) {
+        catchList(unit).map(item => {
+          val (trapId) = item
+          usingExceptions = true
+          doLabel(s"exception_handler_$trapId") + "\n"
+        }).mkString
+      } else {
+        ""
       }
     }
+    def processUnit = _doUnit(unit)
 
-    out += _doUnit(unit)
-    out
+    List(processLabel, processTry, processEndCatch, processExceptionHandler, processUnit).mkString
   }
 
-  def _doUnit(unit: soot.Unit): String = {
-    var stms = ""
+  final def _doUnit(unit: soot.Unit): String = {
     unit match {
-      case s: DefinitionStmt =>
-        referenceType(s.getLeftOp.getType)
-
-        // l-value
-        s.getLeftOp match {
-          case s2: ArrayRef =>
-            val base = doValue(s2.getBase)
-            val index = doValue(s2.getIndex)
-            val right = doValue(s.getRightOp)
-            s"$base->set($index, $right);"
-          case _ =>
-            if (s.getRightOp.getType.equals(s.getLeftOp.getType)) {
-              doValue(s.getLeftOp) + " = " + doValue(s.getRightOp) + ";"
-            } else {
-              // Exceptions for example!
-              doValue(s.getLeftOp) + " = " + doCast(s.getRightOp.getType, s.getLeftOp.getType, s.getRightOp) + ";"
-            }
-        }
-      case s: ReturnStmt =>
-        "return " + doCastIfNeeded(method.getReturnType, s.getOp) + ";"
-      case s: ReturnVoidStmt => "return;"
-      case s: IfStmt => s"if (" + doValue(s.getCondition) + ") { goto " + labels(s.getTarget) + "; }"
+      case s: DefinitionStmt => referenceType(s.getLeftOp.getType); doAssign(s.getLeftOp, s.getRightOp)
+      case s: ReturnStmt => doReturn(method.getReturnType, s.getOp)
+      case s: ReturnVoidStmt => doReturnVoid()
+      case s: IfStmt => doIf(s.getCondition, s.getTarget)
+      case s: GotoStmt => doGoto(s.getTarget)
+      case s: ThrowStmt => doThrow(s.getOp)
+      case s: InvokeStmt => doExprStm(s.getInvokeExpr)
+      case s: EnterMonitorStmt => doEnterMonitor(s.getOp)
+      case s: ExitMonitorStmt => doExitMonitor(s.getOp)
+      case s: NopStmt => doNop()
       case s: LookupSwitchStmt =>
-        var out = ""
-        var index = 0
-        for (i <- 0 to s.getTargetCount - 1) {
-          out += "case " + s.getLookupValue(i) + ": goto " + labels(s.getTarget(i)) + "; break;\n"
-        }
-        out += "default: goto " + labels(s.getDefaultTarget) + "; break;\n"
-        "switch(" + doValue(s.getKey) + ") {\n" + out + "}"
+        doSwitch(s.getKey, labels(s.getDefaultTarget),
+          uniqueMap((0 until s.getTargetCount).map(i => (s.getLookupValue(i), labels(s.getTarget(i))))).orNull
+        )
       case s: TableSwitchStmt =>
-        var out = ""
-        var index = 0
-        for (i <- s.getLowIndex to s.getHighIndex) {
-          out += "case " + i + ": goto " + labels(s.getTarget(index)) + "; break;\n"
-          index += 1
-        }
-        out += "default: goto " + labels(s.getDefaultTarget) + "; break;\n"
-        "switch(" + doValue(s.getKey) + ") {\n" + out + "}"
-      case s: GotoStmt => "goto " + labels(s.getTarget) + ";"
-      case s: ThrowStmt => "throw(" + doValue(s.getOp) + ");"
-      case s: InvokeStmt => doExpr(s.getInvokeExpr) + ";"
-      case s: EnterMonitorStmt => "RuntimeEnterMonitor(" + doValue(s.getOp) + ")"
-      case s: ExitMonitorStmt => "RuntimeExitMonitor(" + doValue(s.getOp) + ")"
-      case s: NopStmt => s";"
+        doSwitch(s.getKey, labels(s.getDefaultTarget),
+          uniqueMap((s.getLowIndex to s.getHighIndex).map(i => (i, labels(s.getTarget(i - s.getLowIndex))))).orNull
+        )
     }
     //unit.addBoxPointingToThis()
     //println("  unit:" + unit)
   }
 
-  def doValue(value: Value): String = {
+  private def uniqueMap[A,B](s: Seq[(A,B)]) = {
+    val h = new collection.mutable.HashMap[A,B]
+    val okay = s.iterator.forall(x => {
+      val y = h.put(x._1, x._2)
+      y.isEmpty || y.get == x._2
+    })
+    if (okay) Some(h) else None
+  }
+
+  final def doValue(value: Value): String = {
     value match {
-      case t: Local => allocateLocal(t)
-      case t: Immediate =>
-        t match {
-          case c: NullConstant =>
-            //doWrapRefType(value.getType, "NULL")
-            "std::shared_ptr<void*>(NULL)"
-          case c: IntConstant => t.toString
-          case c: LongConstant => t.toString
-          case c: FloatConstant => t.toString
-          case c: DoubleConstant => t.toString
-          case c: StringConstant => "cstr_to_JavaString(L\"" + escapeString(c.value) + "\")"
-          case c: ClassConstant => "NULL /* ClassConstant:" + c.getValue + "*/"
-        }
-      case t: ThisRef => doWrapRefType(method.getDeclaringClass, "this")
-      case t: ParameterRef => getParamName(t.getIndex)
-      case t: CaughtExceptionRef =>
-        referenceType(t.getType)
-        //"((void*)(__caughtexception))"
-        //"((" + mangler.typeToStringRef(t.getType) + ")(__caughtexception))"
-        "__caughtexception"
-      case t: ArrayRef =>
-        val base = doValue(t.getBase)
-        val index = doValue(t.getIndex)
-        s"$base->get($index)"
-        //"(" + mangler.typeToStringRef(t.getType) + ")(void *)(" + doValue(t.getBase) + "->get(" + doValue(t.getIndex) + "))"
-      case t: InstanceFieldRef =>
-        referenceType(t.getField.getDeclaringClass)
-        doValue(t.getBase) + "->" + t.getField.getName
-      case t: StaticFieldRef =>
-        referenceType(t.getField.getDeclaringClass)
-        mangler.mangle(t.getField.getDeclaringClass) + "::" + t.getField.getName
+      case t: Local => doLocal(allocateLocal(t))
+      case t: Immediate => doImmediate(t)
+      case t: ThisRef => doThisRef(method.getDeclaringClass)
+      case t: ParameterRef => doParam(getParamName(t.getIndex))
+      case t: CaughtExceptionRef => referenceType(t.getType); doCaughtException(t.getType)
+      case t: ArrayRef => doArrayAccess(t.getBase, t.getIndex)
+      case t: InstanceFieldRef => referenceType(t.getField.getDeclaringClass); doInstanceField(t.getBase, t.getField.getName)
+      case t: StaticFieldRef => referenceType(t.getField.getDeclaringClass); doStaticField(t.getField.getDeclaringClass, t.getField.getName)
       case t: Expr => doExpr(t)
-      //case _ => value.toString
     }
   }
 
-  private def escapeString(str: String): String = {
-    str.map(v => v match {
-      case '"' => "\""
-      case '\n' => "\\n"
-      case '\r' => "\\r"
-      case '\t' => "\\t"
-      case _ => v
-    }).mkString("")
+  final def doImmediate(i: Immediate): String = {
+    i match {
+      case c: NullConstant => doConstantNull()
+      case c: IntConstant => doConstantInt(c.value)
+      case c: LongConstant => doConstantLong(c.value)
+      case c: FloatConstant => doConstantFloat(c.value)
+      case c: DoubleConstant => doConstantDouble(c.value)
+      case c: StringConstant => doConstantString(c.value)
+      case c: ClassConstant => doConstantClass(c.value)
+    }
   }
 
-  def doExpr(expr: Expr): String = {
+  final def doExpr(expr: Expr): String = {
     expr match {
-      case e: BinopExpr =>
-        doBinop(e.getType, e.getOp1, e.getOp2, e match {
-          case k: AddExpr => "+"
-          case k: AndExpr => "&"
-          case k: DivExpr => "/"
-          case k: RemExpr => "%"
-          case k: MulExpr => "*"
-          case k: OrExpr => "|"
-          case k: ShlExpr => "<<"
-          case k: ShrExpr => ">>"
-          case k: UshrExpr => ">>>"
-          case k: SubExpr => "-"
-          case k: XorExpr => "^"
-          case k: EqExpr => "=="
-          case k: NeExpr => "!="
-          case k: GeExpr => ">="
-          case k: LeExpr => "<="
-          case k: LtExpr => "<"
-          case k: GtExpr => ">"
-          case k: CmpExpr => "cmp"
-          case k: CmplExpr => "cmpl"
-          case k: CmpgExpr => "cmpg"
-        })
-      case e: CastExpr =>
-        referenceType(e.getCastType)
-        doCast(e.getType, e.getCastType, e.getOp)
-      case e: InstanceOfExpr =>
-        referenceType(e.getType)
-        doInstanceof(e.getType, e.getCheckType, e.getOp)
-      case e: NewExpr =>
-        referenceType(e.getType)
-        val newType = mangler.typeToStringNoRef(e.getType)
-        s"std::shared_ptr< $newType >(new $newType())"
-      case e: NewArrayExpr =>
-        referenceType(e.getType.getArrayType)
-        "std::shared_ptr< " + mangler.typeToStringNoRef(e.getType) + " >(new " + mangler.typeToStringNoRef(e.getType) + "(" + doValue(e.getSize) + "))"
-      case e: NewMultiArrayExpr =>
-        referenceType(e.getType)
-        "new " + mangler.typeToStringNoRef(e.getType) + (0 to e.getSizeCount - 1).map(i => "[" + e.getSize(i) + "]").mkString
+      case e: CastExpr => referenceType(e.getCastType); doCast(e.getType, e.getCastType, e.getOp)
+      case e: InstanceOfExpr => referenceType(e.getType); doInstanceof(e.getType, e.getCheckType, e.getOp)
+      case e: NewExpr => referenceType(e.getType); doNew(e.getType)
+      case e: NewArrayExpr => referenceType(e.getType.getArrayType); doNewArray(e.getType, e.getSize)
+      case e: NewMultiArrayExpr => referenceType(e.getType); doNewMultiArray(e.getType, (0 to e.getSizeCount - 1).map(e.getSize).toArray)
+      case e: LengthExpr => doLength(e.getOp)
+      case e: NegExpr => doNegate(e.getOp)
+      case e: BinopExpr => doBinop(e.getType, e.getOp1, e.getOp2, getOpString(e))
       case e: InvokeExpr =>
         referenceType(e.getMethod.getDeclaringClass)
         val argsList = e.getArgs.asScala.toList
         val castTypes = e.getMethod.getParameterTypes.asScala.map(_.asInstanceOf[Type]).toList
-        val args = (argsList, castTypes).zipped.map((value, expectedType) => {
-          if (expectedType.equals(value.getType)) {
-            doValue(value)
-          } else {
-            "((" + mangler.typeToStringRef(expectedType) + ")" + doValue(value) + ")"
-          }
-        }).toList
-        for (arg <- e.getArgs.asScala) {
-          referenceType(arg.getType)
-        }
-        val argsCall = args.mkString(", ")
+        val args = (argsList, castTypes).zipped.map((value, expectedType) => doCastIfNeeded(expectedType, value)).toList
+        e.getArgs.asScala.foreach(i => referenceType(i.getType))
         e match {
-          case i: StaticInvokeExpr => mangler.mangleFullName(e.getMethod) + "(" + argsCall + ")"
-          case i: InstanceInvokeExpr =>
-            i match {
-              case i: InterfaceInvokeExpr =>
-                doValue(i.getBase) + "->" + mangler.mangleBaseName(e.getMethod) + "(" + argsCall + ")"
-              case i: VirtualInvokeExpr =>
-                if (e.getMethod.getDeclaringClass.getName == "java.lang.Object") {
-                  // Required for interfaces not extending Object directly
-                  "((std::dynamic_pointer_cast<java_lang_Object>)(" + doValue(i.getBase) + "))->" + mangler.mangleBaseName(e.getMethod) + "(" + argsCall + ")"
-                } else {
-                  doValue(i.getBase) + "->" + mangler.mangleBaseName(e.getMethod) + "(" + argsCall + ")"
-                }
-              case i: SpecialInvokeExpr =>
-                doValue(i.getBase) + "->" + mangler.mangle(i.getMethod.getDeclaringClass) + "::" + mangler.mangleBaseName(e.getMethod) + "(" + argsCall + ")"
-            }
+          case i: StaticInvokeExpr => doInvokeStatic(e.getMethod, args)
+          case i: InstanceInvokeExpr => doInvokeInstance(i.getBase, e.getMethod, args, i.isInstanceOf[SpecialInvokeExpr])
         }
-      case e: LengthExpr => "((" + doValue(e.getOp) + ")->size())"
-      case e: NegExpr => "-(" + doValue(e.getOp) + ")"
     }
   }
 
-  def doWrapRefType(toType:SootClass, value: String): String = {
-    "std::shared_ptr< " + mangler.mangle(toType) + " >(" + value + ")"
+  final private def getOpString(e: BinopExpr): String = {
+    e match {
+      case k: AddExpr => "+" case k: SubExpr => "-"
+      case k: MulExpr => "*" case k: DivExpr => "/" case k: RemExpr => "%"
+      case k: AndExpr => "&" case k: OrExpr => "|" case k: XorExpr => "^"
+      case k: ShlExpr => "<<" case k: ShrExpr => ">>" case k: UshrExpr => ">>>"
+      case k: EqExpr => "==" case k: NeExpr => "!="
+      case k: GeExpr => ">=" case k: LeExpr => "<="
+      case k: LtExpr => "<" case k: GtExpr => ">"
+      case k: CmpExpr => "cmp" case k: CmplExpr => "cmpl" case k: CmpgExpr => "cmpg"
+    }
   }
 
-  def doWrapRefType(toType:Type, value: String): String = {
-    "std::shared_ptr< " + mangler.typeToStringNoRef(toType) + " >(" + value + ")"
-  }
-
-  def doCastIfNeeded(toType:Type, value:Value): String = {
+  final def doCastIfNeeded(toType:Type, value:Value): String = {
     if (value.getType.equals(toType)) {
       doValue(value)
     } else {
@@ -312,30 +220,46 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
     }
   }
 
-  def doCast(fromType:Type, toType:Type, value:Value): String = {
-    //"((" + mangler.typeToStringRef(toType) + ")" + doValue(value) + ")"
-    if (mangler.isRefType(toType)) {
-      "(std::dynamic_pointer_cast< " + mangler.typeToStringNoRef(toType) + " >(" + doValue(value) + "))"
-    } else {
-      "((" + mangler.typeToStringRef(toType) + ")" + doValue(value) + ")"
-    }
-  }
-
-  def doInstanceof(baseType:Type, checkType:Type, value:Value): String = {
-    doValue(value) + " instanceof " + mangler.typeToStringRef(checkType)
-  }
-
-  def doBinop(kind:Type, left:Value, right:Value, op:String): String = {
-    var l = doValue(left)
-    var r = doValue(right)
-    if (mangler.isRefType(left.getType)) l = s"$l.get()"
-    if (mangler.isRefType(right.getType)) r = s"$r.get()"
-    op match {
-      case "cmp" | "cmpl" | "cmpg" => s"$op($l, $r)"
-      case _ =>
-        s"$l $op $r"
-    }
-  }
+  def doStringLiteral(s: String): String
+  def doCast(fromType:Type, toType:Type, value:Value): String
+  def doInstanceof(baseType:Type, checkType:Type, value:Value): String
+  def doBinop(kind:Type, left:Value, right:Value, op:String): String
+  def doNegate(value:Value):String
+  def doLength(value:Value):String
+  def doStaticField(kind:SootClass, fieldName:String): String
+  def doNew(kind:Type): String
+  def doVariableAllocation(kind:Type, name:String): String
+  def doNewArray(kind: Type, size: Value): String
+  def doNewMultiArray(kind: Type, values: Array[Value]): String
+  def doNop(): String
+  def doCaughtException(value: Type): String
+  def doArrayAccess(value: Value, value1: Value): String
+  def doGoto(unit: Unit): String
+  def doReturn(returnType: Type, returnValue: Value): String
+  def doReturnVoid(): String
+  def doIf(condition: Value, target: Stmt): String
+  def doConstantClass(s: String): String
+  def doConstantNull(): String
+  def doConstantInt(value: Int): String
+  def doConstantLong(value: Long): String
+  def doConstantFloat(value: Float): String
+  def doConstantDouble(value: Double): String
+  def doConstantString(value: String): String
+  def doThrow(value: Value): String
+  def doLabel(labelName: String): String
+  def doTryStart():String
+  def doCatchAndGoto(trapType: SootClass, labelName: String): String
+  def doSwitch(matchValue:Value, defaultLabel: String, map: mutable.HashMap[Int, String]): String
+  def doAssign(leftOp: Value, rightOp: Value): String
+  def doExprStm(expr: Expr): String
+  def doThisRef(clazz: SootClass): String
+  def doEnterMonitor(value: Value): String
+  def doExitMonitor(value: Value): String
+  def doLocal(localName: String): String
+  def doParam(paramName: String): String
+  def doInstanceField(instance: Value, fieldName: String): String
+  def doInvokeStatic(method: SootMethod, args: Seq[String]): String
+  def doInvokeInstance(base: Value, method: SootMethod, args: List[String], special:Boolean): String
 
   def referenceType(kind: Type): scala.Unit = {
     kind match {
@@ -350,8 +274,6 @@ class BaseMethodBodyGenerator(method: SootMethod, protected val mangler: BaseMan
   }
 
   def getParamName(index: Int) = s"p$index"
-
-  def doVariableAllocation(kind:Type, name:String) = mangler.typeToStringRef(kind) + " " + name + ";\n"
 
   def allocateLabelName: String = {
     val res = "label_" + lastLabelIndex

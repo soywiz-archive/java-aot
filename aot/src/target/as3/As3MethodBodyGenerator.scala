@@ -3,7 +3,7 @@ package target.as3
 import soot.{IntType, Value, Type, SootMethod}
 import target.base.BaseMethodBodyGenerator
 
-class As3MethodBodyGenerator(method:SootMethod) extends BaseMethodBodyGenerator(method, As3Mangler) {
+abstract class As3MethodBodyGenerator(method:SootMethod) extends BaseMethodBodyGenerator(method, As3Mangler) {
   override def doCast(fromType:Type, toType:Type, value:Value): String = {
     "((" + mangler.typeToStringRef(toType) + ")" + doValue(value) + ")"
   }
