@@ -20,7 +20,8 @@ abstract class VfsNode {
 
   protected def child(element:String):VfsNode
 
-  final def fullName:String = if (parent != null) s"${parent.fullName}/$name" else name
+  def absoluteFullPath:String
+  final def fullPath:String = if (parent != null) s"${parent.fullPath}/$name" else name
   def name:String
   def parent:VfsNode
   def read(): Array[Byte]

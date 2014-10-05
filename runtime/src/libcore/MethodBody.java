@@ -1,5 +1,5 @@
 package libcore;
 
-public @interface CPPMethod {
+public @interface MethodBody {
     String value() default "";
 }

@@ -11,6 +11,8 @@ class ZipVfsNode(val zip:ZipFile, path:String = "", val name:String = "", val pa
   override def write(data: Array[Byte]): Unit = throw new NotImplementedError()
   override def read(): Array[Byte] = FileBytes.read(zip.getInputStream(entry))
 
+  def absoluteFullPath:String = zip.getName + "/" + this.fullPath
+
   override def stat(): VfsStat = VfsStat(
     entry.getName, entry.getSize, entry.isDirectory,
     new Date(entry.getLastAccessTime.toMillis),

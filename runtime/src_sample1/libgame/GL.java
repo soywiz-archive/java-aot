@@ -1,7 +1,7 @@
 package libgame;
 
 import libcore.CPPClass;
-import libcore.CPPMethod;
+import libcore.MethodBody;
 
 @CPPClass(
     framework = "OpenGL"
@@ -46,7 +46,7 @@ public class GL {
             "    glEnd();\n}")
     static public native void drawSimple();
     */
-    @CPPMethod("#include \"gl.cpp\"")
+    @MethodBody("#include \"gl.cpp\"")
     static public native int createProgram(String vs, String fs);
 
     static public native int useProgram(int program);

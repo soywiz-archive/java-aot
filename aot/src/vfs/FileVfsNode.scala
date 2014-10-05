@@ -11,6 +11,8 @@ class FileVfsNode(val path:String, val name:String = "", val parent:VfsNode = nu
   override def write(data: Array[Byte]): Unit = FileBytes.write(file, data)
   override def read(): Array[Byte] = FileBytes.read(file)
 
+  def absoluteFullPath:String = path
+
   override def stat(): VfsStat = {
     VfsStat(file.getName, file.length(), file.isDirectory, new Date(file.lastModified()), new Date(file.lastModified()), new Date(file.lastModified()))
   }

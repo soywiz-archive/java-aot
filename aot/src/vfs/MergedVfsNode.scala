@@ -6,6 +6,8 @@ class MergedVfsNode(nodes:Seq[VfsNode], val name:String = "", val parent:VfsNode
   if (nodes.isEmpty) throw new InvalidArgumentException(Array("Nodes can't be empty"))
 
   override protected def child(name:String): VfsNode = new MergedVfsNode(nodes.map(node => node.access(name)), name, this)
+  
+  override def absoluteFullPath: String = "merged@" + this.fullPath
 
   private def op[T](action: VfsNode => T): T = {
     var lastError:Throwable = null

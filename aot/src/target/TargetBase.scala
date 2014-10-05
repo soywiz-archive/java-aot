@@ -17,8 +17,16 @@ abstract class TargetBase {
   protected val utf8 = Charset.forName("UTF-8")
   protected val file_separator = System.getProperty("file.separator")
 
+  def createClassContext(projectContext:BaseProjectContext, clazz:SootClass): BaseClassContext = {
+    new BaseClassContext(projectContext, clazz)
+  }
+
+  def createProjectContext(classNames:Seq[String], mainClass:String, runtimeProvider:RuntimeProvider, outputPath:VfsNode): BaseProjectContext = {
+    new BaseProjectContext(classNames, mainClass, runtimeProvider, outputPath)
+  }
+
   def buildAndRun(classNames:Seq[String], mainClass:String, runtimeProvider:RuntimeProvider, outputPath:VfsNode): scala.Unit = {
-    val projectContext = new BaseProjectContext(classNames, mainClass, runtimeProvider, outputPath)
+    val projectContext = createProjectContext(classNames, mainClass, runtimeProvider, outputPath)
     generateProject(projectContext)
     buildProject(projectContext)
     runProject(projectContext)
@@ -31,7 +39,7 @@ abstract class TargetBase {
     for (className <- projectContext.classNames) {
       val clazz = Scene.v.getSootClass(className)
       println("Processing class: " + clazz.getName)
-      generateClass(new BaseClassContext(projectContext, clazz))
+      generateClass(createClassContext(projectContext, clazz))
     }
     println("Processed classes: " + projectContext.classNames.length)
   }
@@ -52,7 +60,16 @@ abstract class TargetBase {
 
     for (method <- clazz.getMethods.asScala) {
       val methodContext = new BaseMethodContext(classContext, method)
-      methodContext.methodWithBody = if (methodHasBody(methodContext.method)) doMethodWithBody(methodContext) else null
+      methodContext.methodWithBody = doMethodWithBodyOrAbstract(methodContext)
+    }
+  }
+
+  def doMethodWithBodyOrAbstract(methodContext:BaseMethodContext): String = {
+    val method = methodContext.method
+    if (methodHasBody(method)) {
+      doMethodWithBody(methodContext)
+    } else {
+      SootUtils.getTag(method.getTags.asScala, "Llibcore/MethodBody;", "value").asInstanceOf[String]
     }
   }
 
