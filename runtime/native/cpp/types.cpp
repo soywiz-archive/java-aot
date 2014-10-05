@@ -6,8 +6,8 @@
 #include <memory>
 
 #include "types.h"
-#include "java_lang_String.h"
-#include "libcore_Native.h"
+#include "java/lang/String.h"
+#include "libcore/Native.h"
 
 void java_lang_Object::__init__() {
     return;

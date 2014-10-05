@@ -14,13 +14,17 @@ import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 class TargetCpp extends TargetBase {
-  override def generateProject(projectContext: BaseProjectContext): scala.Unit = {
-    super.generateProject(projectContext)
+  override def generateProject(context: BaseProjectContext): scala.Unit = {
+    val runtimeVfs = context.runtime.runtimeClassesVfs
+    val outputVfs = context.output
+    runtimeVfs.access("cpp").copyTreeTo(outputVfs)
+
+    super.generateProject(context)
   }
 
   override def generateClass(clazz: BaseClassContext): scala.Unit = {
     super.generateClass(clazz)
-    val outputPath = clazz.projectContext.outputPath
+    val outputPath = clazz.projectContext.output
     val body = doClassBody(clazz)
     val head = doClassHeader(clazz)
     val classPath = classNameToPath(clazz.clazz.getName)
@@ -50,21 +54,20 @@ class TargetCpp extends TargetBase {
   override def buildProject(projectContext: BaseProjectContext): scala.Unit = {
     val cppProjectContext = projectContext.asInstanceOf[CppProjectContext]
     
-    val runtimeProvider = projectContext.runtimeProvider
-    var java_macos_embedded_frameworks = runtimeProvider.java_sample1_classes_path + "/frameworks/cpp"
+    val runtime = projectContext.runtime
+    var java_macos_embedded_frameworks = runtime.java_sample1_classes_path + "/frameworks/cpp"
     if (OS.isWindows) java_macos_embedded_frameworks = "^/+".r.replaceAllIn(java_macos_embedded_frameworks, "")
 
     val mainClassName = mangler.mangleClassName(projectContext.mainClass)
 
     def createMain(): String = {
-      val java_runtime_classes_path = runtimeProvider.java_runtime_classes_path
-      val main_cpp = FileBytes.read(new File(s"$java_runtime_classes_path/main.cpp"), utf8)
+      val main_cpp = runtime.runtimeClassesVfs.access("cpp/main.cpp").read(utf8)
       s"#define __ENTRY_POINT_METHOD__ $mainClassName::main\n$main_cpp"
     }
 
-    val outputPath = projectContext.outputPath
+    val outputPath = projectContext.output
 
-    outputPath.access("main.cpp").write(createMain(), utf8)
+    outputPath.access("main.cpp").ensureParentPath().write(createMain(), utf8)
     val paths = projectContext.classNames.filter(_ != "java.lang.Object").map(name => classNameToPath(name) + ".cpp").mkString(" ")
 
     var frameworksAppend = ""
@@ -101,7 +104,9 @@ class TargetCpp extends TargetBase {
 
 
     val cflagsAppend = cppProjectContext.cflags.mkString(" ")
-    var command = s"g++ -fpermissive -Wint-to-pointer-cast -O2 types.cpp main.cpp $paths $frameworksAppend $libraryAppend $cflagsAppend"
+    var command = s"g++ -fpermissive -Wint-to-pointer-cast "
+    command += " \"-I" + outputPath.absoluteFullPath + "\""
+    command += s" -O2 types.cpp main.cpp $paths $frameworksAppend $libraryAppend $cflagsAppend"
     if (OS.isMac) {
       command += s" -framework Cocoa -framework CoreAudio -F/Library/Frameworks -F$java_macos_embedded_frameworks"
       command += s" -D_THREAD_SAFE -lm -liconv -Wl,-framework,OpenGL -Wl,-framework,ForceFeedback -lobjc -Wl,-framework,Cocoa -Wl,-framework,Carbon -Wl,-framework,IOKit -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit"
@@ -114,19 +119,19 @@ class TargetCpp extends TargetBase {
     println(command)
     outputExecutableFile.remove()
 
-    projectContext.outputPath.access("build.bat").write(command, utf8)
-    projectContext.outputPath.access("build.sh").write(command, utf8)
+    projectContext.output.access("build.bat").write(command, utf8)
+    projectContext.output.access("build.sh").write(command, utf8)
 
-    val result = ProcessUtils.runAndRedirect(command, new File(projectContext.outputPath.absoluteFullPath)) == 0
+    val result = ProcessUtils.runAndRedirect(command, new File(projectContext.output.absoluteFullPath)) == 0
     if (!result) throw new Exception("error building")
 
     if (OS.isMac) {
-      val png512 = new FileVfsNode(runtimeProvider.java_runtime_classes_path).access("emptyicon.png").read()
-      CppGeneratorBuildMacOS.createAPP(projectContext.outputPath.access("test.app"), "sampleapp", outputExecutableFile.read(), png512)
+      val png512 = new FileVfsNode(runtime.java_runtime_classes_path).access("emptyicon.png").read()
+      CppGeneratorBuildMacOS.createAPP(projectContext.output.access("test.app"), "sampleapp", outputExecutableFile.read(), png512)
     }
   }
 
-  def getOutputExecutablePath(projectContext:BaseProjectContext): VfsNode = projectContext.outputPath.access("a.out")
+  def getOutputExecutablePath(projectContext:BaseProjectContext): VfsNode = projectContext.output.access("a.out")
 
   override def runProject(projectContext:BaseProjectContext): scala.Unit = {
     val executable = getOutputExecutablePath(projectContext)
@@ -167,6 +172,10 @@ class TargetCpp extends TargetBase {
     s"$head { $body }"
   }
 
+  def getHeaderFileForClass(clazz:SootClass):String = {
+    classNameToPath(clazz.getName) + ".h"
+  }
+
   def doClassHeader(context:BaseClassContext): String = {
     val clazz2 = context.asInstanceOf[CppClassContext]
 
@@ -182,25 +191,25 @@ class TargetCpp extends TargetBase {
     if (cflags != null) clazz2.cppProject.cflags.add(nativeLibrary)
     if (native_header != null) clazz2.native_header = native_header
 
+    val classesToInclude = new ListBuffer[SootClass]()
+    if (clazz.hasSuperclass) classesToInclude.append(clazz.getSuperclass)
+
+    for (res <- clazz.getInterfaces.asScala) classesToInclude.append(res)
+
+
     var declaration = ""
     declaration += "#ifndef " + mangler.mangleFullClassName(clazz.getName) + "_def\n"
     declaration += "#define " + mangler.mangleFullClassName(clazz.getName) + "_def\n"
 
     declaration += "#include \"types.h\"\n"
-    if (native_header != null) {
-      declaration += native_header + "\n"
-    }
-    if (clazz.hasSuperclass) {
-      val res = mangler.mangle(clazz.getSuperclass)
-      if (res != "java_lang_Object") {
-        declaration += "#include \"" + res + ".h\"\n"
+    for (res <- classesToInclude) {
+      if (res.getName != "java.lang.Object") {
+        declaration += "#include \"" + getHeaderFileForClass(res) + "\"\n"
       }
     }
-
-    for (res <- clazz.getInterfaces.asScala) {
-      declaration += "#include \"" + mangler.mangle(res) + ".h\"\n"
-    }
     declaration += "\n"
+
+    if (native_header != null) declaration += native_header + "\n"
 
     for (rc <- context.referencedClasses) declaration += "class " + mangler.mangle(rc) + ";\n"
     declaration += "\n"
@@ -237,11 +246,14 @@ class TargetCpp extends TargetBase {
 
     //for (rc <- referencedClasses) declaration += "#include \"" + Mangling.mangle(rc) + ".h\"\n"
 
-    definition += "#include \"" + mangler.mangleFullClassName(clazz.getName) + ".h\"\n"
-    for (rc <- referencedClasses) {
-      val res = mangler.mangle(rc)
-      if (res != "java_lang_Object") {
-        definition += "#include \"" + res + ".h\"\n"
+    val classesToInclude = new ListBuffer[SootClass]()
+
+    classesToInclude.append(clazz)
+    for (rc <- referencedClasses) classesToInclude.append(rc)
+
+    for (res <- classesToInclude) {
+      if (res.getName != "java.lang.Object") {
+        definition += "#include \"" + getHeaderFileForClass(res) + "\"\n"
       }
     }
 
@@ -265,7 +277,7 @@ class TargetCpp extends TargetBase {
       if (result.methodWithBody != null) {
         definition += result.methodWithBody + "\n"
       } else {
-        definition += s"// Not implemented method: {$result.method} (abstract, interface or native)\n"
+        definition += s"// Not implemented method: {$result.method.getName} (abstract, interface or native)\n"
       }
     }
 

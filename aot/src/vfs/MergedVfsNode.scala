@@ -21,6 +21,8 @@ class MergedVfsNode(nodes:Seq[VfsNode], val name:String = "", val parent:VfsNode
     throw lastError
   }
 
+
+  override def list(): Seq[VfsNode] = nodes.flatMap(node => node.list())
   override def write(data: Array[Byte]): Unit = op(_.write(data))
   override def read(): Array[Byte] = op(_.read())
   override def stat(): VfsStat = op(_.stat())

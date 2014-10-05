@@ -11,6 +11,10 @@ class ZipVfsNode(val zip:ZipFile, path:String = "", val name:String = "", val pa
   override def write(data: Array[Byte]): Unit = throw new NotImplementedError()
   override def read(): Array[Byte] = FileBytes.read(zip.getInputStream(entry))
 
+  override def list(): Seq[VfsNode] = {
+    throw new NotImplementedError()
+  }
+
   def absoluteFullPath:String = zip.getName + "/" + this.fullPath
 
   override def stat(): VfsStat = VfsStat(

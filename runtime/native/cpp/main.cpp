@@ -1,4 +1,3 @@
-#include "sample1_Sample1.h"
 
 int main(int argc, char **argv) {
     printf("Start!\n");

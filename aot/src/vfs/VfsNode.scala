@@ -31,7 +31,7 @@ abstract class VfsNode {
   def remove():Unit
 
   final def ensureParentPath():VfsNode = {
-    parent.mkdir()
+    if (parent != null) parent.mkdir()
     this
   }
 
@@ -40,6 +40,21 @@ abstract class VfsNode {
   def isDirectory:Boolean = stat().isDirectory
   def size:Long = stat().size
   def exists():Boolean = try { size; true } catch { case _:Throwable => false }
+
+  def copyTo(that:VfsNode): Unit = that.ensureParentPath().write(this.read())
+
+  def copyTreeTo(that:VfsNode):Unit = {
+    println("copyTreeTo " + this.absoluteFullPath + " -> " + that.absoluteFullPath)
+    val stat = this.stat()
+    if (stat.isDirectory) {
+      that.mkdir()
+      for (node <- this.list()) {
+        node.copyTreeTo(that.access(node.name))
+      }
+    } else {
+      this.copyTo(that)
+    }
+  }
 
   final def read(charset:Charset):String = {
     charset.decode(ByteBuffer.wrap(read())).toString
