@@ -3,28 +3,40 @@ package vfs
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 
-import scala.collection.mutable
-
 abstract class VfsNode {
-  final def access(path:String):VfsNode = {
-    val stack = new mutable.Stack[String]()
-    for (item <- path.split('/')) {
-      item match {
-        case "." | "" =>
-        case ".." => stack.pop()
-        case _ => stack.push(item)
-      }
-    }
-    accessImpl(stack)
-  }
-  protected def accessImpl(path:Seq[String]):VfsNode
+  final def access(path:String):VfsNode = access(path.split('/'))
 
+  final private def access(chunks:Seq[String]):VfsNode = {
+    if (chunks.isEmpty) {
+      this
+    } else {
+      (chunks.head match {
+        case null | "." | "" => this
+        case ".." => this.parent
+        case _ => this.child(chunks.head)
+      }).access(chunks.tail)
+    }
+  }
+
+  protected def child(element:String):VfsNode
+
+  final def fullName:String = if (parent != null) s"${parent.fullName}/$name" else name
+  def name:String
+  def parent:VfsNode
   def read(): Array[Byte]
   def write(data:Array[Byte]): Unit
   def stat():VfsStat
+  def mkdir():Unit
+  def remove():Unit
+
+  final def ensureParentPath():VfsNode = {
+    parent.mkdir()
+    this
+  }
 
   def list(): Seq[VfsNode] = List()
 
+  def isDirectory:Boolean = stat().isDirectory
   def size:Long = stat().size
   def exists():Boolean = try { size; true } catch { case _:Throwable => false }
 

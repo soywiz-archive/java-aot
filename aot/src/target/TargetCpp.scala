@@ -6,37 +6,27 @@ import java.nio.charset.Charset
 import _root_.util._
 import soot._
 import soot.jimple.{ArrayRef, Expr, Stmt}
-import target.base.BaseMethodContext
-import target.context.BaseMethodContext
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 class TargetCpp extends TargetBase {
-
-
-  override def generateProject(projectContext: BaseProjectContext): Any = {
+  override def generateProject(projectContext: BaseProjectContext): scala.Unit = {
     super.generateProject(projectContext)
-
-    for (file <- List("types.cpp", "types.h", "gl.cpp")) {
-      FileBytes.write(new File(s"$outputPath/$file"), FileBytes.read(new File(s"$java_runtime_classes_path/$file")))
-    }
   }
 
-
-  override def generateClass(context: BaseClassContext): Unit = {
-    val outputPath = context.projectContext.outputPath
-    val className = context.clazz.getName
-    var classNamePath = className.replace('.', '/')
-    val classBody = doClassBody(context)
-    val classHeader = doClassHeader(context)
-
-    FileBytes.write(new File(s"$outputPath/$classNamePath.h"), )
-    val fileH =
-    val fileCpp = s"$outputPath/$classNamePath.cpp"
+  override def generateClass(clazz: BaseClassContext): scala.Unit = {
+    super.generateClass(clazz)
+    val outputPath = clazz.projectContext.outputPath
+    val body = doClassBody(clazz)
+    val head = doClassHeader(clazz)
+    val classPath = classNameToPath(clazz.clazz.getName)
+    outputPath.access(s"$classPath.h").ensureParentPath().write(head, utf8)
+    outputPath.access(s"$classPath.cpp").ensureParentPath().write(body, utf8)
   }
 
+  /*
   override def buildProject(projectContext: BaseProjectContext): Unit = {
     val runtimeProvider = projectContext.runtimeProvider
     var java_macos_embedded_frameworks = runtimeProvider.java_sample1_classes_path + "/frameworks/cpp"
@@ -123,24 +113,39 @@ class TargetCpp extends TargetBase {
     ProcessUtils.runAndRedirect(outputExecutableFile.getAbsolutePath, outputExecutableFile.getParentFile)
   }
 
-  def doMethodHeader(context:BaseMethodContext): Unit = {
+  def baseMethodGenerator(method: SootMethod, mangler: BaseMangler) {
+    val bodyGenerator:TargetBase
+    val signatureGenerator:BaseMethodSignatureGenerator
+
+    def doMethod(): MethodResult = {
+      bodyGenerator.calculateSignatureDependencies()
+
+      def getBody:String = {
+        if (method.isAbstract || method.isNative) {
+          SootUtils.getTag(method.getTags.asScala, "Llibcore/CPPMethod;", "value").asInstanceOf[String]
+        } else {
+          signatureGenerator.generateBody(bodyGenerator.doMethodBody())
+        }
+      }
+
+      MethodResult(method, signatureGenerator.generateHeader(), getBody, bodyGenerator.getReferencedClasses)
+    }
+  }
+  */
+
+  def doMethodDeclaration(context:BaseMethodContext): String = {
     val method = context.method
     val returnType = mangler.typeToStringRef(method.getReturnType)
     val mangledBaseName = mangler.mangleBaseName(method)
     val params = getMethodParams(method)
 
-    def generateHeader() = {
-      var declaration = ""
-      declaration += mangler.visibility(method) + ": "
-      declaration += if (method.isStatic) "static " else "virtual "
-      declaration += s"$returnType $mangledBaseName($params)"
-      if (method.isAbstract) declaration += " = 0"
-      declaration += ";"
-      declaration
-    }
+    val visibility = mangler.visibility(method) + ": "
+    val staticVirtual = if (method.isStatic) "static " else "virtual "
+    val suffix = if (method.isAbstract) " = 0" else ""
+    s"$visibility $staticVirtual $returnType $mangledBaseName($params) $suffix;"
   }
 
-  def doMethodDecl2(context:BaseMethodContext): String = {
+  def doMethodDefinitionHead(context:BaseMethodContext): String = {
     val method = context.method
     val returnType = mangler.typeToStringRef(method.getReturnType)
     val mangledFullName = mangler.mangleFullName(method)
@@ -155,7 +160,7 @@ class TargetCpp extends TargetBase {
   }
 
   override def doMethodWithBody(context:BaseMethodContext): String = {
-    val head = doMethodDecl2(context)
+    val head = doMethodDefinitionHead(context)
     val body = doMethodBody(context)
     s"$head { $body }"
   }
@@ -187,7 +192,7 @@ class TargetCpp extends TargetBase {
     }
     declaration += "\n"
 
-    for (rc <- referencedClasses) declaration += "class " + mangler.mangle(rc) + ";\n"
+    for (rc <- context.referencedClasses) declaration += "class " + mangler.mangle(rc) + ";\n"
     declaration += "\n"
 
     declaration += "class " + mangler.mangle(clazz)
@@ -201,9 +206,9 @@ class TargetCpp extends TargetBase {
     for (field <- clazz.getFields.asScala) {
       declaration += mangler.visibility(field) + ": " + mangler.staticity(field) + " " + mangler.typeToStringRef(field.getType) + " " + mangler.mangle(field) + ";\n"
     }
-    for (result <- results) declaration += result.declaration + "\n"
+    for (result <- context.methods) declaration += doMethodDeclaration(result) + "\n"
 
-    if (staticConstructor != null) {
+    if (context.hasStaticConstructor) {
       declaration += "class __StaticInit { public: __StaticInit(); };\n"
       declaration += "private: static __StaticInit* __staticInit;\n"
     }
@@ -216,6 +221,8 @@ class TargetCpp extends TargetBase {
   }
 
   def doClassBody(context:BaseClassContext): String = {
+    val clazz = context.clazz
+    val referencedClasses = context.referencedClasses
     var definition = ""
 
     //for (rc <- referencedClasses) declaration += "#include \"" + Mangling.mangle(rc) + ".h\"\n"
@@ -243,15 +250,16 @@ class TargetCpp extends TargetBase {
       }
     }
 
-    for (result <- results) {
-      if (result.definition != null) {
-        definition += result.definition + "\n"
+
+    for (result <- context.methods) {
+      if (result.methodWithBody != null) {
+        definition += result.methodWithBody + "\n"
       } else {
         definition += s"// Not implemented method: {$result.method} (abstract, interface or native)\n"
       }
     }
 
-    if (staticConstructor != null) {
+    if (context.hasStaticConstructor) {
       definition += s"$mangledClassType::__StaticInit::__StaticInit() { $mangledClassType::__clinit__(); }\n"
       definition += s"$mangledClassType::__StaticInit* $mangledClassType::__staticInit = new $mangledClassType::__StaticInit();\n"
     }
@@ -290,7 +298,8 @@ class TargetCpp extends TargetBase {
 
   override def doNew(kind:Type, context:BaseMethodContext): String = {
     val newType = mangler.typeToStringNoRef(kind)
-    s"std::shared_ptr< $newType >(new $newType())"
+    //s"std::shared_ptr< $newType >(new $newType())"
+    s"new $newType()"
   }
 
   override def doLocal(localName: String, context:BaseMethodContext): String = localName
@@ -336,10 +345,10 @@ class TargetCpp extends TargetBase {
 
   override def doConstantClass(s: String, context:BaseMethodContext): String = "NULL /* ClassConstant:" + s + "*/"
   override def doConstantNull(context:BaseMethodContext): String = "std::shared_ptr<void*>(NULL)"
-  override def doConstantInt(value: Int, context:BaseMethodContext): String = s"${value}"
+  override def doConstantInt(value: Int, context:BaseMethodContext): String = s"$value"
   override def doConstantLong(value: Long, context:BaseMethodContext): String = s"${value}L"
   override def doConstantFloat(value: Float, context:BaseMethodContext): String = s"${value}f"
-  override def doConstantDouble(value: Double, context:BaseMethodContext): String = s"${value}"
+  override def doConstantDouble(value: Double, context:BaseMethodContext): String = s"$value"
   override def doConstantString(value: String, context:BaseMethodContext): String = escapeString(value)
 
   override def doThrow(value: Value, context:BaseMethodContext): String = "throw(" + doValue(value, context) + ");"
@@ -411,12 +420,12 @@ class TargetCpp extends TargetBase {
   }
 
   private def escapeString(str: String): String = {
-    str.map(_ match {
+    str.map(c => c match {
       case '"' => "\""
       case '\n' => "\\n"
       case '\r' => "\\r"
       case '\t' => "\\t"
-      case _ => _
+      case _ => c
     }).mkString("")
   }
 

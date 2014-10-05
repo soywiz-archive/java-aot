@@ -1,5 +1,6 @@
 import target.TargetCpp
 import util.{ClassDependencyWalker, OS, RuntimeProvider, SootUtils}
+import vfs.FileVfsNode
 
 object Main extends App {
   System.out.println(System.getProperty("os.name").toLowerCase)
@@ -15,6 +16,8 @@ object Main extends App {
 
   //val generator = new As3ClassTreeGenerator()
   val target = new TargetCpp()
+  print("Calculating dependency tree...")
   val dependencies = new ClassDependencyWalker(runtimeProvider).getRefClassesTree(entryPoint)
-  target.buildAndRun(dependencies, entryPoint, runtimeProvider, runtimeProvider.cpp_classes_path)
+  println("" + dependencies.length + "...Ok")
+  target.buildAndRun(dependencies, entryPoint, runtimeProvider, new FileVfsNode(runtimeProvider.cpp_classes_path))
 }

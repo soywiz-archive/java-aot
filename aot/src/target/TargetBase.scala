@@ -6,6 +6,7 @@ import java.nio.charset.Charset
 import _root_.util._
 import soot._
 import soot.jimple.{TableSwitchStmt, _}
+import vfs.VfsNode
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -16,18 +17,16 @@ abstract class TargetBase {
   protected val utf8 = Charset.forName("UTF-8")
   protected val file_separator = System.getProperty("file.separator")
 
-  def buildAndRun(classNames:Seq[String], mainClass:String, runtimeProvider:RuntimeProvider, outputPath:String): scala.Unit = {
+  def buildAndRun(classNames:Seq[String], mainClass:String, runtimeProvider:RuntimeProvider, outputPath:VfsNode): scala.Unit = {
     val projectContext = new BaseProjectContext(classNames, mainClass, runtimeProvider, outputPath)
     generateProject(projectContext)
     buildProject(projectContext)
     runProject(projectContext)
   }
 
-  def generateProject(projectContext:BaseProjectContext) = {
+  def generateProject(projectContext:BaseProjectContext): scala.Unit = {
     // Load classes into stage
     projectContext.classNames.foreach(Scene.v.loadClassAndSupport)
-
-    FileBytes.makeDirectories(new File(projectContext.outputPath))
 
     for (className <- projectContext.classNames) {
       val clazz = Scene.v.getSootClass(className)
@@ -43,50 +42,21 @@ abstract class TargetBase {
   def runProject(projectContext:BaseProjectContext): scala.Unit = {
   }
 
-  def generateClass(context:BaseClassContext): scala.Unit = {
-    val clazz = context.clazz
+  protected def classNameToPath(name:String): String = name.replace(".", "/")
 
-    if (clazz.hasSuperclass) context.referencedClasses.add(clazz.getSuperclass)
-    for (interface <- clazz.getInterfaces.asScala) context.referencedClasses.add(interface)
+  def generateClass(classContext:BaseClassContext): scala.Unit = {
+    val clazz = classContext.clazz
 
-    for (method <- clazz.getMethods) {
-      val context = new BaseMethodContext(context, method)
-      context.methodWithBody = doMethodWithBody(context)
-    }
+    if (clazz.hasSuperclass) classContext.referencedClasses.add(clazz.getSuperclass)
+    for (interface <- clazz.getInterfaces.asScala) classContext.referencedClasses.add(interface)
 
-    /*
-    var staticConstructor:StaticConstructorResult = null
-
-    try {
-      val clinitMethod = clazz.getMethodByName("<clinit>")
-      val className = mangler.mangle(clazz)
-      staticConstructor = StaticConstructorResult(clazz)
-    } catch  {
-      case e:Exception =>
-    }
-
-    ClassResult(clazz, results, declaration, definition, referencedClasses.toList, native_framework, native_library, cflags, staticConstructor)
-    */
-  }
-
-  def baseMethodGenerator(method: SootMethod, mangler: BaseMangler) {
-    val bodyGenerator:TargetBase
-    val signatureGenerator:BaseMethodSignatureGenerator
-
-    def doMethod(): MethodResult = {
-      bodyGenerator.calculateSignatureDependencies()
-
-      def getBody:String = {
-        if (method.isAbstract || method.isNative) {
-          SootUtils.getTag(method.getTags.asScala, "Llibcore/CPPMethod;", "value").asInstanceOf[String]
-        } else {
-          signatureGenerator.generateBody(bodyGenerator.doMethodBody())
-        }
-      }
-
-      MethodResult(method, signatureGenerator.generateHeader(), getBody, bodyGenerator.getReferencedClasses)
+    for (method <- clazz.getMethods.asScala) {
+      val methodContext = new BaseMethodContext(classContext, method)
+      methodContext.methodWithBody = if (methodHasBody(methodContext.method)) doMethodWithBody(methodContext) else null
     }
   }
+
+  def methodHasBody(method:SootMethod):Boolean = !method.isAbstract && !method.isNative
 
   def doMethodWithBody(context:BaseMethodContext): String
 

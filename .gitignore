@@ -1,5 +1,5 @@
 *.iws
-/target
+target
 /out
 /out_*
 *.class

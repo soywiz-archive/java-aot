@@ -6,7 +6,9 @@ import vfs.{MergedVfsNode, FileVfsNode, VfsNode}
 
 class RuntimeProvider {
   private val cl = this.getClass.getClassLoader
-  private val javaAotProjectDirectory = new File(cl.getResource("target/SootUtils.class").getPath).getParentFile.getParentFile.getParentFile
+  private val currentClassPath = this.getClass.getName.replace(".", "/") + ".class"
+  println(currentClassPath)
+  private val javaAotProjectDirectory = new File(cl.getResource(currentClassPath).getPath).getParentFile.getParentFile.getParentFile
   private val javaAotProjectPath = javaAotProjectDirectory.getAbsolutePath
 
   val java_runtime_classes_path = s"$javaAotProjectPath/../../out_runtime"

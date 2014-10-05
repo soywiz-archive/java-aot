@@ -5,9 +5,9 @@ import java.util.zip.ZipFile
 
 import util.FileBytes
 
-class ZipVfsNode(val zip:ZipFile, path:String = "") extends VfsNode {
+class ZipVfsNode(val zip:ZipFile, path:String = "", val name:String = "", val parent:ZipVfsNode = null) extends VfsNode {
   lazy val entry = zip.getEntry(path)
-  override protected def accessImpl(path: Seq[String]): VfsNode = new ZipVfsNode(zip, this.path + "/" + path.mkString("/"))
+  override protected def child(name: String): VfsNode = new ZipVfsNode(zip, s"${this.path}/$name", name, parent)
   override def write(data: Array[Byte]): Unit = throw new NotImplementedError()
   override def read(): Array[Byte] = FileBytes.read(zip.getInputStream(entry))
 
@@ -20,4 +20,7 @@ class ZipVfsNode(val zip:ZipFile, path:String = "") extends VfsNode {
 
   override def exists(): Boolean = entry != null
   override def size: Long = entry.getSize
+
+  override def mkdir(): Unit = throw new NotImplementedError()
+  override def remove(): Unit = throw new NotImplementedError()
 }
