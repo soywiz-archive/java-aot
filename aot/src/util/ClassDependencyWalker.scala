@@ -10,7 +10,7 @@ import scala.collection.mutable
 
 class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
 
-  def getRefClassesTree(path:String) : List[String] = {
+  def getRefClassesTree(path:String) : Seq[String] = {
     val visited = mutable.HashSet[String]()
     val toVisit = mutable.Queue[String]()
 
@@ -34,11 +34,9 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
     visited.toList
   }
 
-  def getRefClasses(path:String): List[String] = {
-    getRefClasses(FileBytes.read(new File(runtimeProvider.getClassPath(path))))
-  }
+  private def getRefClasses(path:String): List[String] = getRefClasses(runtimeProvider.getClassVfsNode(path).read())
 
-  def getRefClasses(data:Array[Byte]): List[String] = {
+  private def getRefClasses(data:Array[Byte]): List[String] = {
     val cn = new ClassNode(Opcodes.ASM5)
 
     val cr = new ClassReader(data)

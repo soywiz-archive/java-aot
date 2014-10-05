@@ -1,17 +1,14 @@
 package util
 
-import java.io.{File, FileInputStream, FileOutputStream}
+import java.io.{InputStream, File, FileInputStream, FileOutputStream}
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 
 object FileBytes {
-  def read(file:File):Array[Byte] = {
-    val fis = new FileInputStream(file)
-    val data = new Array[Byte](file.length().toInt)
-    fis.read(data)
-    fis.close()
-    data
-  }
+  def makeDirectories(file: File) = file.mkdirs()
+
+  def copy(from:File, to:File) = write(to, read(from))
+  def read(file:File):Array[Byte] = read(new FileInputStream(file))
 
   def read(file:File, charset:Charset):String = {
     charset.decode(ByteBuffer.wrap(read(file))).toString
@@ -28,5 +25,12 @@ object FileBytes {
     val data = new Array[Byte](bb.remaining())
     bb.get(data)
     write(file, data)
+  }
+
+  def read(is:InputStream): Array[Byte] = {
+    val data = new Array[Byte](is.available().toInt)
+    is.read(data)
+    is.close()
+    data
   }
 }

@@ -1,21 +1,25 @@
-package target.context
+package target
 
 import soot._
 import soot.jimple.{GotoStmt, IfStmt, LookupSwitchStmt, TableSwitchStmt}
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-
 class BaseMethodContext(val classContext:BaseClassContext, val method: SootMethod) {
+  classContext.methods.append(this)
+
   val locals = new mutable.HashMap[Local, String]
   var lastLocalId = 0
+
+  var methodWithBody:String = ""
 
   val labels = new mutable.HashMap[Unit, String]
   var lastLabelIndex = 0
 
-  val tryList = new mutable.HashMap[Unit, mutable.ListBuffer[Tuple2[Int, SootClass]]]
-  val catchList = new mutable.HashMap[Unit, mutable.ListBuffer[Tuple2[Int, SootClass]]]
-  val endCatchList = new mutable.HashMap[Unit, mutable.ListBuffer[Tuple2[Int, SootClass]]]
+  val tryList = new mutable.HashMap[Unit, mutable.ListBuffer[(Int, SootClass)]]
+  val catchList = new mutable.HashMap[Unit, mutable.ListBuffer[(Int, SootClass)]]
+  val endCatchList = new mutable.HashMap[Unit, mutable.ListBuffer[(Int, SootClass)]]
   def referencedClasses = classContext.referencedClasses
 
   var usingExceptions = false
@@ -60,13 +64,13 @@ class BaseMethodContext(val classContext:BaseClassContext, val method: SootMetho
     locals.get(t).get
   }
 
-  def getLabels(units: List[Unit]): scala.Unit = {
+  def processLabels(units: List[Unit]): scala.Unit = {
     for (unit <- units) {
       unit match {
         case s: GotoStmt => labels(s.getTarget) = allocateLabelName
         case s: IfStmt => labels(s.getTarget) = allocateLabelName
         case s: LookupSwitchStmt =>
-          val targets = (0 to s.getTargetCount - 1).map(s.getTarget(_).asInstanceOf[Unit])
+          val targets = (0 to s.getTargetCount - 1).map(s.getTarget)
           for (target <- targets) labels(target) = allocateLabelName
           if (s.getDefaultTarget != null) labels(s.getDefaultTarget) = allocateLabelName
         case s: TableSwitchStmt =>
@@ -77,3 +81,5 @@ class BaseMethodContext(val classContext:BaseClassContext, val method: SootMetho
     }
   }
 }
+
+//case class MethodResult(method:SootMethod, declaration:String, definition:String, referencedClasses:List[SootClass])

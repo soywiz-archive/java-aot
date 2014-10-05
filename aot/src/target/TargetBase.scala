@@ -1,23 +1,60 @@
 package target
 
+import java.io.File
+import java.nio.charset.Charset
+
+import _root_.util._
 import soot._
 import soot.jimple.{TableSwitchStmt, _}
-import target.context.{BaseMethodContext, BaseClassContext}
-import target.result.{StaticConstructorResult, ClassResult}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 abstract class TargetBase {
-  def doClass(context:BaseClassContext): scala.Unit = {
+  protected val cl = this.getClass.getClassLoader
+  protected val utf8 = Charset.forName("UTF-8")
+  protected val file_separator = System.getProperty("file.separator")
+
+  def buildAndRun(classNames:Seq[String], mainClass:String, runtimeProvider:RuntimeProvider, outputPath:String): scala.Unit = {
+    val projectContext = new BaseProjectContext(classNames, mainClass, runtimeProvider, outputPath)
+    generateProject(projectContext)
+    buildProject(projectContext)
+    runProject(projectContext)
+  }
+
+  def generateProject(projectContext:BaseProjectContext) = {
+    // Load classes into stage
+    projectContext.classNames.foreach(Scene.v.loadClassAndSupport)
+
+    FileBytes.makeDirectories(new File(projectContext.outputPath))
+
+    for (className <- projectContext.classNames) {
+      val clazz = Scene.v.getSootClass(className)
+      println("Processing class: " + clazz.getName)
+      generateClass(new BaseClassContext(projectContext, clazz))
+    }
+    println("Processed classes: " + projectContext.classNames.length)
+  }
+
+  def buildProject(projectContext:BaseProjectContext): scala.Unit = {
+  }
+  
+  def runProject(projectContext:BaseProjectContext): scala.Unit = {
+  }
+
+  def generateClass(context:BaseClassContext): scala.Unit = {
     val clazz = context.clazz
 
     if (clazz.hasSuperclass) context.referencedClasses.add(clazz.getSuperclass)
     for (interface <- clazz.getInterfaces.asScala) context.referencedClasses.add(interface)
 
-    val methodBodies = clazz.getMethods.asScala.map(method => doMethodBody(new BaseMethodContext(context, method))).toList
+    for (method <- clazz.getMethods) {
+      val context = new BaseMethodContext(context, method)
+      context.methodWithBody = doMethodWithBody(context)
+    }
 
+    /*
     var staticConstructor:StaticConstructorResult = null
 
     try {
@@ -28,14 +65,30 @@ abstract class TargetBase {
       case e:Exception =>
     }
 
-
-    //println("typedef int int32;")
-    //println("typedef long long int int64;")
-    //println("class java_lang_Exception;")
-    //println("class java_lang_Object;")
-
     ClassResult(clazz, results, declaration, definition, referencedClasses.toList, native_framework, native_library, cflags, staticConstructor)
+    */
   }
+
+  def baseMethodGenerator(method: SootMethod, mangler: BaseMangler) {
+    val bodyGenerator:TargetBase
+    val signatureGenerator:BaseMethodSignatureGenerator
+
+    def doMethod(): MethodResult = {
+      bodyGenerator.calculateSignatureDependencies()
+
+      def getBody:String = {
+        if (method.isAbstract || method.isNative) {
+          SootUtils.getTag(method.getTags.asScala, "Llibcore/CPPMethod;", "value").asInstanceOf[String]
+        } else {
+          signatureGenerator.generateBody(bodyGenerator.doMethodBody())
+        }
+      }
+
+      MethodResult(method, signatureGenerator.generateHeader(), getBody, bodyGenerator.getReferencedClasses)
+    }
+  }
+
+  def doMethodWithBody(context:BaseMethodContext): String
 
   final def doMethodBody(context:BaseMethodContext): String = {
     val body = context.method.retrieveActiveBody
@@ -53,7 +106,7 @@ abstract class TargetBase {
     }
     val units = body.getUnits
 
-    context.getLabels(units.asScala.toList)
+    context.processLabels(units.asScala.toList)
 
     var stms = ""
     for (unit <- units.asScala) {
@@ -116,24 +169,15 @@ abstract class TargetBase {
       case s: NopStmt => doNop(context)
       case s: LookupSwitchStmt =>
         doSwitch(s.getKey, context.labels(s.getDefaultTarget),
-          uniqueMap((0 until s.getTargetCount).map(i => (s.getLookupValue(i), context.labels(s.getTarget(i))))).orNull, context
+          CollectionUtils.uniqueMap((0 until s.getTargetCount).map(i => (s.getLookupValue(i), context.labels(s.getTarget(i))))).orNull, context
         )
       case s: TableSwitchStmt =>
         doSwitch(s.getKey, context.labels(s.getDefaultTarget),
-          uniqueMap((s.getLowIndex to s.getHighIndex).map(i => (i, context.labels(s.getTarget(i - s.getLowIndex))))).orNull, context
+          CollectionUtils.uniqueMap((s.getLowIndex to s.getHighIndex).map(i => (i, context.labels(s.getTarget(i - s.getLowIndex))))).orNull, context
         )
     }
     //unit.addBoxPointingToThis()
     //println("  unit:" + unit)
-  }
-
-  private def uniqueMap[A,B](s: Seq[(A,B)]) = {
-    val h = new collection.mutable.HashMap[A,B]
-    val okay = s.iterator.forall(x => {
-      val y = h.put(x._1, x._2)
-      y.isEmpty || y.get == x._2
-    })
-    if (okay) Some(h) else None
   }
 
   final def doValue(value: Value, context:BaseMethodContext): String = {
