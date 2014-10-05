@@ -102,19 +102,19 @@ object SootUtils {
       int(clazz.getSuperclass)
     }
   }
+  
+  def hasMethod(clazz:SootClass, name:String, parameterTypes:java.util.List[_]):Boolean = {
+    try {
+      (clazz.getMethod(name, parameterTypes) != null)
+    } catch {
+      case _:Throwable => false
+    }
+  }
 
   def isMethodOverriding(method:SootMethod): Boolean = {
+    val name = method.getName
     val parameterTypes = method.getParameterTypes
     val ancestors = classAncestors(method.getDeclaringClass)
-    for (clazz <- ancestors) {
-      try {
-        if (clazz.getMethod(method.getName) != null) {
-          return true
-        }
-      } catch {
-        case _:Throwable =>
-      }
-    }
-    false
+    ancestors.exists(hasMethod(_, name, parameterTypes))
   }
 }

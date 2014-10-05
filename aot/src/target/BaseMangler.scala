@@ -28,5 +28,5 @@ trait BaseMangler {
   }
 
   def mangleMethodName(method: SootMethod): String = escapeSpecialChars(method.getName)
-  def mangleFullMethodName(method: SootMethod): String = escapeSpecialChars(method.getDeclaringClass.getName) + "::" + mangleMethodName(method)
+  def mangleFullMethodName(method: SootMethod): String = mangleClassName(method.getDeclaringClass.getName) + "::" + mangleMethodName(method)
 }
