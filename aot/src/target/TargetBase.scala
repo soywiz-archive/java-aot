@@ -129,7 +129,7 @@ abstract class TargetBase {
     def processExceptionHandler = {
       if (context.catchList.contains(unit)) {
         context.catchList(unit).map(item => {
-          val (trapId) = item
+          val (trapId, trapType) = item
           context.usingExceptions = true
           doLabel(s"exception_handler_$trapId", context) + "\n"
         }).mkString

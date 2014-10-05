@@ -17,10 +17,10 @@ class java_lang_Class;
 
 class java_lang_Object {
     public: void __init__();
-    public: bool equals(std::shared_ptr<java_lang_Object> p0);
+    public: bool equals(java_lang_Object* p0);
     public: int32 hashCode();
-    public: std::shared_ptr<java_lang_Class> getClass();
-    public: std::shared_ptr<java_lang_String> toString();
+    public: java_lang_Class* getClass();
+    public: java_lang_String* toString();
 };
 
 class ArrayBase : public java_lang_Object {
@@ -40,8 +40,7 @@ public:
         this->items = new T[len1];
         this->alloc = 1;
         this->len = len;
-        memset(0, len1, sizeof(T));
-        //for (int n = 0; n < len1; n++) this->items[n] = 0;
+        memset(this->items, 0, len1 * sizeof(T));
     }
 
     ~Array() {
@@ -80,10 +79,10 @@ public:
     void* __get_object(int index) { return (void *)(int64)items[index]; }
 };
 
-std::shared_ptr<java_lang_String> cstr_to_JavaString(const wchar_t* str);
-std::shared_ptr<java_lang_String> cstr_byte_to_JavaString(const char* str);
-wchar_t* JavaString_to_cstr(std::shared_ptr<java_lang_String> str);
-char* JavaString_to_cstr_byte(std::shared_ptr<java_lang_String> str);
+java_lang_String* cstr_to_JavaString(const wchar_t* str);
+java_lang_String* cstr_byte_to_JavaString(const char* str);
+wchar_t* JavaString_to_cstr(java_lang_String* str);
+char* JavaString_to_cstr_byte(java_lang_String* str);
 
 int32 cmp(int64 l, int64 r);
 

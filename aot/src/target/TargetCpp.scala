@@ -62,7 +62,11 @@ class TargetCpp extends TargetBase {
 
     def createMain(): String = {
       val main_cpp = runtime.runtimeClassesVfs.access("cpp/main.cpp").read(utf8)
-      s"#define __ENTRY_POINT_METHOD__ $mainClassName::main\n$main_cpp"
+      List(
+        s"#define __ENTRY_POINT_METHOD__ $mainClassName::main",
+        s"#include <" + getHeaderFileForClass(projectContext.mainClass) + ">",
+        main_cpp
+      ).mkString("\n")
     }
 
     val outputPath = projectContext.output
@@ -105,7 +109,7 @@ class TargetCpp extends TargetBase {
 
     val cflagsAppend = cppProjectContext.cflags.mkString(" ")
     var command = s"g++ -fpermissive -Wint-to-pointer-cast "
-    command += " \"-I" + outputPath.absoluteFullPath + "\""
+    command += " -I" + outputPath.absoluteFullPath + ""
     command += s" -O2 types.cpp main.cpp $paths $frameworksAppend $libraryAppend $cflagsAppend"
     if (OS.isMac) {
       command += s" -framework Cocoa -framework CoreAudio -F/Library/Frameworks -F$java_macos_embedded_frameworks"
@@ -126,7 +130,8 @@ class TargetCpp extends TargetBase {
     if (!result) throw new Exception("error building")
 
     if (OS.isMac) {
-      val png512 = new FileVfsNode(runtime.java_runtime_classes_path).access("emptyicon.png").read()
+
+      val png512 = runtime.runtimeClassesVfs.access("all/emptyicon.png").read()
       CppGeneratorBuildMacOS.createAPP(projectContext.output.access("test.app"), "sampleapp", outputExecutableFile.read(), png512)
     }
   }
@@ -172,9 +177,8 @@ class TargetCpp extends TargetBase {
     s"$head { $body }"
   }
 
-  def getHeaderFileForClass(clazz:SootClass):String = {
-    classNameToPath(clazz.getName) + ".h"
-  }
+  def getHeaderFileForClass(className:String):String = classNameToPath(className) + ".h"
+  def getHeaderFileForClass(clazz:SootClass):String = getHeaderFileForClass(clazz.getName)
 
   def doClassHeader(context:BaseClassContext): String = {
     val clazz2 = context.asInstanceOf[CppClassContext]
@@ -264,11 +268,8 @@ class TargetCpp extends TargetBase {
         val isRefType = mangler.isRefType(field.getType)
         val mangledFieldType = mangler.typeToStringRef(field.getType)
         val mangledFieldName = mangler.mangle(field)
-        if (isRefType) {
-          definition += s"$mangledFieldType $mangledClassType::$mangledFieldName = $mangledFieldType(NULL);\n"
-        } else {
-          definition += s"$mangledFieldType $mangledClassType::$mangledFieldName = ($mangledFieldType)0;\n"
-        }
+        val nullValue = if (isRefType) s"($mangledFieldType)(NULL)" else s"($mangledFieldType)0"
+        definition += s"$mangledFieldType $mangledClassType::$mangledFieldName = $nullValue;\n"
       }
     }
 
@@ -300,8 +301,8 @@ class TargetCpp extends TargetBase {
   override def doBinop(kind:Type, left:Value, right:Value, op:String, context:BaseMethodContext): String = {
     var l = doValue(left, context)
     var r = doValue(right, context)
-    if (mangler.isRefType(left.getType)) l = s"$l.get()"
-    if (mangler.isRefType(right.getType)) r = s"$r.get()"
+    //if (mangler.isRefType(left.getType)) l = s"$l.get()"
+    //if (mangler.isRefType(right.getType)) r = s"$r.get()"
     op match {
       case "cmp" | "cmpl" | "cmpg" => s"$op($l, $r)"
       case _ =>
@@ -310,12 +311,7 @@ class TargetCpp extends TargetBase {
   }
 
   override def doCast(fromType:Type, toType:Type, value:Value, context:BaseMethodContext): String = {
-    //"((" + mangler.typeToStringRef(toType) + ")" + doValue(value) + ")"
-    if (mangler.isRefType(toType)) {
-      "(std::dynamic_pointer_cast< " + mangler.typeToStringNoRef(toType) + " >(" + doValue(value, context) + "))"
-    } else {
-      "((" + mangler.typeToStringRef(toType) + ")" + doValue(value, context) + ")"
-    }
+    "((" + mangler.typeToStringRef(toType) + ")" + doValue(value, context) + ")"
   }
 
   override def doNew(kind:Type, context:BaseMethodContext): String = {
@@ -337,7 +333,8 @@ class TargetCpp extends TargetBase {
   }
 
   override def doNewArray(kind: Type, size: Value, context:BaseMethodContext): String = {
-    "std::shared_ptr< " + mangler.typeToStringNoRef(kind) + " >(new " + mangler.typeToStringNoRef(kind) + "(" + doValue(size, context) + "))"
+    //"std::shared_ptr< " + mangler.typeToStringNoRef(kind) + " >(new " + mangler.typeToStringNoRef(kind) + "(" + doValue(size, context) + "))"
+    "new " + mangler.typeToStringNoRef(kind) + "(" + doValue(size, context) + ")"
   }
 
   override def doNewMultiArray(kind: Type, values: Array[Value], context:BaseMethodContext): String = {
@@ -366,18 +363,22 @@ class TargetCpp extends TargetBase {
   }
 
   override def doConstantClass(s: String, context:BaseMethodContext): String = "NULL /* ClassConstant:" + s + "*/"
-  override def doConstantNull(context:BaseMethodContext): String = "std::shared_ptr<void*>(NULL)"
+  override def doConstantNull(context:BaseMethodContext): String = {
+    //"std::shared_ptr<void*>(NULL)"
+    "NULL"
+  }
   override def doConstantInt(value: Int, context:BaseMethodContext): String = s"$value"
   override def doConstantLong(value: Long, context:BaseMethodContext): String = s"${value}L"
   override def doConstantFloat(value: Float, context:BaseMethodContext): String = s"${value}f"
   override def doConstantDouble(value: Double, context:BaseMethodContext): String = s"$value"
-  override def doConstantString(value: String, context:BaseMethodContext): String = escapeString(value)
+  override def doConstantString(value: String, context:BaseMethodContext): String = "cstr_byte_to_JavaString(\"" + escapeString(value) + "\")"
 
   override def doThrow(value: Value, context:BaseMethodContext): String = "throw(" + doValue(value, context) + ");"
   override def doLabel(labelName: String, context:BaseMethodContext): String = s"$labelName:; "
   override def doTryStart(context:BaseMethodContext):String = "try {\n"
   override def doCatchAndGoto(trapType: SootClass, labelName: String, context:BaseMethodContext): String = {
-    "} catch (std::shared_ptr<" + mangler.mangle(trapType) + s"> __caughtexception__) { __caughtexception = __caughtexception__; goto $labelName; }\n"
+    //"} catch (std::shared_ptr<" + mangler.mangle(trapType) + s"> __caughtexception__) { __caughtexception = __caughtexception__; goto $labelName; }\n"
+    "} catch (" + mangler.mangle(trapType) + s"* __caughtexception__) { __caughtexception = __caughtexception__; goto $labelName; }\n"
   }
   override def doSwitch(matchValue:Value, defaultLabel: String, map: scala.collection.mutable.HashMap[Int, String], context:BaseMethodContext): String = {
     def matchValueString = doValue(matchValue, context)
@@ -417,7 +418,7 @@ class TargetCpp extends TargetBase {
   override def doEnterMonitor(value: Value, context:BaseMethodContext): String = "RuntimeEnterMonitor(" + doValue(value, context) + ")"
   override def doExitMonitor(value: Value, context:BaseMethodContext): String = "RuntimeExitMonitor(" + doValue(value, context) + ")"
 
-  override def doInvokeStatic(method: SootMethod, args: Seq[String], context:BaseMethodContext): String = mangler.mangleFullName(method) + "(" + args.mkString + ")"
+  override def doInvokeStatic(method: SootMethod, args: Seq[String], context:BaseMethodContext): String = mangler.mangleFullName(method) + "(" + args.mkString(", ") + ")"
 
   override def doInvokeInstance(base: Value, method: SootMethod, args: List[String], special:Boolean, context:BaseMethodContext): String = {
     val argsCall = args.mkString(", ")
@@ -426,7 +427,8 @@ class TargetCpp extends TargetBase {
     } else {
       if (method.getDeclaringClass.getName == "java.lang.Object") {
         // Required for interfaces not extending Object directly
-        "((std::dynamic_pointer_cast<java_lang_Object>)(" + doValue(base, context) + "))->" + mangler.mangleBaseName(method) + "(" + argsCall + ")"
+        //"((std::dynamic_pointer_cast<java_lang_Object>)(" + doValue(base, context) + "))->" + mangler.mangleBaseName(method) + "(" + argsCall + ")"
+        "((java_lang_Object *)(" + doValue(base, context) + "))->" + mangler.mangleBaseName(method) + "(" + argsCall + ")"
       } else {
         doValue(base, context) + "->" + mangler.mangleBaseName(method) + "(" + argsCall + ")"
       }
@@ -434,11 +436,13 @@ class TargetCpp extends TargetBase {
   }
 
   private def doWrapRefType(toType:SootClass, value: String, context:BaseMethodContext): String = {
-    "std::shared_ptr< " + mangler.mangle(toType) + " >(" + value + ")"
+    //"std::shared_ptr< " + mangler.mangle(toType) + " >(" + value + ")"
+    value
   }
 
   private def doWrapRefType(toType:Type, value: String, context:BaseMethodContext): String = {
-    "std::shared_ptr< " + mangler.typeToStringNoRef(toType) + " >(" + value + ")"
+    //"std::shared_ptr< " + mangler.typeToStringNoRef(toType) + " >(" + value + ")"
+    value
   }
 
   private def escapeString(str: String): String = {
@@ -505,9 +509,9 @@ class TargetCpp extends TargetBase {
       Runtime.getRuntime.exec(s"strip " + path.access("Contents/MacOS/app").absoluteFullPath)
 
       path.access("Contents/Resources/app.icns").ensureParentPath().write(createIcns(png512x512))
-      path.access("Contents/Contents/PkgInfo").ensureParentPath().write("APPL????", utf8)
+      path.access("Contents/PkgInfo").ensureParentPath().write("APPL????", utf8)
 
-      path.access("Contents/Contents/Info.plist").write(
+      path.access("Contents/Info.plist").write(
         s"""
       |<?xml version="1.0" encoding="UTF-8"?>
       |<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

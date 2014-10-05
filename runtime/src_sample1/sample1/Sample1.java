@@ -27,7 +27,11 @@ public class Sample1 {
     }
 
 	static public int main(String[] args) {
+        libcore.Native.putchar('H');
         System.out.println("Hello world!");
+        System.out.println("args:" + args.length);
+        for (String arg : args) System.out.println("arg:" + arg);
+
         //libcore.Native.putchar('H');
         //return -1;
 		int[] list = new int[10];
@@ -99,18 +103,21 @@ public class Sample1 {
 
         System.out.println("WOW. Inner class says minus seven is: " + v.run());
 
-        SDLEngineContext context = new SDLEngineContext();
-        Stage stage = new Stage(context);
+        //SDLEngineContext context = new SDLEngineContext();
+        //Stage stage = new Stage(context);
+//
+        //stage.addChild(new Quad() {
+        //    {
+        //        this.color = Color.red;
+        //        this.width = 200;
+        //        this.height = 200;
+        //    }
+        //});
+//
+        //context.loop(stage);
 
-        stage.addChild(new Quad() {
-            {
-                this.color = Color.red;
-                this.width = 200;
-                this.height = 200;
-            }
-        });
-
-        context.loop(stage);
+        int item = -1;
+        System.out.println("Inverting -1 bits: " + ~item);
 
 		return 0;
 	}

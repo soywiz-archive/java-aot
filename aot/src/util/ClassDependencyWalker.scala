@@ -16,6 +16,7 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
 
     def enqueue(path:String): Unit = {
       if (!visited.contains(path)) {
+        //println(path)
         toVisit.enqueue(path)
         visited.add(path)
       }
@@ -52,7 +53,10 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
           case Type.INT | Type.CHAR | Type.BYTE | Type.BOOLEAN | Type.VOID | Type.SHORT | Type.LONG | Type.DOUBLE | Type.FLOAT =>
           case _ =>
             val name = kind.getClassName
-            if (name != null) classNames.add(name)
+            if (name != null) {
+              //println("   - " + name)
+              classNames.add(name)
+            }
         }
       }
     }
@@ -70,8 +74,10 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
 
     //val debug = (cn.name == "java/lang/System")
 
+    //println(cn.name)
     for (method <- cn.methods.asScala.map(_.asInstanceOf[MethodNode])) {
       //if (debug) println(s"   - ${method.name}")
+      //println(" - " + method.name)
       processMethodType(Type.getType(method.desc))
       for (ins <- method.instructions.toArray) {
         //if (method.name == "children") println("  " + ins)
@@ -83,17 +89,18 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
             } else {
               processClassName(i.desc)
             }
-          case i:MethodInsnNode =>
-            //if (method.name == "children") println("  + " + i.desc)
-            processMethodType(Type.getType(i.desc))
-          case i:MultiANewArrayInsnNode =>
-            //if (method.name == "children") println("  + " + i.desc)
-            processMethodType(Type.getType(i.desc))
+          case i:MethodInsnNode =>  processClassName(i.owner)
+          case i:MultiANewArrayInsnNode =>  processMethodType(Type.getType(i.desc))
           case i:FieldInsnNode =>
             //if (method.name == "children") println("  + " + i.owner + " : " + i.desc)
             processClassName(i.owner)
             processType(Type.getType(i.desc))
+          case i:LabelNode =>
+          case i:LineNumberNode =>
+          case i:LdcInsnNode =>
+          case i:VarInsnNode =>
           case _ =>
+            //println(ins)
         }
       }
     }
