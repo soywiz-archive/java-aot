@@ -23,6 +23,13 @@ class TargetAs3 extends Target {
     val runtimeVfs = context.runtime.runtimeClassesVfs
     val outputVfs = context.output
     runtimeVfs.access("as3").copyTreeTo(outputVfs)
+
+    val bootMainString = runtimeVfs.access("as3/BootMain.as").read(utf8)
+      .replace("/*!IMPORTS*/", context.bootImports.mkString("\n"))
+      .replace("/*!PREINIT*/", context.preInitLines.mkString("\n"))
+      .replace("/*!CALLMAIN*/", "Sample1.main_java_lang_String$Array(args)")
+
+    outputVfs.access("BootMain.as").write(bootMainString, utf8)
   }
 
   override def generateClass(clazz: BaseClassContext): scala.Unit = {
@@ -148,7 +155,8 @@ class TargetAs3 extends Target {
     }
 
     if (context.hasStaticConstructor) {
-      definition += s"\t{ $mangledClassType.__clinit___(); }\n"
+      context.projectContext.bootImports.append(s"import $mangledClassType;")
+      context.projectContext.preInitLines.append(s"\t$mangledClassType.__clinit___();")
     }
 
     // Class

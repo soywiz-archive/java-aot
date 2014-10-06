@@ -24,11 +24,11 @@ public class StringBuilder {
         return append((int)v);
     }
 
-    public StringBuilder append(int v) {
-		return append((long)v);
+    public StringBuilder append(long v) {
+		return append((int)v);
 	}
 
-	public StringBuilder append(long v) {
+	public StringBuilder append(int v) {
 		//String set = "0123456789abcdefghijklmnopqrtuvwxyz";
         String set = "0123456789";
 		char[] out = new char[128];

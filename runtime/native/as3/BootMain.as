@@ -1,7 +1,12 @@
 package {
 	import flash.display.Sprite;
+	import flash.text.TextField;
 	import flash.utils.setTimeout;
+
+	import libcore.Native;
+
 	import sample1.Sample1;
+	/*!IMPORTS*/
 
 	public class BootMain extends flash.display.Sprite {
 		public function BootMain() {
@@ -9,7 +14,12 @@ package {
 		}
 
 		private function main():void {
-			Sample1.main_java_lang_String$Array([])
+			addChild(Native.consoleTextField = new TextField());
+			Native.consoleTextField.width = stage.stageWidth;
+			Native.consoleTextField.height = stage.stageHeight;
+			var args:Array = [];
+			/*!PREINIT*/
+			/*!CALLMAIN*/
 		}
 	}
 }
