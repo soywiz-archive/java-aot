@@ -197,7 +197,7 @@ abstract class Target {
 
   final def doExpr(expr: Expr, context:BaseMethodContext): String = {
     expr match {
-      case e: CastExpr => context.referenceType(e.getCastType); doCast(e.getType, e.getCastType, e.getOp, context)
+      case e: CastExpr => context.referenceType(e.getCastType); doCast(e.getOp.getType, e.getCastType, e.getOp, context)
       case e: InstanceOfExpr => context.referenceType(e.getType); doInstanceof(e.getType, e.getCheckType, e.getOp, context)
       case e: NewExpr => context.referenceType(e.getType); doNew(e.getType, context)
       case e: NewArrayExpr => context.referenceType(e.getType.getArrayType); doNewArray(e.getType, e.getSize, context)

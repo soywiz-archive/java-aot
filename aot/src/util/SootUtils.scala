@@ -12,6 +12,7 @@ object SootUtils {
   def init(runtimeProvider:RuntimeProvider): Unit = {
     soot.G.reset
     Options.v.set_output_format(Options.output_format_jimple)
+    //Options.v.set_output_format(Options.output_format_grimple)
     Options.v.set_include_all(true)
     Options.v.set_print_tags_in_output(true)
 

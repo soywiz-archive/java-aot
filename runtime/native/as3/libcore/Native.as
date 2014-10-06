@@ -21,6 +21,6 @@ package libcore {
 			for (var n:int = 0; n < len; n++) destArray[n + destOfs] = srcArray[n + srcOfs];
 		}
 		static public function gc_():void { }
-		static public function currentTimeMillis_():Long { return new Long(0, 0); }
+		static public function currentTimeMillis_():Long { return Long.fromNumber(new Date().getTime()); }
 	}
 }

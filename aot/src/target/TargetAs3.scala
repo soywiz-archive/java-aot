@@ -214,8 +214,8 @@ class TargetAs3 extends Target {
           case "^" => s"Long.xor($l, $r)"
 
           case "<<" => s"Long.shl($l, $r)"
-          case ">>" => s"Long.shr($l, $r)"
-          case ">>>" => s"Long.sar($l, $r)"
+          case ">>" => s"Long.sar($l, $r)"
+          case ">>>" => s"Long.shr($l, $r)"
 
           case "==" => s"Long.eq($l, $r)"
           case "!=" => s"Long.ne($l, $r)"
@@ -241,8 +241,8 @@ class TargetAs3 extends Target {
   registerAbstract("java.lang.String", "String", "StringTools")
 
   override def doCast(fromType:Type, toType:Type, value:Value, context:BaseMethodContext): String = {
-    if (mangler.typeToStringRef(toType) == "java.lang.Object") {
-      "(" + doValue(value, context) + ")"
+    if (mangler.typeToStringRef(fromType) == "Long") {
+      "((" + doValue(value, context) + ").toInt())"
     } else {
       "((" + doValue(value, context) + ") as " + mangler.typeToStringRef(toType) + ")"
     }
