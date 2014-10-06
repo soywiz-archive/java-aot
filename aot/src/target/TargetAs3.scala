@@ -25,10 +25,15 @@ class TargetAs3 extends Target {
     val outputVfs = context.output
     runtimeVfs.access("as3").copyTreeTo(outputVfs)
 
+
     val bootMainString = runtimeVfs.access("as3/BootMain.as").read(utf8)
       .replace("/*!IMPORTS*/", context.bootImports.mkString("\n"))
       .replace("/*!PREINIT*/", context.preInitLines.mkString("\n"))
       .replace("/*!CALLMAIN*/", "Sample1.main_java_lang_String$Array(args)")
+
+    for (key <- mangler.abstractTypes.keys) {
+      outputVfs.access(key.replace(".", "/") + ".as").remove()
+    }
 
     outputVfs.access("BootMain.as").write(bootMainString, utf8)
     outputVfs.access("build.sh").write("/Developer/airsdk15/bin/mxmlc -optimize=false -debug=true +configname=air -source-path+=. BootMain.as -output=a.swf", utf8)
@@ -72,9 +77,11 @@ class TargetAs3 extends Target {
     val returnType = mangler.typeToStringRef(method.getReturnType)
     val mangledFullName = mangler.mangleMethodName(method)
     val params = getMethodParams(method)
-    val static = if (method.isStatic) "static" else if (SootUtils.isMethodOverriding(method)) "override" else ""
+    val static = if (method.isStatic) "static" else if (mustOverrideMethod(method)) "override" else ""
     s"$static public function $mangledFullName($params):$returnType"
   }
+
+  def mustOverrideMethod(method:SootMethod):Boolean = SootUtils.isMethodOverriding(method) && !mangler.abstractTypes.contains(method.getDeclaringClass.getSuperclass.getName)
 
   def getParamName(index: Int) = s"p$index"
 
@@ -106,7 +113,12 @@ class TargetAs3 extends Target {
     for (rc <- referencedClasses) classesToInclude.append(rc)
 
     for (res <- classesToInclude) {
-      definition += "import " + res.getName + ";\n"
+      if (!mangler.abstractTypes.contains(res.getName)) {
+        definition += "import " + res.getName + ";\n"
+      } else {
+        val (as3, staticType) = mangler.abstractTypes(res.getName)
+        definition += "import " + staticType + ";\n"
+      }
     }
 
     val typeKind = if (clazz.isInterface) "interface" else "class"
@@ -124,8 +136,8 @@ class TargetAs3 extends Target {
     }
 
     definition += s"public $typeKind " + clazz.getShortName
-    if (extendingList.nonEmpty) definition += " extends " + extendingList.mkString(", ")
-    if (implementingList.nonEmpty) definition += " implements " + implementingList.mkString(", ")
+    if (extendingList.nonEmpty) definition += " extends " + extendingList.map(mangler.mangleClassName).mkString(", ")
+    if (implementingList.nonEmpty) definition += " implements " + implementingList.map(mangler.mangleClassName).mkString(", ")
     definition += " {\n"
 
     val mangledClassType = mangler.mangleClassName(clazz.getName)
@@ -278,7 +290,7 @@ class TargetAs3 extends Target {
   override def doConstantLong(value: Long, context:BaseMethodContext): String = s"Long.value(" + (value & 0xFFFFFFFFL) + ", " + (value >> 32) + ")"
   override def doConstantFloat(value: Float, context:BaseMethodContext): String = s"${value}f"
   override def doConstantDouble(value: Double, context:BaseMethodContext): String = s"$value"
-  override def doConstantString(value: String, context:BaseMethodContext): String = "JavaCore.lstring(\"" + escapeString(value) + "\")"
+  override def doConstantString(value: String, context:BaseMethodContext): String = "\"" + escapeString(value) + "\""
 
   override def doThrow(value: Value, context:BaseMethodContext): String = "throw(" + doValue(value, context) + ");"
   override def doLabel(labelName: String, context:BaseMethodContext): String = s"$labelName:; "
@@ -317,17 +329,30 @@ class TargetAs3 extends Target {
       val instanceSootClass = base.getType.asInstanceOf[RefType].getSootClass
 
       if (instanceSootClass.equals(method.getDeclaringClass)) {
-        doValue(base, context) + "." + mangler.mangleMethodName(method) + "(" + argsCall + ")"
+        if (mangler.abstractTypes.contains(method.getDeclaringClass.getName)) {
+          val (as3, staticType) = mangler.abstractTypes(method.getDeclaringClass.getName)
+          doValue(base, context) + " = " + staticType + "." + mangler.mangleMethodName(method) + "(" + (args).mkString(", ") + ")"
+        } else {
+          doValue(base, context) + "." + mangler.mangleMethodName(method) + "(" + argsCall + ")"
+        }
       } else {
-        if (instanceSootClass.hasSuperclass && instanceSootClass.getSuperclass.equals(method.getDeclaringClass)) {
+        if (mangler.abstractTypes.contains(method.getDeclaringClass.getName)) {
+          // Nothing
+          ""
+        } else if (instanceSootClass.hasSuperclass && instanceSootClass.getSuperclass.equals(method.getDeclaringClass)) {
           //"/* WARNING: USING SUPER DIRECTLY! CHECK! */ super." +
-          mangler.mangleMethodName(method) + "(" + argsCall + ")"
+          "super." + mangler.mangleMethodName(method) + "(" + argsCall + ")"
         } else {
           throw new InvalidArgumentException(Array("Calling special without super"))
         }
       }
     } else {
-      doValue(base, context) + "." + mangler.mangleMethodName(method) + "(" + argsCall + ")"
+      if (mangler.abstractTypes.contains(method.getDeclaringClass.getName)) {
+        val (as3, staticType) = mangler.abstractTypes(method.getDeclaringClass.getName)
+        staticType + "." + mangler.mangleMethodName(method) + "(" + (doValue(base, context) :: args).mkString(", ") + ")"
+      } else {
+        doValue(base, context) + "." + mangler.mangleMethodName(method) + "(" + argsCall + ")"
+      }
     }
   }
 
@@ -344,9 +369,25 @@ class TargetAs3 extends Target {
   val mangler = As3Mangler
 
   object As3Mangler extends BaseMangler {
+    val abstractTypes = new mutable.HashMap[String, (String, String)]()
+
+    def declareAbstractType(javaType:String, as3Type:String, staticMethodsType:String): scala.Unit = {
+      abstractTypes(javaType) = (as3Type, staticMethodsType)
+    }
+
+    declareAbstractType("java.lang.Object", "Object", "ObjectImpl")
+    declareAbstractType("java.lang.String", "String", "StringImpl")
+    
     def mangle(clazz:SootClass): String = mangleClassName(clazz.getName)
     def mangle(field:SootField): String = field.getName
-    def mangleClassName(name:String):String = name.replace('.', '.')
+    def mangleClassName(name:String):String = {
+      if (abstractTypes.contains(name)) {
+        val (as3Type, staticMethodsType) = abstractTypes(name)
+        as3Type
+      } else {
+        name
+      }
+    }
     def mangleFullClassName(name:String):String = name.replace('.', '.')
 
     //override def visibility(member:ClassMember):String = if (member.isPublic) "public" else if (member.isProtected) "protected" else "private"
