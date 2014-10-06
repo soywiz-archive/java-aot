@@ -1,5 +1,7 @@
 *.iws
-target
+/target
+/aot/target
+/soot/target
 /out
 /out_*
 *.class
