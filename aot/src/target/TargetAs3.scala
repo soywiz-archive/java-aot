@@ -4,6 +4,7 @@ import java.io.File
 import java.nio.charset.Charset
 
 import _root_.util._
+import com.sun.javaws.exceptions.InvalidArgumentException
 import soot._
 import soot.jimple._
 import vfs.VfsNode
@@ -30,6 +31,8 @@ class TargetAs3 extends Target {
       .replace("/*!CALLMAIN*/", "Sample1.main_java_lang_String$Array(args)")
 
     outputVfs.access("BootMain.as").write(bootMainString, utf8)
+    outputVfs.access("build.sh").write("/Developer/airsdk15/bin/mxmlc -optimize=false -debug=true +configname=air -source-path+=. BootMain.as -output=a.swf", utf8)
+    outputVfs.access("build.bat").write("@c:\\dev\\airsdk15\\bin\\mxmlc -optimize=false -debug=true +configname=air -source-path+=. BootMain.as -output=a.swf", utf8)
   }
 
   override def generateClass(clazz: BaseClassContext): scala.Unit = {
@@ -218,8 +221,19 @@ class TargetAs3 extends Target {
     }
   }
 
+  def registerAbstract(javaType:String, as3Type:String, as3StaticMethodType:String): scala.Unit ={
+
+  }
+
+  registerAbstract("java.lang.Object", "Object", "ObjectTools")
+  registerAbstract("java.lang.String", "String", "StringTools")
+
   override def doCast(fromType:Type, toType:Type, value:Value, context:BaseMethodContext): String = {
-    "" + mangler.typeToStringRef(toType) + "(" + doValue(value, context) + ")"
+    if (mangler.typeToStringRef(toType) == "java.lang.Object") {
+      "(" + doValue(value, context) + ")"
+    } else {
+      "((" + doValue(value, context) + ") as " + mangler.typeToStringRef(toType) + ")"
+    }
   }
 
   override def doNew(kind:Type, context:BaseMethodContext): String = {
@@ -300,10 +314,17 @@ class TargetAs3 extends Target {
     val argsCall = args.mkString(", ")
     if (special) {
       //doValue(base, context) + "." + mangler.mangle(method.getDeclaringClass) + "::" + mangler.mangleMethodName(method) + "(" + argsCall + ")"
-      if (base.getType.asInstanceOf[RefType].getSootClass.equals(method.getDeclaringClass)) {
+      val instanceSootClass = base.getType.asInstanceOf[RefType].getSootClass
+
+      if (instanceSootClass.equals(method.getDeclaringClass)) {
         doValue(base, context) + "." + mangler.mangleMethodName(method) + "(" + argsCall + ")"
       } else {
-        "/* WARNING: USING SUPER DIRECTLY! CHECK! */ super." + mangler.mangleMethodName(method) + "(" + argsCall + ")"
+        if (instanceSootClass.hasSuperclass && instanceSootClass.getSuperclass.equals(method.getDeclaringClass)) {
+          //"/* WARNING: USING SUPER DIRECTLY! CHECK! */ super." +
+          mangler.mangleMethodName(method) + "(" + argsCall + ")"
+        } else {
+          throw new InvalidArgumentException(Array("Calling special without super"))
+        }
       }
     } else {
       doValue(base, context) + "." + mangler.mangleMethodName(method) + "(" + argsCall + ")"
