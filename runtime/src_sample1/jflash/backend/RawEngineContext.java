@@ -7,7 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 public class RawEngineContext extends EngineContext {
-    private States states = new States();
+    final protected States states = new States();
 
     @Override
     public void clear(Color color) {
@@ -76,34 +76,3 @@ public class RawEngineContext extends EngineContext {
 
 }
 
-class State {
-    public Matrix matrix = new Matrix();
-    public float alpha = 1.0f;
-
-    public void copyFrom(State that) {
-        this.matrix.copyFrom(that.matrix);
-        this.alpha = that.alpha;
-    }
-}
-
-class States {
-    private State[] states = new State[100];
-    private int index = 0;
-
-    public States() {
-        for (int n = 0; n < states.length; n++) states[n] = new State();
-    }
-
-    public State get() {
-        return states[index];
-    }
-
-    public void save() {
-        states[index + 1].copyFrom(states[index + 0]);
-        index++;
-    }
-
-    public void restore() {
-        index--;
-    }
-}

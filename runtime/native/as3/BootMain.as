@@ -5,6 +5,8 @@ package {
 
 	import libcore.Native;
 
+	import libgame.as3.As3Native;
+
 	/*!IMPORTS*/
 
 	[SWF(width = 1280, height = 740, frameRate = 30)]
@@ -14,6 +16,7 @@ package {
 		}
 
 		private function main():void {
+			As3Native.init(this);
 			addChild(Native.consoleTextField = new TextField());
 			Native.consoleTextField.width = stage.stageWidth;
 			Native.consoleTextField.height = stage.stageHeight;

@@ -118,6 +118,7 @@ public class Sample2 {
 
             @Override
             public void update(int dt) {
+                x++;
                 System.out.println("Quad.updated!");
             }
         });

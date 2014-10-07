@@ -11,7 +11,7 @@ public class Color {
     }
 
     public int toInt() {
-        return (a << 24) | (r << 16) | (b << 8) | (g << 0);
+        return (a << 24) | (r << 16) | (g << 8) | (b << 0);
     }
 
     static public Color black = new Color(0, 0, 0, 255);

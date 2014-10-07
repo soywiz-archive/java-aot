@@ -136,7 +136,10 @@ public class Matrix {
     }
 
     public Point transformPoint(Point pos) {
-        return new Point(pos.x * a + pos.y * c + tx, pos.x * b + pos.y * d + ty);
+        return transformPoint(pos, new Point());
     }
 
+    public Point transformPoint(Point pos, Point out) {
+        return out.setXY(pos.x * a + pos.y * c + tx, pos.x * b + pos.y * d + ty);
+    }
 }
