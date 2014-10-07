@@ -4,7 +4,8 @@ import soot.{ArrayType, RefType, Type, SootClass}
 
 import scala.collection.mutable.ListBuffer
 
-class BaseClassContext(val projectContext:BaseProjectContext, val clazz:SootClass) {
+class BaseClassContext(val projectContext:BaseProjectContext, val targetClazz:TargetClass) {
+  val clazz = targetClazz.clazz
   projectContext.classes.append(this)
 
   val referencedClasses = new scala.collection.mutable.HashSet[SootClass]

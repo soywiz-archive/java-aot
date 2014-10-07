@@ -4,7 +4,7 @@ import jflash.display.Quad;
 import jflash.display.Stage;
 import jflash.util.Color;
 import libcore.Native;
-import libgame.As3EngineContext;
+import libgame.as3.As3EngineContext;
 //import libgame.*;
 
 public class Sample2 {
@@ -49,7 +49,7 @@ public class Sample2 {
         System.out.println("123456789");
         System.out.println("" + 123456789);
 
-        int[] data2 = new int[10000000];
+        int[] data2 = new int[1000000];
 
         long start = System.currentTimeMillis();
 		System.out.println("start:" + start);
@@ -105,19 +105,24 @@ public class Sample2 {
         int item = -1;
         System.out.println("Inverting -1 bits: " + ~item);
 
-        //As3EngineContext context = new As3EngineContext();
-        ////SDLEngineContext context = new SDLEngineContext();
-        //Stage stage = new Stage(context);
-//
-        //stage.addChild(new Quad() {
-        //    {
-        //        this.color = Color.red;
-        //        this.width = 200;
-        //        this.height = 200;
-        //    }
-        //});
-//
-        //context.loop(stage);
+        As3EngineContext context = new As3EngineContext();
+        //SDLEngineContext context = new SDLEngineContext();
+        Stage stage = new Stage(context);
+
+        stage.addChild(new Quad() {
+            {
+                this.color = Color.red;
+                this.width = 200;
+                this.height = 200;
+            }
+
+            @Override
+            public void update(int dt) {
+                System.out.println("Quad.updated!");
+            }
+        });
+
+        context.loop(stage);
 	}
 }
 

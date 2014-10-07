@@ -7,6 +7,7 @@ import soot.options.Options
 import soot.tagkit.{AnnotationElem, AnnotationStringElem, Tag, VisibilityAnnotationTag}
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 
 object SootUtils {
   def init(runtimeProvider:RuntimeProvider): Unit = {
@@ -89,19 +90,16 @@ object SootUtils {
     null
   }
 
+  def getSuperClassOrNull(clazz:SootClass): SootClass = if (clazz.hasSuperclass) clazz.getSuperclass else null
+
   def classAncestors(clazz:SootClass): List[SootClass] = {
-    def int(clazz:SootClass): List[SootClass] = {
-      if (!clazz.hasSuperclass) {
-        List(clazz)
-      } else {
-        classAncestors(clazz.getSuperclass) :+ clazz
-      }
+    val buffer = new ListBuffer[SootClass]
+    var tclazz = getSuperClassOrNull(clazz)
+    while (tclazz != null) {
+      buffer.append(tclazz)
+      tclazz = getSuperClassOrNull(tclazz)
     }
-    if (!clazz.hasSuperclass) {
-      List()
-    } else {
-      int(clazz.getSuperclass)
-    }
+    buffer.toList
   }
   
   def hasMethod(clazz:SootClass, name:String, parameterTypes:java.util.List[_]):Boolean = {
@@ -112,10 +110,47 @@ object SootUtils {
     }
   }
 
+  def hasMethod(clazz:SootClass, method:SootMethod):Boolean = hasMethod(clazz, method.getName, method.getParameterTypes)
+
+  def getAllDirectInterfaces(clazz:SootClass): List[SootClass] = {
+    if (clazz.getInterfaceCount == 0) {
+      List()
+    } else {
+      val clazzInterfaces = clazz.getInterfaces.asScala.toList
+      clazzInterfaces.flatMap(clazzInterfaces ::: getAllDirectInterfaces(_))
+    }
+  }
+
+  def getAllDirectAndIndirectInterfaces(clazz:SootClass): List[SootClass] = {
+    if (clazz.getInterfaceCount == 0) {
+      List()
+    } else {
+      val clazzInterfaces = clazz.getInterfaces.asScala.toList
+      if (clazz.hasSuperclass) {
+        getAllDirectAndIndirectInterfaces(clazz.getSuperclass) ::: clazzInterfaces.flatMap(clazzInterfaces ::: getAllDirectAndIndirectInterfaces(_))
+      } else {
+        clazzInterfaces.flatMap(clazzInterfaces ::: getAllDirectAndIndirectInterfaces(_))
+      }
+    }
+  }
+
   def isMethodOverriding(method:SootMethod): Boolean = {
     val name = method.getName
     val parameterTypes = method.getParameterTypes
     val ancestors = classAncestors(method.getDeclaringClass)
-    ancestors.exists(hasMethod(_, name, parameterTypes))
+    val abstractOverride = ancestors.filter(_.isAbstract).flatMap(getAllDirectAndIndirectInterfaces).exists(hasMethod(_, method))
+    val normalOverride = ancestors.exists(hasMethod(_, name, parameterTypes))
+    /*
+    var methodString = method.toString()
+    if (methodString == "<jflash.display.DisplayObject: void update(int)>") {
+      println(method + " : " + abstractOverride + " : " + normalOverride)
+      println(parameterTypes)
+      println(ancestors)
+    }
+    if (abstractOverride) {
+      //println("abstractOverride:" + method)
+    }
+    */
+    abstractOverride || normalOverride
   }
 }

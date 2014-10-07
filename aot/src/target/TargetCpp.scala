@@ -34,7 +34,7 @@ class TargetCpp extends Target {
     outputPath.access(s"$classPath.cpp").ensureParentPath().write(body, utf8)
   }
 
-  override def createClassContext(projectContext:BaseProjectContext, clazz:SootClass): BaseClassContext = {
+  override def createClassContext(projectContext:BaseProjectContext, clazz:TargetClass): BaseClassContext = {
     new CppClassContext(projectContext, clazz)
   }
 
@@ -42,7 +42,7 @@ class TargetCpp extends Target {
     new CppProjectContext(classNames, mainClass, runtimeProvider, outputPath)
   }
 
-  class CppClassContext(projectContext:BaseProjectContext, clazz:SootClass) extends BaseClassContext(projectContext, clazz) {
+  class CppClassContext(projectContext:BaseProjectContext, clazz:TargetClass) extends BaseClassContext(projectContext, clazz) {
     var native_header = ""
     def cppProject = projectContext.asInstanceOf[CppProjectContext]
   }

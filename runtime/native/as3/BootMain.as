@@ -7,6 +7,7 @@ package {
 
 	/*!IMPORTS*/
 
+	[SWF(width = 1280, height = 740, frameRate = 30)]
 	public class BootMain extends flash.display.Sprite {
 		public function BootMain() {
 			setTimeout(main, 0);

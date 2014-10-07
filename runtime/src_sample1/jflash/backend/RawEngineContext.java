@@ -76,10 +76,6 @@ public class RawEngineContext extends EngineContext {
 
 }
 
-
-/**
- * Created by soywiz on 1/10/14.
- */
 class State {
     public Matrix matrix = new Matrix();
     public float alpha = 1.0f;
@@ -90,9 +86,6 @@ class State {
     }
 }
 
-/**
- * Created by soywiz on 1/10/14.
- */
 class States {
     private State[] states = new State[100];
     private int index = 0;

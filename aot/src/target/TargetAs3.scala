@@ -51,7 +51,7 @@ class TargetAs3 extends Target {
 
   override protected def classNameToPath(name:String): String = mangler.getClassPath(name)
 
-  override def createClassContext(projectContext:BaseProjectContext, clazz:SootClass): BaseClassContext = {
+  override def createClassContext(projectContext:BaseProjectContext, clazz:TargetClass): BaseClassContext = {
     new As3ClassContext(projectContext, clazz)
   }
 
@@ -59,7 +59,7 @@ class TargetAs3 extends Target {
     new As3ProjectContext(classNames, mainClass, runtimeProvider, outputPath)
   }
 
-  class As3ClassContext(projectContext:BaseProjectContext, clazz:SootClass) extends BaseClassContext(projectContext, clazz) {
+  class As3ClassContext(projectContext:BaseProjectContext, clazz:TargetClass) extends BaseClassContext(projectContext, clazz) {
   }
   
   class As3ProjectContext(classNames:Seq[String], mainClass:String, runtimeProvider:RuntimeProvider, outputPath:VfsNode)  extends BaseProjectContext(classNames, mainClass, runtimeProvider, outputPath) {
@@ -84,7 +84,9 @@ class TargetAs3 extends Target {
     s"$static public function $mangledFullName($params):$returnType"
   }
 
-  def mustOverrideMethod(method:SootMethod):Boolean = SootUtils.isMethodOverriding(method) && !mangler.abstractTypes.contains(method.getDeclaringClass.getSuperclass.getName)
+  def mustOverrideMethod(method:SootMethod):Boolean = {
+    SootUtils.isMethodOverriding(method) && !mangler.abstractTypes.contains(method.getDeclaringClass.getSuperclass.getName)
+  }
 
   def getParamName(index: Int) = s"p$index"
 
@@ -182,18 +184,11 @@ class TargetAs3 extends Target {
 
     // Class is abstract, and as3 is not supporting abstract classes, so we should locate not declared methods
     if (clazz.isAbstract && !clazz.isInterface) {
-      def getAllInterfaces(clazz:SootClass): List[SootClass] = {
-        if (clazz.getInterfaceCount == 0) {
-          List()
-        } else {
-          val clazzInterfaces = clazz.getInterfaces.asScala.toList
-          clazzInterfaces.flatMap(clazzInterfaces ::: getAllInterfaces(_))
-        }
-      }
 
-      println("Class:" + clazz.getName)
-      for (interface <- getAllInterfaces(clazz).distinct) {
-        println("  Interface:" + interface.getName)
+
+      //println("Class:" + clazz.getName)
+      for (interface <- SootUtils.getAllDirectInterfaces(clazz).distinct) {
+        //println("  Interface:" + interface.getName)
         for (method <- interface.getMethods.asScala) {
           val methodSignature = getMethodSignature(method)
           if (!methodSignatures.contains(methodSignature)) {

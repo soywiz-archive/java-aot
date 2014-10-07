@@ -16,10 +16,11 @@ abstract class Target {
   protected val cl = this.getClass.getClassLoader
   protected val utf8 = Charset.forName("UTF-8")
   protected val file_separator = System.getProperty("file.separator")
+  protected val tree = new TargetTree()
 
   def targetName:String
 
-  def createClassContext(projectContext:BaseProjectContext, clazz:SootClass): BaseClassContext = {
+  def createClassContext(projectContext:BaseProjectContext, clazz:TargetClass): BaseClassContext = {
     new BaseClassContext(projectContext, clazz)
   }
 
@@ -39,29 +40,14 @@ abstract class Target {
     projectContext.classNames.foreach(Scene.v.loadClassAndSupport)
 
     // Preprocesses classes
-    projectContext.classNames.map(Scene.v.getSootClass).foreach(preprocessClass)
+    projectContext.classNames.foreach(tree.getTargetClass)
 
     for (className <- projectContext.classNames) {
-      val clazz = Scene.v.getSootClass(className)
-      println("Processing class: " + clazz.getName)
+      val clazz = tree.getTargetClass(className)
+      println("Processing class: " + clazz.clazz.getName)
       generateClass(createClassContext(projectContext, clazz))
     }
     println("Processed classes: " + projectContext.classNames.length)
-  }
-
-  // @TODO
-  /*
-  class TargetMethod(clazz:TargetClass, method:SootMethod) {
-
-  }
-
-  class TargetClass(clazz:SootClass) {
-
-  }
-  */
-
-  def preprocessClass(clazz:SootClass): scala.Unit = {
-
   }
 
   def buildProject(projectContext:BaseProjectContext): scala.Unit = {
@@ -232,7 +218,10 @@ abstract class Target {
         context.referenceType(e.getMethod.getDeclaringClass)
         val argsList = e.getArgs.asScala.toList
         val castTypes = e.getMethod.getParameterTypes.asScala.map(_.asInstanceOf[Type]).toList
-        val args = (argsList, castTypes).zipped.map((value, expectedType) => doCastIfNeeded(expectedType, value, context)).toList
+        val args = (argsList, castTypes).zipped.map((value, expectedType) => {
+          context.referenceType(expectedType);
+          doCastIfNeeded(expectedType, value, context)
+        }).toList
         e.getArgs.asScala.foreach(i => context.referenceType(i.getType))
         e match {
           case i: StaticInvokeExpr => doInvokeStatic(e.getMethod, args, context)
