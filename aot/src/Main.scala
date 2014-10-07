@@ -9,20 +9,15 @@ object Main extends App {
 
   SootUtils.init(runtimeProvider)
 
-  //ClassGenerator.doClass("Test1")
-  //new ClassGenerator("java.lang.Object").doClass()
-
   val entryPoint = "sample1.Sample1"
 
   //val target = new TargetCpp()
   val target = new TargetAs3()
   print("Calculating dependency tree...")
   val dependencies = new ClassDependencyWalker(runtimeProvider).getRefClassesTree(entryPoint)
-  //dependencies.sorted.foreach(println)
+
   println("" + dependencies.length + "...Ok")
   println(s"target:${target.targetName}")
-
-  //System.exit(-1)
 
   target.buildAndRun(dependencies, entryPoint, runtimeProvider, new FileVfsNode(s"${runtimeProvider.project_root}/out_${target.targetName}"))
 }

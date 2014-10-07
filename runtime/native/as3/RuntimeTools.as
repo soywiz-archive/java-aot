@@ -11,5 +11,14 @@ package {
 			if (value < 0) result |= ~0xFFFF;
 			return result;
 		}
+
+		static public function number_cmp(l:Number, r:Number):int {
+			if (l < r) return -1;
+			if (l > r) return +1;
+			return 0;
+		}
+
+		static public function number_cmpl(l:Number, r:Number):int { return (isNaN(l) || isNaN(r)) ? -1 : number_cmp(l, r); }
+		static public function number_cmpg(l:Number, r:Number):int { return (isNaN(l) || isNaN(r)) ? +1 : number_cmp(l, r); }
 	}
 }

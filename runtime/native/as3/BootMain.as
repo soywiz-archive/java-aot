@@ -3,9 +3,8 @@ package {
 	import flash.text.TextField;
 	import flash.utils.setTimeout;
 
-	import libcore.Native;
+	import libcore._Native;
 
-	import sample1.Sample1;
 	/*!IMPORTS*/
 
 	public class BootMain extends flash.display.Sprite {
@@ -14,9 +13,9 @@ package {
 		}
 
 		private function main():void {
-			addChild(Native.consoleTextField = new TextField());
-			Native.consoleTextField.width = stage.stageWidth;
-			Native.consoleTextField.height = stage.stageHeight;
+			addChild(_Native.consoleTextField = new TextField());
+			_Native.consoleTextField.width = stage.stageWidth;
+			_Native.consoleTextField.height = stage.stageHeight;
 			var args:Array = [];
 			/*!PREINIT*/
 			/*!CALLMAIN*/

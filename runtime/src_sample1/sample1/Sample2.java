@@ -1,6 +1,10 @@
 package sample1;
 
+import jflash.display.Quad;
+import jflash.display.Stage;
+import jflash.util.Color;
 import libcore.Native;
+import libgame.As3EngineContext;
 //import libgame.*;
 
 public class Sample2 {
@@ -27,7 +31,7 @@ public class Sample2 {
         System.out.println("args:" + args.length);
         for (String arg : args) System.out.println("arg:" + arg);
 
-        //libcore.Native.putchar('H');
+        //libcore._Native.putchar('H');
         //return -1;
 		int[] list = new int[10];
 
@@ -98,7 +102,11 @@ public class Sample2 {
 
         System.out.println("WOW. Inner class says minus seven is: " + v.run());
 
-        //SDLEngineContext context = new SDLEngineContext();
+        int item = -1;
+        System.out.println("Inverting -1 bits: " + ~item);
+
+        //As3EngineContext context = new As3EngineContext();
+        ////SDLEngineContext context = new SDLEngineContext();
         //Stage stage = new Stage(context);
 //
         //stage.addChild(new Quad() {
@@ -110,9 +118,6 @@ public class Sample2 {
         //});
 //
         //context.loop(stage);
-
-        int item = -1;
-        System.out.println("Inverting -1 bits: " + ~item);
 	}
 }
 

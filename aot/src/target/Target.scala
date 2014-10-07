@@ -38,12 +38,30 @@ abstract class Target {
     // Load classes into stage
     projectContext.classNames.foreach(Scene.v.loadClassAndSupport)
 
+    // Preprocesses classes
+    projectContext.classNames.map(Scene.v.getSootClass).foreach(preprocessClass)
+
     for (className <- projectContext.classNames) {
       val clazz = Scene.v.getSootClass(className)
       println("Processing class: " + clazz.getName)
       generateClass(createClassContext(projectContext, clazz))
     }
     println("Processed classes: " + projectContext.classNames.length)
+  }
+
+  // @TODO
+  /*
+  class TargetMethod(clazz:TargetClass, method:SootMethod) {
+
+  }
+
+  class TargetClass(clazz:SootClass) {
+
+  }
+  */
+
+  def preprocessClass(clazz:SootClass): scala.Unit = {
+
   }
 
   def buildProject(projectContext:BaseProjectContext): scala.Unit = {
@@ -57,12 +75,17 @@ abstract class Target {
   def generateClass(classContext:BaseClassContext): scala.Unit = {
     val clazz = classContext.clazz
 
-    if (clazz.hasSuperclass) classContext.referencedClasses.add(clazz.getSuperclass)
-    for (interface <- clazz.getInterfaces.asScala) classContext.referencedClasses.add(interface)
+    if (clazz.hasSuperclass) classContext.referenceType(clazz.getSuperclass)
+    for (interface <- clazz.getInterfaces.asScala) classContext.referenceType(interface)
 
     for (method <- clazz.getMethods.asScala) {
       val methodContext = new BaseMethodContext(classContext, method)
       methodContext.methodWithBody = doMethodWithBodyOrAbstract(methodContext)
+      for (kind <- method.getParameterTypes.asScala.map(_.asInstanceOf[Type])) {
+        classContext.referenceType(kind)
+      }
+      classContext.referenceType(method.getReturnType)
+      for (clazz <- methodContext.referencedClasses) classContext.referenceType(clazz)
     }
   }
 

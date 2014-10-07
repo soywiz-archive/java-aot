@@ -67,6 +67,7 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
     }
 
     def processClassName(className:String) = processType(Type.getType("L" + className + ";"))
+
     if (cn.superName != null) processClassName(cn.superName)
     for (interfaceName <- cn.interfaces.asScala.map(_.asInstanceOf[String])) processClassName(interfaceName)
     for (innerClass <- cn.innerClasses.asScala.map(_.asInstanceOf[InnerClassNode])) processClassName(innerClass.name)
@@ -79,6 +80,7 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
       //if (debug) println(s"   - ${method.name}")
       //println(" - " + method.name)
       processMethodType(Type.getType(method.desc))
+
       for (ins <- method.instructions.toArray) {
         //if (method.name == "children") println("  " + ins)
         ins match {
