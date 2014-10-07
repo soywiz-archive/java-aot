@@ -241,10 +241,42 @@ class TargetAs3 extends Target {
   registerAbstract("java.lang.String", "String", "StringTools")
 
   override def doCast(fromType:Type, toType:Type, value:Value, context:BaseMethodContext): String = {
-    if (mangler.typeToStringRef(fromType) == "Long") {
-      "((" + doValue(value, context) + ").toInt())"
+    val valueStr = doValue(value, context)
+    val toCastTypeStr = mangler.typeToStringRef(toType)
+
+    if (fromType == toType) {
+      s"$valueStr"
     } else {
-      "((" + doValue(value, context) + ") as " + mangler.typeToStringRef(toType) + ")"
+      val processedValueStr = fromType match {
+        case e:BooleanType => s"(($valueStr) ? 1 : 0)"
+        case e:ByteType => s"$valueStr"
+        case e:CharType => s"$valueStr"
+        case e:ShortType => s"$valueStr"
+        case e:IntType => s"$valueStr"
+        case e:FloatType => s"$valueStr"
+        case e:DoubleType => s"$valueStr"
+        case e:RefType => s"$valueStr"
+        case e:ArrayType => s"$valueStr"
+        case e:LongType => s"(($valueStr).toInt())"
+      }
+
+      toType match {
+        case e:BooleanType => s"$processedValueStr != 0"
+        case e:ByteType => s"RuntimeTools.toByte($processedValueStr)"
+        case e:ShortType => s"RuntimeTools.toShort($processedValueStr)"
+        case e:CharType => s"($processedValueStr & 0xFFFF)"
+        case e:IntType => s"$processedValueStr"
+        case e:FloatType =>s"Number($processedValueStr)"
+        case e:DoubleType => s"Number($processedValueStr)"
+        case e:RefType => s"($valueStr as $toCastTypeStr)"
+        case e:ArrayType => s"($valueStr as $toCastTypeStr)"
+        case e:LongType =>
+          fromType match {
+            case e:FloatType => s"Long.fromNumber($processedValueStr)"
+            case e:DoubleType => s"Long.fromNumber($processedValueStr)"
+            case _ => s"Long.fromInt($processedValueStr)"
+          }
+      }
     }
   }
 

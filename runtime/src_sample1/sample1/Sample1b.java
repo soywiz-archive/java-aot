@@ -1,7 +1,7 @@
 package sample1;
 
 public class Sample1b {
-	static public int main(String[] args) {
+	static public void main(String[] args) {
 		//libcore.Native.putchar('H');
 		final int value = 7;
 
@@ -11,7 +11,6 @@ public class Sample1b {
 				return -value;
 			}
 		}.run());
-		return 0;
 	}
 }
 

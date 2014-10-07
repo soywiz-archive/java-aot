@@ -21,7 +21,7 @@ public class Sample2 {
         test.test();
     }
 
-	static public int main(String[] args) {
+	static public void main(String[] args) {
         libcore.Native.putchar('H');
         System.out.println("Hello world!");
         System.out.println("args:" + args.length);
@@ -113,8 +113,6 @@ public class Sample2 {
 
         int item = -1;
         System.out.println("Inverting -1 bits: " + ~item);
-
-		return 0;
 	}
 }
 
