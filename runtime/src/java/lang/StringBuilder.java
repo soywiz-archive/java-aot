@@ -39,14 +39,14 @@ public class StringBuilder {
         if (isNegative) v = -v;
 		while (v != 0) {
 			out[--index] = set.charAt((int)(v % 10));
-            //_Native.debugint(out[index]);
+            //Native.debugint(out[index]);
 			count++;
 			v /= 10;
 		}
 		if (isNegative) append("-");
-        //_Native.debugint(out.length);
-        //_Native.debugint(index);
-        //_Native.debugint(count);
+        //Native.debugint(out.length);
+        //Native.debugint(index);
+        //Native.debugint(count);
 		return append(new String(out, index, count));
 	}
 

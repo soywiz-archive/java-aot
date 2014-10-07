@@ -60,10 +60,11 @@ abstract class VfsNode {
     charset.decode(ByteBuffer.wrap(read())).toString
   }
 
-  final def write(string:String, charset:Charset):Unit = {
+  final def write(string:String, charset:Charset):VfsNode = {
     val bb = charset.encode(string)
     val data = new Array[Byte](bb.remaining())
     bb.get(data)
     write(data)
+    this
   }
 }

@@ -2,7 +2,7 @@ package sample1;
 
 public class Sample1 {
 	static public void main(String[] args) {
-		//libcore._Native.putchar('H');
+		//libcore.Native.putchar('H');
 		System.out.println("Hello world!");
 		for (int n = 0; n < 10; n++) System.out.print("" + n);
 		System.out.println("");

@@ -38,6 +38,7 @@ class TargetAs3 extends Target {
 
     outputVfs.access("BootMain.as").write(bootMainString, utf8)
     outputVfs.access("build.sh").write("/Developer/airsdk15/bin/mxmlc -optimize=false -debug=true +configname=air -source-path+=. BootMain.as -output=a.swf", utf8)
+    outputVfs.access("build_release.sh").write("/Developer/airsdk15/bin/mxmlc -optimize=true -debug=false -inline=true +configname=air -source-path+=. BootMain.as -output=a.swf", utf8)
     outputVfs.access("build.bat").write("@c:\\dev\\airsdk15\\bin\\mxmlc -optimize=false -debug=true +configname=air -source-path+=. BootMain.as -output=a.swf", utf8)
   }
 
@@ -201,7 +202,7 @@ class TargetAs3 extends Target {
 
     if (context.hasStaticConstructor) {
       context.projectContext.bootImports.append(s"import $mangledClassType;")
-      context.projectContext.preInitLines.append(s"\t$mangledClassType.__clinit___();")
+      context.projectContext.preInitLines.append(s"\t$mangledClassType.__clinit__();")
     }
 
     // Class
@@ -473,7 +474,12 @@ class TargetAs3 extends Target {
     }
 
     def getShortName(clazz:SootClass):String = _getShortName(clazz.getShortName)
-    private def _getShortName(shortName:String):String = "_" + shortName
+    private def _getShortName(shortName:String):String = {
+      shortName match {
+        case "Number" | "Object" | "Class" => s"_$shortName"
+        case _ => shortName
+      }
+    }
 
     def getClassPath(name:String):String = {
       getRealClassName(name).replace(".", "/")
@@ -505,7 +511,11 @@ class TargetAs3 extends Target {
     }
 
     override def mangleMethodName(method: SootMethod): String = {
-      escapeSpecialChars(method.getName + "_" + method.getParameterTypes.asScala.map(_.asInstanceOf[Type].toString).mkString("_"))
+      if (method.getParameterCount == 0) {
+        escapeSpecialChars(method.getName)
+      } else {
+        escapeSpecialChars(method.getName + "_" + method.getParameterTypes.asScala.map(_.asInstanceOf[Type].toString).mkString("_"))
+      }
     }
 
     override def mangleFullMethodName(method: SootMethod): String = mangleClassName(method.getDeclaringClass.getName) + "." + mangleMethodName(method)

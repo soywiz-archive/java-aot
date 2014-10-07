@@ -31,7 +31,7 @@ public class Sample2 {
         System.out.println("args:" + args.length);
         for (String arg : args) System.out.println("arg:" + arg);
 
-        //libcore._Native.putchar('H');
+        //libcore.Native.putchar('H');
         //return -1;
 		int[] list = new int[10];
 

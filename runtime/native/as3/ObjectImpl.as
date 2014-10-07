@@ -2,11 +2,11 @@ package {
 	import java.lang._Class;
 
 	public class ObjectImpl {
-		[Inline] static public function hashCode_(that:Object):int {
+		[Inline] static public function hashCode(that:Object):int {
 			return 0;
 		}
 
-		static public function getClass_(local6:*):java.lang._Class {
+		static public function getClass(local6:*):java.lang._Class {
 			return null;
 		}
 
@@ -14,7 +14,7 @@ package {
 			return a == b;
 		}
 
-		[Inline] static public function toString_(that:Object):String {
+		[Inline] static public function toString(that:Object):String {
 			return String(that);
 		}
 	}

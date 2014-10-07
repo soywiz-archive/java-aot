@@ -3,7 +3,7 @@ package {
 	import flash.text.TextField;
 	import flash.utils.setTimeout;
 
-	import libcore._Native;
+	import libcore.Native;
 
 	/*!IMPORTS*/
 
@@ -14,9 +14,9 @@ package {
 		}
 
 		private function main():void {
-			addChild(_Native.consoleTextField = new TextField());
-			_Native.consoleTextField.width = stage.stageWidth;
-			_Native.consoleTextField.height = stage.stageHeight;
+			addChild(Native.consoleTextField = new TextField());
+			Native.consoleTextField.width = stage.stageWidth;
+			Native.consoleTextField.height = stage.stageHeight;
 			var args:Array = [];
 			/*!PREINIT*/
 			/*!CALLMAIN*/
