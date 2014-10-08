@@ -25,7 +25,7 @@ class TargetAs3 extends Target {
     val outputVfs = context.output
     runtimeVfs.access("as3").copyTreeTo(outputVfs)
 
-    context.bootImports.append("import " + mangler.getRealClassName(context.mainClass) + ";");
+    context.bootImports.append("import " + mangler.getRealClassName(context.mainClass) + ";")
 
     val bootMainString = runtimeVfs.access("as3/BootMain.as").read(utf8)
       .replace("/*!IMPORTS*/", context.bootImports.mkString("\n"))
@@ -41,6 +41,19 @@ class TargetAs3 extends Target {
     outputVfs.access("build_release.sh").write("/Developer/airsdk15/bin/mxmlc -optimize=true -debug=false -inline=true +configname=air -source-path+=. BootMain.as -output=a.swf", utf8)
     outputVfs.access("build.bat").write("@c:\\dev\\airsdk15\\bin\\mxmlc -optimize=false -debug=true +configname=air -source-path+=. BootMain.as -output=a.swf", utf8)
   }
+
+  override def buildProject(projectContext: BaseProjectContext): scala.Unit = {
+    val command = "/Developer/airsdk15/bin/mxmlc -optimize=false -debug=true -verbose-stacktraces=true -inline +configname=air -source-path+=" + projectContext.output.absoluteFullPath + " BootMain.as -output=" + getOutputExecutablePath(projectContext).absoluteFullPath
+    val result = ProcessUtils.runAndRedirect(command, new File(projectContext.output.absoluteFullPath)) == 0
+    //
+  }
+
+  override def runProject(projectContext:BaseProjectContext): scala.Unit = {
+    val command = "open " + getOutputExecutablePath(projectContext).absoluteFullPath
+    val result = ProcessUtils.runAndRedirect(command, new File(projectContext.output.absoluteFullPath)) == 0
+  }
+
+  def getOutputExecutablePath(projectContext:BaseProjectContext): VfsNode = projectContext.output.access("a.swf")
 
   override def generateClass(clazz: BaseClassContext): scala.Unit = {
     super.generateClass(clazz)
@@ -64,14 +77,6 @@ class TargetAs3 extends Target {
   }
   
   class As3ProjectContext(classNames:Seq[String], mainClass:String, runtimeProvider:RuntimeProvider, outputPath:VfsNode)  extends BaseProjectContext(classNames, mainClass, runtimeProvider, outputPath) {
-  }
-
-  override def buildProject(projectContext: BaseProjectContext): scala.Unit = {
-  }
-
-  def getOutputExecutablePath(projectContext:BaseProjectContext): VfsNode = projectContext.output.access("a.swf")
-
-  override def runProject(projectContext:BaseProjectContext): scala.Unit = {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -44,10 +44,20 @@ abstract class Target {
 
     for (className <- projectContext.classNames) {
       val clazz = tree.getTargetClass(className)
-      println("Processing class: " + clazz.clazz.getName)
-      generateClass(createClassContext(projectContext, clazz))
+      print("Processing class: " + clazz.clazz.getName + "...")
+      val elapsed = measureTime(() => {
+        generateClass(createClassContext(projectContext, clazz))
+      })
+      println(s"Ok($elapsed)")
     }
     println("Processed classes: " + projectContext.classNames.length)
+  }
+
+  def measureTime(callback:() => scala.Unit):Long = {
+    val start = System.nanoTime()
+    callback()
+    val end = System.nanoTime()
+    (end - start) / 1000000L
   }
 
   def buildProject(projectContext:BaseProjectContext): scala.Unit = {
