@@ -219,7 +219,9 @@ abstract class Target {
       case e: CastExpr => context.referenceType(e.getCastType); doCast(e.getOp.getType, e.getCastType, e.getOp, context)
       case e: InstanceOfExpr => context.referenceType(e.getType); doInstanceof(e.getType, e.getCheckType, e.getOp, context)
       case e: NewExpr => context.referenceType(e.getType); doNew(e.getType, context)
-      case e: NewArrayExpr => context.referenceType(e.getType.getArrayType); doNewArray(e.getType, e.getSize, context)
+      case e: NewArrayExpr =>
+        context.referenceType(e.getType.getArrayType);
+        doNewArray(e.getBaseType, e.getSize, context)
       case e: NewMultiArrayExpr => context.referenceType(e.getType); doNewMultiArray(e.getType, (0 to e.getSizeCount - 1).map(e.getSize).toArray, context)
       case e: LengthExpr => doLength(e.getOp, context)
       case e: NegExpr => doNegate(e.getOp, context)
@@ -269,7 +271,7 @@ abstract class Target {
   def doStaticField(kind:SootClass, fieldName:String, context:BaseMethodContext): String
   def doNew(kind:Type, context:BaseMethodContext): String
   def doVariableAllocation(kind:Type, name:String, context:BaseMethodContext): String
-  def doNewArray(kind: Type, size: Value, context:BaseMethodContext): String
+  def doNewArray(elementType: Type, size: Value, context:BaseMethodContext): String
   def doNewMultiArray(kind: Type, values: Array[Value], context:BaseMethodContext): String
   def doNop(context:BaseMethodContext): String
   def doCaughtException(value: Type, context:BaseMethodContext): String

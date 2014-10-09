@@ -29,4 +29,4 @@ void libcore_Native::arraycopy(java_lang_Object* src, int srcOfs, java_lang_Obje
 }
 void libcore_Native::gc() { }
 int64 libcore_Native::currentTimeMillis() { struct timeval tp; ::gettimeofday(&tp, NULL); int64 result = (int64)tp.tv_sec * 1000L + (int64)tp.tv_usec / 1000L; return result; }
-
+int32 libcore_Native::getTimerTime() { return (int32)libcore_Native::currentTimeMillis(); }

@@ -51,12 +51,15 @@ public class Sample2 {
 
         int[] data2 = new int[1000000];
 
-        long start = System.currentTimeMillis();
+        //long start = System.currentTimeMillis();
+        int start = Native.getTimerTime();
 		System.out.println("start:" + start);
-        for (int m = 0; m < data2.length; m++) {
+        int data2length = data2.length;
+        for (int m = 0; m < data2length; m++) {
             data2[m] = m * 2;
         }
-        long end = System.currentTimeMillis();
+        int end = Native.getTimerTime();
+        //long end = System.currentTimeMillis();
 		System.out.println("end:" + end);
         System.out.println("diff:" + (end - start));
 

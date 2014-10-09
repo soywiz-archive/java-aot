@@ -22,4 +22,5 @@ public class Native {
 	static public native void arraycopy(Object src, int srcOfs, Object dest, int destOfs, int len);
 	static public native void gc();
 	static public native long currentTimeMillis();
+    static public native int getTimerTime();
 }

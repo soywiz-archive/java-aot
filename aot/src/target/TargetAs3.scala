@@ -43,9 +43,10 @@ class TargetAs3 extends Target {
   }
 
   override def buildProject(projectContext: BaseProjectContext): scala.Unit = {
+    getOutputExecutablePath(projectContext).remove()
     val command = "/Developer/airsdk15/bin/mxmlc -optimize=false -debug=true -verbose-stacktraces=true -inline +configname=air -source-path+=" + projectContext.output.absoluteFullPath + " BootMain.as -output=" + getOutputExecutablePath(projectContext).absoluteFullPath
-    val result = ProcessUtils.runAndRedirect(command, new File(projectContext.output.absoluteFullPath)) == 0
-    //
+    val result = ProcessUtils.runAndRedirect(command, new File(projectContext.output.absoluteFullPath))
+    if (result != 0) throw new Exception("Can't compile")
   }
 
   override def runProject(projectContext:BaseProjectContext): scala.Unit = {
@@ -347,7 +348,9 @@ class TargetAs3 extends Target {
     "var " + name + ":" + mangler.typeToStringRef(kind) + ";\n"
   }
 
-  override def doNewArray(kind: Type, size: Value, context:BaseMethodContext): String = "new Array(" + doValue(size, context) + ")"
+  override def doNewArray(elementType:Type, size: Value, context:BaseMethodContext): String = {
+    "new " + mangler.getArrayName(elementType) + "(" + doValue(size, context) + ")"
+  }
   override def doNewMultiArray(kind: Type, sizes: Array[Value], context:BaseMethodContext): String = "new " + mangler.typeToStringNoRef(kind) + sizes.map(i => "[" + doValue(i, context) + "]").mkString
   override def doNop(context:BaseMethodContext): String = s";"
   override def doGoto(unit: Unit, context:BaseMethodContext): String = "goto " + context.labels(unit) + ";"
@@ -510,10 +513,24 @@ class TargetAs3 extends Target {
         case v:FloatType => "Number"
         case v:DoubleType => "Number"
         //case r:ArrayType if r.getElementType.isInstanceOf[RefType] => "Array<java_lang_Object*>"
-        case r:ArrayType => "Array"
+        case r:ArrayType => getArrayName(r.getArrayElementType)
         case r:RefType => mangleClassName(r.getClassName)
       }
     }
+
+    def getArrayName(kind: Type): String = {
+      kind match {
+        case e:FloatType => "Vector.<Number>"
+        case e:DoubleType => "Vector.<Number>"
+        case e:IntType => "Vector.<int>"
+        case e:ShortType => "Vector.<int>"
+        case e:CharType => "Vector.<int>"
+        case e:ByteType => "Vector.<int>"
+        //case e:ByteType => "ByteArray"
+        case _ => "Array"
+      }
+    }
+
 
     override def mangleMethodName(method: SootMethod): String = {
       if (method.getParameterCount == 0) {

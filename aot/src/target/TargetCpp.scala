@@ -333,9 +333,9 @@ class TargetCpp extends Target {
     mangler.typeToStringRef(kind) + " " + name + ";\n"
   }
 
-  override def doNewArray(kind: Type, size: Value, context:BaseMethodContext): String = {
+  override def doNewArray(elementType: Type, size: Value, context:BaseMethodContext): String = {
     //"std::shared_ptr< " + mangler.typeToStringNoRef(kind) + " >(new " + mangler.typeToStringNoRef(kind) + "(" + doValue(size, context) + "))"
-    "new " + mangler.typeToStringNoRef(kind) + "(" + doValue(size, context) + ")"
+    "new " + mangler.typeToStringNoRef(elementType.getArrayType) + "(" + doValue(size, context) + ")"
   }
 
   override def doNewMultiArray(kind: Type, sizes: Array[Value], context:BaseMethodContext): String = {

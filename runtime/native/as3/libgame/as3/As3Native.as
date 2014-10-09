@@ -31,15 +31,10 @@ package libgame.as3 {
 			bitmapData.fillRect(bitmapData.rect, color);
 		}
 
-		static public function drawTriangles_int_float$Array(color:int, positions:Array):void {
+		static public function drawTriangles_int_float$Array(color:int, positions:Vector.<Number>):void {
 			var shape:Shape = new Shape();
 			shape.graphics.beginFill(color);
-
-			var positionsV:Vector.<Number> = new Vector.<Number>();
-			for (var n:int = 0; n < positions.length; n++) {
-				positionsV[n] = positions[n];
-			}
-			shape.graphics.drawTriangles(positionsV);
+			shape.graphics.drawTriangles(positions);
 			shape.graphics.endFill();
 			bitmapData.draw(shape);
 		}
