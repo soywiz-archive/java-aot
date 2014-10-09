@@ -25,5 +25,6 @@ public class Stage extends DisplayObjectContainer {
     protected void renderInternal(EngineContext context) {
         context.clear(backgroundColor);
         super.renderInternal(context);
+        context.present();
     }
 }

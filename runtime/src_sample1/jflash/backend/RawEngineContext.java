@@ -15,6 +15,11 @@ public class RawEngineContext extends EngineContext {
     }
 
     @Override
+    public void present() {
+
+    }
+
+    @Override
     public void drawSolid(int width, int height, Color color) {
 
     }

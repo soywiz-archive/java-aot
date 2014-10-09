@@ -20,7 +20,9 @@ package libcore {
 			return convBA.readFloat();
 		}
 		static public function isNaN_float(v:Number):Boolean { return isNaN(v); }
-		static public function putchar_char(v:int):void { Native.consoleTextField.text += String.fromCharCode(v); }
+		static public function putchar_char(v:int):void {
+			//Native.consoleTextField.text += String.fromCharCode(v);
+		}
 		static public function flush():void { }
 		static public function debugint_int(v:int):void { trace('v:' + v); }
 		static public function exit_int(status:int):void { throw(new Error("Not implemented")); }

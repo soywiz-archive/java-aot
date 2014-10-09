@@ -12,6 +12,11 @@ public class As3EngineContext extends RawEngineContext {
         As3Native.clear(color.toInt());
     }
 
+    @Override
+    public void present() {
+        As3Native.present();
+    }
+
     private Point p1 = new Point(), p2 = new Point(), p3 = new Point(), p4 = new Point();
 
     @Override

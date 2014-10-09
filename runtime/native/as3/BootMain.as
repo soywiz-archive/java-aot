@@ -9,20 +9,19 @@ package {
 
 	/*!IMPORTS*/
 
-	[SWF(width = 1280, height = 740, frameRate = 30)]
+	[SWF(width = 1280, height = 740, frameRate = 60)]
 	public class BootMain extends flash.display.Sprite {
 		public function BootMain() {
 			setTimeout(main, 0);
 		}
 
 		private function main():void {
-			As3Native.init(this);
-			addChild(Native.consoleTextField = new TextField());
-			Native.consoleTextField.width = stage.stageWidth;
-			Native.consoleTextField.height = stage.stageHeight;
-			var args:Array = [];
 			/*!PREINIT*/
-			/*!CALLMAIN*/
+
+			As3Native.init(this, function():void {
+				var args:Array = [];
+				/*!CALLMAIN*/
+			});
 		}
 	}
 }

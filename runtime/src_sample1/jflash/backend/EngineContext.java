@@ -11,6 +11,8 @@ abstract public class EngineContext {
 
     abstract public void clear(Color color);
 
+    abstract public void present();
+
     abstract public void drawSolid(int width, int height, Color color);
 
     abstract public void drawImage(int width, int height, Texture texture);
