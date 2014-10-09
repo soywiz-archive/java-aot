@@ -388,7 +388,7 @@ public class RegionAnalysis{
 		for (Iterator<Block> it = cfg.iterator(); it.hasNext(); ) 
 		{
 		    Block node = it.next();
-		    s += "old.Node = " + node.toShortString() + "\n";
+		    s += "Node = " + node.toShortString() + "\n";
 		    s += "Preds:\n";
 		    for (Iterator<Block> predsIt = cfg.getPredsOf(node).iterator(); predsIt.hasNext(); ) 
 		    {

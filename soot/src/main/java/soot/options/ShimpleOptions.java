@@ -42,9 +42,9 @@ public class ShimpleOptions
         return soot.PhaseOptions.getBoolean( options, "enabled" );
     }
     
-    /** Shimple old.Node Elimination Optimizations --
+    /** Shimple Node Elimination Optimizations --
     
-     * old.Node elimination optimizations.
+     * Node elimination optimizations.
     
      * Perform some optimizations, such as dead code 
      * elimination and local aggregation, before/after 

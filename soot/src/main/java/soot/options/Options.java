@@ -1959,7 +1959,7 @@ public class Options extends OptionsBase {
                 "\nShimple Control sets parameters which apply throughout the \ncreation and manipulation of Shimple bodies. Shimple is Soot's \nSSA representation."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
-                +padOpt( "node-elim-opt (true)", "old.Node elimination optimizations" )
+                +padOpt( "node-elim-opt (true)", "Node elimination optimizations" )
                 +padOpt( "standard-local-names (false)", "Uses naming scheme of the Local Name             Standardizer." )
                 +padOpt( "extended (false)", "Compute extended SSA (SSI) form." )
                 +padOpt( "debug (false)", "Enables debugging output, if any." );

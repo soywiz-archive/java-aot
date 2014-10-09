@@ -78,7 +78,7 @@ public class PartialConstructorFolder extends BodyTransformer
         LocalDefs localDefs = new SmartLocalDefs(graph, new SimpleLiveLocals(graph));
         LocalUses localUses = new SimpleLocalUses(graph, localDefs);
 
-        /* fold in old.NewExpr's with specialinvoke's */
+        /* fold in NewExpr's with specialinvoke's */
         while (it.hasNext())
         {
             Stmt s = (Stmt)it.next();

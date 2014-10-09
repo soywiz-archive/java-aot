@@ -56,7 +56,7 @@ import soot.*;
  * 950 to field reads and invoke expressions (.), as well as array reads ([]).
  * I've assigned 850 to cast, newarray and newinvoke.
  *
- * The Dava DCmp?old.Expr precedences look fishy to me; I've assigned DLengthExpr
+ * The Dava DCmp?Expr precedences look fishy to me; I've assigned DLengthExpr
  * a precedence of 950, because it looks like it should parse like a field
  * read to me.
  *

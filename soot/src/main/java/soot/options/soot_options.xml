@@ -2172,7 +2172,7 @@ This option has no effect unless Dump PAG is true.
         </long_desc>
 						</boolopt>
 						<boolopt>
-							<name>Class Method old.Var</name>
+							<name>Class Method Var</name>
 							<alias>class-method-var</alias>
 							<default>true</default>
                                                         <short_desc>In dump, label variables by class and method</short_desc>
@@ -2184,7 +2184,7 @@ the method separately, rather than assigning a single integer to each
 node.
 
 This option has no effect unless Dump PAG is true.  Setting Class
-Method old.Var to true has the effect of setting Topological Sort to
+Method Var to true has the effect of setting Topological Sort to
 false.
         </long_desc>
 						</boolopt>
@@ -3882,9 +3882,9 @@ SSA representation.</p>
           <default>true</default>
         </boolopt>
         <boolopt>
-          <name>Shimple old.Node Elimination Optimizations</name>
+          <name>Shimple Node Elimination Optimizations</name>
           <alias>node-elim-opt</alias>
-          <short_desc>old.Node elimination optimizations</short_desc>
+          <short_desc>Node elimination optimizations</short_desc>
           <default>true</default>
           <long_desc>
           <p>

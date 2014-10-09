@@ -504,7 +504,7 @@ public class SmartMethodInfoFlowAnalysis
 			}
 			else
 			{
-				throw new RuntimeException("Unknown old.Node Type in Data Flow Graph: node " + node + " in InvokeExpr " + ie);
+				throw new RuntimeException("Unknown Node Type in Data Flow Graph: node " + node + " in InvokeExpr " + ie);
 			}
 			
 			Iterator sinksIt = dataFlowSummary.getSuccsOfAsSet(nodeEqVal).iterator();

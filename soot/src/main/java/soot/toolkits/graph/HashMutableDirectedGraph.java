@@ -214,7 +214,7 @@ public class HashMutableDirectedGraph implements MutableDirectedGraph {
     public void addNode(Object node)
     {
 				if (containsNode(node))
-						throw new RuntimeException("old.Node already in graph");
+						throw new RuntimeException("Node already in graph");
 				
 				nodeToSuccs.put(node, new LinkedHashSet<Object>());
         nodeToPreds.put(node, new LinkedHashSet<Object>());
@@ -245,7 +245,7 @@ public class HashMutableDirectedGraph implements MutableDirectedGraph {
 
 	for (Iterator it = iterator(); it.hasNext(); ) {
 	    Object node = it.next();
-	    G.v().out.println("old.Node = "+node);
+	    G.v().out.println("Node = "+node);
 	    G.v().out.println("Preds:");
 	    for (Iterator predsIt = getPredsOf(node).iterator(); predsIt.hasNext(); ) {
 		G.v().out.print("     ");

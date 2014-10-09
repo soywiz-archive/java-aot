@@ -31,6 +31,7 @@ package soot.jimple;
 
 import soot.*;
 import soot.jimple.internal.*;
+
 import java.util.*;
 
 /**
@@ -38,7 +39,7 @@ import java.util.*;
     grammar for the Jimple body. <br><br>
 
     Immediate -> Local | Constant <br>
-    RValue -> Local | Constant | ConcreteRef | old.Expr<br>
+    RValue -> Local | Constant | ConcreteRef | Expr<br>
     Variable -> Local | ArrayRef | InstanceFieldRef | StaticFieldRef <br>
  */
 
@@ -377,7 +378,7 @@ public class Jimple
 
 
     /**
-        Constructs a old.CastExpr(Immediate, Type) grammar chunk.
+        Constructs a CastExpr(Immediate, Type) grammar chunk.
      */
 
     public CastExpr newCastExpr(Value op1, Type t)
@@ -397,7 +398,7 @@ public class Jimple
 
 
     /**
-        Constructs a old.NewExpr(RefType) grammar chunk.
+        Constructs a NewExpr(RefType) grammar chunk.
      */
 
     public NewExpr newNewExpr(RefType type)
@@ -407,7 +408,7 @@ public class Jimple
 
 
     /**
-        Constructs a old.NewArrayExpr(Type, Immediate) grammar chunk.
+        Constructs a NewArrayExpr(Type, Immediate) grammar chunk.
      */
 
     public NewArrayExpr newNewArrayExpr(Type type, Value size)
@@ -898,6 +899,20 @@ public class Jimple
     public JimpleBody newBody()
     {
         return new JimpleBody();
+    }
+
+    /*
+     * RoboVM note: Added in RoboVM.
+     */
+    public SootMethodHandle newMethodHandle(int referenceKind, SootMethodRef methodRef) {
+        return new JMethodHandle(referenceKind, methodRef);
+    }
+
+    /*
+     * RoboVM note: Added in RoboVM.
+     */
+    public SootMethodType newMethodType(Type returnType, List<Type> parameterTypes) {
+        return new JMethodType(returnType, parameterTypes);
     }
 
     /*

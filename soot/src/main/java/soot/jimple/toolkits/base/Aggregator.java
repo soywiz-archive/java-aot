@@ -326,8 +326,8 @@ public class Aggregator extends BodyTransformer
                   G.v().out.println("[debug] tried to put "+aggregatee+
                                  " into "+usepair.stmt + 
                                  ": in particular, "+usepair.valueBox);
-                  G.v().out.println("[debug] aggregatee instanceof old.Expr: "
-                                 +(aggregatee instanceof old.Expr));
+                  G.v().out.println("[debug] aggregatee instanceof Expr: "
+                                 +(aggregatee instanceof Expr));
             }*/
             }
         }

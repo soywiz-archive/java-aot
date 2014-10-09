@@ -327,7 +327,7 @@ public class SparkOptions
         return soot.PhaseOptions.getBoolean( options, "dump-types" );
     }
     
-    /** Class Method old.Var --
+    /** Class Method Var --
     
      * In dump, label variables by class and method.
     
@@ -335,7 +335,7 @@ public class SparkOptions
      * the Dump PAG option represents nodes by numbering each class, 
      * method, and variable within the method separately, rather than 
      * assigning a single integer to each node. This option has no 
-     * effect unless Dump PAG is true. Setting Class Method old.Var to
+     * effect unless Dump PAG is true. Setting Class Method Var to 
      * true has the effect of setting Topological Sort to false. 
      * 
      */
