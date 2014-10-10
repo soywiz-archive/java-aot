@@ -2,6 +2,7 @@ package util
 
 import java.io.File
 
+import ast.AstMethod
 import org.objectweb.asm.{Type, ClassReader, Opcodes}
 import org.objectweb.asm.tree._
 import scala.collection.JavaConverters._
@@ -77,6 +78,8 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
 
     //println(cn.name)
     for (method <- cn.methods.asScala.map(_.asInstanceOf[MethodNode])) {
+      new AstMethod().process(cn, method)
+
       //if (debug) println(s"   - ${method.name}")
       //println(" - " + method.name)
       processMethodType(Type.getType(method.desc))

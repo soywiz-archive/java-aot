@@ -6,22 +6,21 @@ import org.objectweb.asm.tree._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class ProcessAst {
-  val stack = new mutable.Stack[Expr]
-  val locals = new ListBuffer[Local]
-  val stms = new ListBuffer[Stm]
+class AstFrame(_locals:Array[LValue] = null) {
+  private val stack = new mutable.Stack[Expr]
+  private val locals = new ListBuffer[Local]
+  private val stms = new ListBuffer[Stm]
 
-  def process(node:MethodNode):Unit = {
-    process(node.instructions)
-  }
-
-  def process(list:InsnList): Unit = {
+  def process(list:Seq[AbstractInsnNode]): Unit = {
+    println("--------------------------")
     for (item <- list.toArray) {
       processAbstract(item)
     }
+    stms.foreach(println)
+    println(stack)
   }
 
-  def process(i: JumpInsnNode): Unit = {
+  private def process(i: JumpInsnNode): Unit = {
     lazy val op = i.getOpcode match {
       case IFEQ | IF_ICMPEQ | IF_ACMPEQ | IFNULL => "=="
       case IFNE | IF_ICMPNE | IF_ACMPNE | IFNONNULL => "!="
@@ -44,17 +43,29 @@ class ProcessAst {
     }
   }
 
-  def process(i: MethodInsnNode): Unit = {
-    i match {
-      case INVOKEVIRTUAL => throw new NotImplementedError()
-      case INVOKESPECIAL => throw new NotImplementedError()
-      case INVOKESTATIC => throw new NotImplementedError()
-      case INVOKEINTERFACE => throw new NotImplementedError()
+  private def process(i: MethodInsnNode): Unit = {
+    val clazzRef = ClassType(i.owner)
+    println(i.desc)
+    val methodType = NodeUtils.typeFromDesc(i.desc).asInstanceOf[MethodType]
+    val methodRef = MethodRef(clazzRef, methodType, i.name)
+
+    val parameters = stackPopN(methodType.arguments.length).toList
+    val argsThis = i.getOpcode match {
+      case INVOKEINTERFACE | INVOKESPECIAL | INVOKEVIRTUAL => List(stack.pop())
+      case INVOKESTATIC => List()
+    }
+    val args = argsThis ::: parameters
+    val expr = Invoke(methodRef, args)
+
+    if (methodType.hasReturnValue) {
+      stack.push(expr)
+    } else {
+      stms.append(ExprStm(expr))
     }
   }
 
-  def process(i: TypeInsnNode): Unit = {
-    i match {
+  private def process(i: TypeInsnNode): Unit = {
+    i.getOpcode match {
       case NEW => stack.push(New(ClassType(i.desc)))
       case ANEWARRAY => stack.push(NewArray(ClassType(i.desc), stack.pop()))
       case CHECKCAST => stack.push(CheckCast(ClassType(i.desc), stack.pop()))
@@ -62,14 +73,24 @@ class ProcessAst {
     }
   }
 
-  def process(i: VarInsnNode): Unit = {
-    i match {
+  private def process(i: VarInsnNode): Unit = {
+    i.getOpcode match {
       case ILOAD | LLOAD | FLOAD | DLOAD | ALOAD => stack.push(getLocal(i.`var`))
       case ISTORE | LSTORE | FSTORE | DSTORE | ASTORE | RET => stms.append(Assign(getLocal(i.`var`), stack.pop()))
     }
   }
 
-  def processAbstract(i: AbstractInsnNode): Unit = {
+  val labels = new mutable.HashSet[LabelRef]()
+
+  def process(node: LabelNode): Unit = {
+    labels.add(LabelRef())
+  }
+
+  def process(node: LineNumberNode): Unit = {
+
+  }
+
+  private def processAbstract(i: AbstractInsnNode): Unit = {
     i match {
       case i:FieldInsnNode => process(i)
       //case i:IincInsnNode => process(i)
@@ -77,9 +98,9 @@ class ProcessAst {
       case i:InsnNode => process(i)
       //case i: InvokeDynamicInsnNode => process(i)
       case i: JumpInsnNode => process(i)
-      //case i: LabelNode => process(i)
+      case i: LabelNode => process(i)
       case i: LdcInsnNode => process(i)
-      //case i: LineNumberNode => process(i)
+      case i: LineNumberNode => process(i)
       //case i: LookupSwitchInsnNode => process(i)
       case i: MethodInsnNode => process(i)
       //case i: MultiANewArrayInsnNode => process(i)
@@ -89,40 +110,48 @@ class ProcessAst {
     }
   }
 
-  def process(i:LdcInsnNode):Unit = {
+  private def process(i:LdcInsnNode):Unit = {
     i.cst match {
-      case v:Int => stack.push(IntConstant(v))
-      case v:Long => stack.push(LongConstant(v))
-      case v:Double => stack.push(DoubleConstant(v))
+      case v:Integer => stack.push(IntConstant(v))
+      //case v:Long => stack.push(LongConstant(v))
+      //case v:Double => stack.push(DoubleConstant(v))
       case v:String => stack.push(StringConstant(v))
       //case v:Type => stack.push(ClassConstant(v))
     }
   }
 
-  def process(i:FieldInsnNode):Unit = {
-    val fieldRef = FieldRef(i.owner, i.name, NodeUtils.typeFromDesc(i.desc))
+  private def process(i:FieldInsnNode):Unit = {
+    val fieldRef = FieldRef(ClassType(i.owner), NodeUtils.typeFromDesc(i.desc), i.name)
     i.getOpcode match {
-      case Opcodes.GETSTATIC => stack.push(Field(fieldRef))
-      case Opcodes.GETFIELD => stack.push(Field(fieldRef, stack.pop()))
-      case Opcodes.PUTSTATIC => stms.append(Assign(Field(fieldRef), stack.pop()))
-      case Opcodes.PUTFIELD => stms.append(Assign(Field(fieldRef, stack.pop()), stack.pop()))
+      case GETSTATIC => stack.push(StaticField(fieldRef))
+      case GETFIELD => stack.push(Field(fieldRef, stack.pop()))
+      case PUTSTATIC => stms.append(Assign(StaticField(fieldRef), stack.pop()))
+      case PUTFIELD => stms.append(Assign(Field(fieldRef, stack.pop()), stack.pop()))
     }
   }
 
-  def stackPop2() = { val r = stack.pop(); val l = stack.pop(); (l, r) }
-  def stackPop3() = { val r = stack.pop(); val m = stack.pop(); val l = stack.pop(); (l, m, r) }
+  private def stackPop2() = { val r = stack.pop(); val l = stack.pop(); (l, r) }
+  private def stackPopN(count:Int):Array[Expr] = {
+    val out = new Array[Expr](count)
+    for (n <- 0 until count) out(count - n - 1) = stack.pop()
+    out
+  }
+  private def stackPop3() = { val r = stack.pop(); val m = stack.pop(); val l = stack.pop(); (l, m, r) }
 
-  def getLocal(index:Int) = {
-    Local(index)
+  private def getLocal(index:Int) = {
+    if (index >= _locals.length) {
+      throw new Exception
+    }
+    _locals(index)
   }
 
-  def allocLocal(index:Int = -1) = {
-    val local = Local(index)
+  private def allocLocal(kind:NodeType) = {
+    val local = Local(kind)
     locals.append(local)
     local
   }
 
-  def process(i:InsnNode): Unit = {
+  private def process(i:InsnNode): Unit = {
     i.getOpcode match {
       case NOP =>
       case ACONST_NULL => stack.push(NullConstant())
@@ -173,19 +202,19 @@ class ProcessAst {
       case IOR | LOR => stack.push(Binop("|", stackPop2()))
       case IXOR | LXOR => stack.push(Binop("~", stackPop2()))
 
-      case I2L | F2L | D2L => stack.push(Conv(stack.pop(), classOf[Long]))
-      case I2F | L2F | D2F => stack.push(Conv(stack.pop(), classOf[Float]))
-      case I2D | L2D | F2D => stack.push(Conv(stack.pop(), classOf[Double]))
-      case L2I | F2I | D2I => stack.push(Conv(stack.pop(), classOf[Int]))
-      case I2B => stack.push(Conv(stack.pop(), classOf[Byte]))
-      case I2C => stack.push(Conv(stack.pop(), classOf[Char]))
-      case I2S => stack.push(Conv(stack.pop(), classOf[Short]))
+      case I2L | F2L | D2L => stack.push(Conv(stack.pop(), LongType()))
+      case I2F | L2F | D2F => stack.push(Conv(stack.pop(), FloatType()))
+      case I2D | L2D | F2D => stack.push(Conv(stack.pop(), DoubleType()))
+      case L2I | F2I | D2I => stack.push(Conv(stack.pop(), IntType()))
+      case I2B => stack.push(Conv(stack.pop(), ByteType()))
+      case I2C => stack.push(Conv(stack.pop(), CharType()))
+      case I2S => stack.push(Conv(stack.pop(), ShortType()))
 
       case LCMP => stack.push(Binop("cmp", stackPop2()))
       case FCMPL | DCMPL => stack.push(Binop("cmpl", stackPop2()))
       case FCMPG | DCMPG => stack.push(Binop("cmpg", stackPop2()))
       case IRETURN | LRETURN | FRETURN | DRETURN | ARETURN => stms.append(ReturnStm(stack.pop()))
-      case RETURN => stms.append(ReturnStm())
+      case RETURN => stms.append(ReturnVoidStm())
 
       case ARRAYLENGTH => stack.push(ArrayLength(stack.pop()))
 
