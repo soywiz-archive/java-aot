@@ -1,3 +1,5 @@
+import _root_.java.lang.invoke.MethodHandles
+
 import ast._
 import org.objectweb.asm.{Label, Opcodes}
 import org.objectweb.asm.tree._
@@ -48,7 +50,7 @@ class Test extends FlatSpec with Matchers {
     println("+++++++++++++")
     stms.foreach(println)
 
-    assert(List(
+    assert(stms == List(
       BranchStm(Binop("!=",(IntConstant(1),IntConstant(0))),LabelRef(0)),
       Assign(Local(IntType(),0,"temp_0"),IntConstant(1)),
       JumpStm(LabelRef(1)),
@@ -57,7 +59,7 @@ class Test extends FlatSpec with Matchers {
       JumpStm(LabelRef(1)),
       LabelStm(LabelRef(1)),
       ReturnStm(Local(IntType(),0,"temp_0"))
-    ) == stms)
+    ))
   }
 
   "test" should "test3" in {

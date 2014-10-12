@@ -2,7 +2,7 @@ package util
 
 import java.io.File
 
-import ast.AstMethod
+import ast.{InsUtils, AstMethod}
 import org.objectweb.asm.{Type, ClassReader, Opcodes}
 import org.objectweb.asm.tree._
 import scala.collection.JavaConverters._
@@ -42,7 +42,9 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
     val cn = new ClassNode(Opcodes.ASM5)
 
     val cr = new ClassReader(data)
-    cr.accept(cn, 0)
+    //cr.accept(cn, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+    //cr.accept(cn, ClassReader.SKIP_FRAMES)
+    cr.accept(cn, ClassReader.EXPAND_FRAMES)
 
     val classNames = mutable.HashSet[String]()
 
@@ -78,7 +80,10 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
 
     //println(cn.name)
     for (method <- cn.methods.asScala.map(_.asInstanceOf[MethodNode])) {
-      new AstMethod().process(cn, method)
+      //println("---------------------------------------------")
+      //println(s"Analyzing: ${cn.name} :: ${method.name}")
+      //for (node <- method.instructions.toArray) println(InsUtils.toString(node))
+      //new AstMethod().process(cn, method)
 
       //if (debug) println(s"   - ${method.name}")
       //println(" - " + method.name)

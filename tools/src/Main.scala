@@ -167,10 +167,10 @@ object Main extends App {
     var uints:Array[Int] = null
     var doubles:Array[Double] = null
     var strings:Array[String] = null
-    var namespaces:Array[(Int, String)] = null
+    var namespaces:Array[Namespace] = null
     var nsset:Array[Any] = null
-    var multinames:Array[Any] = null
-    var methods:Array[Any] = null
+    var multinames:Array[MultiName] = null
+    var methods:Array[Method] = null
 
     def readSTRING_INFO() = {
       val size = abc.readU30()
@@ -178,29 +178,29 @@ object Main extends App {
       new String(StreamUtils.streamRead(abc.is, size), "UTF-8")
     }
 
-    def readMULTINAME_INFO() = {
+    def readMULTINAME_INFO(): MultiName = {
       val kind = abc.readU8()
       kind match {
-        case 0x07 | 0x0D => new ConstantQName(namespaces(abc.readU30()), strings(abc.readU30()))
-        case 0x09 | 0x0E => new ConstantMultiname(strings(abc.readU30()), nsset(abc.readU30()))
-        case 0x0F | 0x10 => new ConstantRTQName(strings(abc.readU30()))
-        case 0x11 | 0x12 => new ConstantRTQNameL()
-        case 0x1B | 0x1C => new ConstantMultinameL(nsset(abc.readU30()))
+        case 0x07 | 0x0D => ConstantQName(namespaces(abc.readU30()), strings(abc.readU30()))
+        case 0x09 | 0x0E => ConstantMultiname(strings(abc.readU30()), nsset(abc.readU30()))
+        case 0x0F | 0x10 => ConstantRTQName(strings(abc.readU30()))
+        case 0x11 | 0x12 => ConstantRTQNameL()
+        case 0x1B | 0x1C => ConstantMultinameL(nsset(abc.readU30()))
 
-        case 0x1D | 0x1E => new ConstantUnknown(abc.readU30(), abc.readU30(), abc.readU30())
+        case 0x1D | 0x1E => ConstantUnknown(abc.readU30(), abc.readU30(), abc.readU30())
       }
     }
 
     def readNAMESPACE_INFO() = {
-      (abc.readU8(), strings(abc.readU30()))
+      Namespace(abc.readU8(), strings(abc.readU30()))
 
-      //CONSTANT_Namespace                  0x08
-      //CONSTANT_PackageNamespace           0x16
-      //CONSTANT_PackageInternalNs          0x17
-      //CONSTANT_ProtectedNamespace         0x18
-      //CONSTANT_ExplicitNamespace          0x19
-      //CONSTANT_StaticProtectedNs          0x1A
-      //CONSTANT_PrivateNs                  0x05
+      //CONSTANT_Namespace                  0x08 - 8
+      //CONSTANT_PackageNamespace           0x16 - 22
+      //CONSTANT_PackageInternalNs          0x17 - 23
+      //CONSTANT_ProtectedNamespace         0x18 - 24
+      //CONSTANT_ExplicitNamespace          0x19 - 25
+      //CONSTANT_StaticProtectedNs          0x1A - 26
+      //CONSTANT_PrivateNs                  0x05 - 5
     }
 
     def readNS_SET_INFO() = for (n <- 0 until abc.readU30()) yield abc.readU30()
@@ -212,29 +212,38 @@ object Main extends App {
       strings = ("" :: (for (v <- 0 until abc.readU30() - 1) yield readSTRING_INFO()).toList).toArray
       namespaces = (null :: (for (v <- 0 until abc.readU30() - 1) yield readNAMESPACE_INFO()).toList).toArray
       nsset = (null :: (for (v <- 0 until abc.readU30() - 1) yield readNS_SET_INFO()).toList).toArray
-      multinames = (null :: (for (v <- 0 until abc.readU30() - 1) yield readMULTINAME_INFO()).toList).toArray
+      multinames = (ConstantRTQName("*") :: (for (v <- 0 until abc.readU30() - 1) yield readMULTINAME_INFO()).toList).toArray
     }
 
+    case class Method(paramCount:Int, returnType:MultiName, name:String, flags:Int, options:List[(Int, Int)], paramTypes:List[MultiName], paramNames:List[String])
+
     def readMethods(): Unit = {
-      def readMethod(): Unit = {
+      def readMethod(): Method = {
         val paramCount = abc.readU30()
-        val returnType = abc.readU30()
-        val paramTypes = for (m <- 0 until paramCount) yield abc.readU30()
+        val returnType = multinames(abc.readU30())
+        val paramTypes = for (m <- 0 until paramCount) yield multinames(abc.readU30())
         val name = strings(abc.readU30())
         //println(s"name:$name:" + strings(name))
         val flags = abc.readU8()
-        val options = if ((flags & 0x08) != 0) {
+        val NEED_ARGUMENTS = (flags & 1) != 0
+        val NEED_ACTIVATION = (flags & 2) != 0
+        val NEED_REST = (flags & 4) != 0
+        val HAS_OPTIONAL = (flags & 8) != 0
+        val SET_DXNS = (flags & 0x40) != 0
+        val HAS_PARAM_NAMES = (flags & 0x80) != 0
+
+        val options = if (HAS_OPTIONAL) {
           for (m <- 0 until abc.readU30()) yield (abc.readU30(), abc.readU8())
         } else {
           List()
         }
-        val paramNames = if ((flags & 0x80) != 0) {
-          for (m <- 0 until paramCount) yield abc.readU30()
+        val paramNames = if (HAS_PARAM_NAMES) {
+          for (m <- 0 until paramCount) yield strings(abc.readU30())
         } else {
           List()
         }
 
-        (paramCount, returnType, name, flags, options, paramNames)
+        Method(paramCount, returnType, name, flags, options.toList, paramTypes.toList, paramNames.toList)
       }
 
       methods = (for (n <- 0 until abc.readU30()) yield readMethod()).toArray
@@ -269,20 +278,24 @@ object Main extends App {
           case 1 | 2 | 3 =>
             val disp_id = abc.readU30()
             val method = abc.readU30()
+            println(method)
+            println(methods(method))
             (disp_id, method)
           case 4 =>
             val slot_id = abc.readU30()
-            val function = abc.readU30()
-            (slot_id, function)
-          case 5 =>
-            val slot_id = abc.readU30()
             val classi = abc.readU30()
             (slot_id, classi)
+          case 5 =>
+            val slot_id = abc.readU30()
+            val function = abc.readU30()
+            (slot_id, function)
           case 7 =>
             val slot_id = abc.readU30()
             val classi = abc.readU30()
             (slot_id, classi)
         }
+        val isFinal = (kind_flags & 1) != 0
+        val isOverride = (kind_flags & 2) != 0
         val metadata = if ((kind_flags & 0x4) != 0) {
           for (m <- 0 until abc.readU30()) yield abc.readU30()
         } else {
@@ -454,12 +467,15 @@ class SWFStreamReader(val is:InputStream) {
   }
 }
 
-case class ConstantQName(ns:Any, name:String)
-case class ConstantRTQName(name:String)
-case class ConstantRTQNameL()
-case class ConstantMultiname(name:String, ns_set:Any)
-case class ConstantMultinameL(ns_set:Any)
-case class ConstantUnknown(a:Int = 0, b:Int = 0, c:Int = 0)
+case class Namespace(kind:Int, name:String)
+
+abstract class MultiName()
+case class ConstantQName(ns:Namespace, name:String) extends MultiName
+case class ConstantRTQName(name:String) extends MultiName
+case class ConstantRTQNameL() extends MultiName
+case class ConstantMultiname(name:String, ns_set:Any) extends MultiName
+case class ConstantMultinameL(ns_set:Any) extends MultiName
+case class ConstantUnknown(a:Int = 0, b:Int = 0, c:Int = 0) extends MultiName
 
 object BitUtils {
   @inline def mask(len:Int) = (1 << len) - 1

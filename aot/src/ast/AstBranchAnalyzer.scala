@@ -1,14 +1,15 @@
 package ast
 
 import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Opcodes._
 import org.objectweb.asm.tree._
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 // TODO: Analyzer should not call frame to generate, in order to be two separated steps
-class AstBranchAnalyzer {
-  val context = new AstMethodContext
+class AstBranchAnalyzer(method:MethodNode = null) {
+  val context = new AstMethodContext(method)
   val map = new mutable.HashMap[AbstractInsnNode, AstBranch]
   val mapInput = new mutable.HashMap[AbstractInsnNode, InoutFrame]
   var exploreQueue = new mutable.Queue[(AbstractInsnNode, InoutFrame)]()
@@ -38,7 +39,7 @@ class AstBranchAnalyzer {
       ensureInoutCompatible(optframe.get.input, input.sharedStack)
     } else {
       val frame = analyze(initial, input)
-      println("<---- " + frame.output + " | " + frame.input)
+      if (context.debug) println("<---- " + frame.output + " | " + frame.input)
       map(initial) = frame
     }
 
@@ -76,8 +77,10 @@ class AstBranchAnalyzer {
   }
 
   private def analyze(initial:AbstractInsnNode, input:InoutFrame): AstBranch = {
-    println("----------------------------------")
-    println(s"Analyzing branch: $initial <-- $input")
+    if (context.debug) {
+      println("----------------------------------")
+      println(s"Analyzing branch: $initial <-- $input")
+    }
     var node = initial
 
     val nodes = new ListBuffer[AbstractInsnNode]
@@ -96,7 +99,7 @@ class AstBranchAnalyzer {
 
       val outputStack = frame.stack.toList
       val output = createInout(outputStack, nextList)
-      println(s" Output --> $output")
+      if (context.debug) println(s" Output --> $output")
 
       val stms0 = if (hasGoto) stms.dropRight(1) else stms
       val stms1 = (output.locals, outputStack).zipped.map((local, value) => Assign(local, value))
@@ -112,11 +115,23 @@ class AstBranchAnalyzer {
     while (node != null) {
       if (node.isInstanceOf[LabelNode]) return process(List(node), hasGoto = false)
       nodes.append(node)
+
       node match {
         case i:JumpInsnNode =>
-          val unconditional = i.getOpcode == Opcodes.GOTO
-          return process((if (unconditional) List() else List(i.getNext)) ::: List(i.label), hasGoto = true)
+          node.getOpcode match {
+            case GOTO =>
+              return process(List(i.getNext), hasGoto = true)
+            case _ =>
+              return process(List(i.getNext, i.label), hasGoto = true)
+          }
         case _ =>
+          node.getOpcode match {
+            // Stop analyzing
+            case ATHROW | RETURN | ARETURN | IRETURN | LRETURN | FRETURN | DRETURN =>
+              return process(List(), hasGoto = false)
+
+            case _ =>
+          }
       }
 
       node = node.getNext

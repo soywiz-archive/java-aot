@@ -8,7 +8,6 @@ import scala.collection.mutable.ListBuffer
 
 class AstFrame(context:AstMethodContext, initialLocals:Array[LValue] = null, initialStack:List[Expr] = null) {
   val stack = new mutable.Stack[Expr]
-  private val locals = new ListBuffer[Local]
   val stms = new ListBuffer[Stm]
 
   initialStack.foreach(stack.push)
@@ -17,8 +16,10 @@ class AstFrame(context:AstMethodContext, initialLocals:Array[LValue] = null, ini
     for (item <- list.toArray) {
       processAbstract(item)
     }
-    stms.foreach(println)
-    println(stack)
+    if (context.debug) {
+      stms.foreach(println)
+      println(stack)
+    }
   }
 
   private def process(i: JumpInsnNode): Unit = {
@@ -77,8 +78,8 @@ class AstFrame(context:AstMethodContext, initialLocals:Array[LValue] = null, ini
 
   private def process(i: VarInsnNode): Unit = {
     i.getOpcode match {
-      case ILOAD | LLOAD | FLOAD | DLOAD | ALOAD => stackPush(getLocal(i.`var`))
-      case ISTORE | LSTORE | FSTORE | DSTORE | ASTORE | RET => stms.append(Assign(getLocal(i.`var`), stackPop()))
+      case ILOAD | LLOAD | FLOAD | DLOAD | ALOAD => stackPush(context.getLocalIn(i, i.`var`))
+      case ISTORE | LSTORE | FSTORE | DSTORE | ASTORE | RET => stms.append(Assign(context.getLocalIn(i, i.`var`), stackPop()))
     }
   }
 
@@ -108,18 +109,27 @@ class AstFrame(context:AstMethodContext, initialLocals:Array[LValue] = null, ini
   }
 
   private  def process(node: IincInsnNode): Unit = {
-    stms.append(Assign(getLocal(node.`var`), Binop("+", (getLocal(node.`var`), IntConstant(node.incr)))))
+    val local = context.getLocalIn(node, node.`var`)
+    stms.append(Assign(local, Binop("+", (local, IntConstant(node.incr)))))
+  }
+
+  def process(node: InvokeDynamicInsnNode): Unit = {
+    throw new Exception("Not implemented InvokeDynamic")
+  }
+
+  def process(node: FrameNode): Unit = {
+
   }
 
   private def processAbstract(i: AbstractInsnNode): Unit = {
-    println(i + " : " + i.getOpcode)
+    if (context.debug) println(i + " : " + i.getOpcode)
     i match {
       case i:FieldInsnNode => process(i)
       case i:IntInsnNode => process(i)
       case i:IincInsnNode => process(i)
-      //case i:FrameNode => process(i)
+      case i:FrameNode => process(i)
       case i:InsnNode => process(i)
-      //case i: InvokeDynamicInsnNode => process(i)
+      case i: InvokeDynamicInsnNode => process(i)
       case i: JumpInsnNode => process(i)
       case i: LabelNode => process(i)
       case i: LdcInsnNode => process(i)
@@ -157,44 +167,20 @@ class AstFrame(context:AstMethodContext, initialLocals:Array[LValue] = null, ini
 
   private def expectStack(count:Int): Unit = {
     if (stack.length < count) {
-      throw new Exception
+      throw new Exception(s"Stack expected $count but has ${stack.length}")
     }
   }
 
-  private def stackPop() = {
-    expectStack(1)
-    stack.pop()
-  }
-  private def stackPop2() = {
-    expectStack(2)
-    val r = stack.pop(); val l = stack.pop(); (l, r)
-  }
-  private def stackPop3() = {
-    expectStack(3)
-    val r = stack.pop(); val m = stack.pop(); val l = stack.pop(); (l, m, r)
-  }
+  private def stackPop() = { expectStack(1); stack.pop() }
+  private def stackPop2() = { expectStack(2); val r = stack.pop(); val l = stack.pop(); (l, r) }
+  private def stackPop3() = { expectStack(3); val r = stack.pop(); val m = stack.pop(); val l = stack.pop(); (l, m, r) }
   private def stackPopN(count:Int):Array[Expr] = {
     expectStack(count)
     val out = new Array[Expr](count)
     for (n <- 0 until count) out(count - n - 1) = stack.pop()
     out
   }
-  private def stackPush(v:Expr):Unit = {
-    stack.push(v)
-  }
-
-  private def getLocal(index:Int) = {
-    if (index >= initialLocals.length) {
-      throw new Exception
-    }
-    initialLocals(index)
-  }
-
-  private def allocLocal(kind:NodeType) = {
-    val local = Local(kind)
-    locals.append(local)
-    local
-  }
+  private def stackPush(v:Expr) = stack.push(v)
 
   private def process(i:InsnNode): Unit = {
     i.getOpcode match {
@@ -220,7 +206,7 @@ class AstFrame(context:AstMethodContext, initialLocals:Array[LValue] = null, ini
 
       case DUP =>
         val value = stackPop()
-        val local = allocLocal(value.getType)
+        val local = context.allocLocal(value.getType)
         stms.append(Assign(local, value))
         stackPush(local)
         stackPush(local)
