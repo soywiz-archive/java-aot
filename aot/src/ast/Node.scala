@@ -20,7 +20,7 @@ case class MethodType(retval:NodeType, arguments:List[NodeType]) extends NodeTyp
   lazy val hasReturnValue = !retval.isInstanceOf[VoidType]
 }
 
-case class LabelRef()
+case class LabelRef(index:Int)
 case class FieldRef(owner:ClassType, kind:NodeType, name:String) { def getType = kind; }
 case class MethodRef(owner:ClassType, kind:MethodType, name:String) { def getType = kind; }
 
@@ -86,8 +86,8 @@ case class ClassConstant(v: ClassType) extends Constant() { val getType = v; }
 case class Invoke(methodRef:MethodRef, args:Seq[Expr]) extends Expr() { val getType = methodRef.kind.retval; }
 
 abstract class Stm()
-case class BranchStm(cond:Expr, label:LabelNode) extends Stm()
-case class JumpStm(label:LabelNode) extends Stm()
+case class BranchStm(cond:Expr, label:LabelRef) extends Stm()
+case class JumpStm(label:LabelRef) extends Stm()
 case class ExprStm(v:Expr) extends Stm()
 case class ReturnStm(cond:Expr) extends Stm()
 case class ReturnVoidStm() extends Stm()
@@ -95,4 +95,4 @@ case class ThrowStm(cond:Expr) extends Stm()
 case class MonitorEnter(cond:Expr) extends Stm()
 case class MonitorExit(cond:Expr) extends Stm()
 case class Assign(value:LValue, v:Expr) extends Stm()
-case class LabelStm(labelNode:LabelNode) extends Stm()
+case class LabelStm(labelNode:LabelRef) extends Stm()

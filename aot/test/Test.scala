@@ -1,4 +1,4 @@
-import ast.{InsUtils, AstBranchAnalyzer, AstFrame}
+import ast._
 import org.objectweb.asm.{Label, Opcodes}
 import org.objectweb.asm.tree._
 import org.scalatest._
@@ -7,7 +7,7 @@ import scala.collection.mutable
 
 class Test extends FlatSpec with Matchers {
   "test" should "test" in {
-    val frame = new AstFrame()
+    val frame = new AstFrame(new AstMethodContext())
     frame.process(List(
       new InsnNode(Opcodes.ICONST_1),
       new JumpInsnNode(Opcodes.GOTO, new LabelNode(new Label()))
@@ -44,8 +44,20 @@ class Test extends FlatSpec with Matchers {
     ))
 
     val stms = new AstBranchAnalyzer().analyze(ins)
+
     println("+++++++++++++")
     stms.foreach(println)
+
+    assert(List(
+      BranchStm(Binop("!=",(IntConstant(1),IntConstant(0))),LabelRef(0)),
+      Assign(Local(IntType(),0,"temp_0"),IntConstant(1)),
+      JumpStm(LabelRef(1)),
+      LabelStm(LabelRef(0)),
+      Assign(Local(IntType(),0,"temp_0"),IntConstant(2)),
+      JumpStm(LabelRef(1)),
+      LabelStm(LabelRef(1)),
+      ReturnStm(Local(IntType(),0,"temp_0"))
+    ) == stms)
   }
 
   "test" should "test3" in {

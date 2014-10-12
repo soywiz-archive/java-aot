@@ -6,7 +6,7 @@ import org.objectweb.asm.tree._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class AstFrame(initialLocals:Array[LValue] = null, initialStack:List[Expr] = null) {
+class AstFrame(context:AstMethodContext, initialLocals:Array[LValue] = null, initialStack:List[Expr] = null) {
   val stack = new mutable.Stack[Expr]
   private val locals = new ListBuffer[Local]
   val stms = new ListBuffer[Stm]
@@ -31,15 +31,17 @@ class AstFrame(initialLocals:Array[LValue] = null, initialStack:List[Expr] = nul
       case IFLE | IF_ICMPLE => "<="
     }
 
+    val labelRef = context.getLabelRef(i.label)
+
     i.getOpcode match {
       case IFEQ | IFNE | IFLT | IFGT | IFGE | IFLE =>
-        stms.append(BranchStm(Binop(op, (stackPop(), IntConstant(0))), i.label))
+        stms.append(BranchStm(Binop(op, (stackPop(), IntConstant(0))), labelRef))
 
       case IF_ICMPEQ |IF_ICMPNE |IF_ICMPLT |IF_ICMPGT |IF_ICMPGE |IF_ICMPLE | IF_ACMPEQ | IF_ACMPNE =>
-        stms.append(BranchStm(Binop(op, stackPop2()), i.label))
+        stms.append(BranchStm(Binop(op, stackPop2()), labelRef))
 
-      case IFNULL | IFNONNULL => stms.append(BranchStm(Binop(op, (stackPop(), NullConstant())), i.label))
-      case GOTO => stms.append(JumpStm(i.label))
+      case IFNULL | IFNONNULL => stms.append(BranchStm(Binop(op, (stackPop(), NullConstant())), labelRef))
+      case GOTO => stms.append(JumpStm(labelRef))
       case JSR => throw new Exception("Not supported JSR")
     }
   }
@@ -80,11 +82,8 @@ class AstFrame(initialLocals:Array[LValue] = null, initialStack:List[Expr] = nul
     }
   }
 
-  private val labels = new mutable.HashSet[LabelRef]()
-
   private def process(node: LabelNode): Unit = {
-    labels.add(LabelRef())
-    stms.append(LabelStm(node))
+    stms.append(LabelStm(context.getLabelRef(node)))
   }
 
   private def process(i: LineNumberNode): Unit = {

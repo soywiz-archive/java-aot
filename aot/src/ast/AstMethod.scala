@@ -13,6 +13,7 @@ class AstMethod {
     println("AstMethod:" + clazz.name + " :: " + method.name + " :: " + method.desc)
     println("++++++++++++++++++++++++++++++++++++++++++++++++++")
 
+    val context = new AstMethodContext
     val instructions = method.instructions
     var lastFrame:FrameNode = null
 
@@ -58,7 +59,7 @@ class AstMethod {
       println("--------------------------")
       println(s"FRAME:$frameTypeString,locals:$localSize,stack:$stackSize")
 
-      new AstFrame(locals.toArray).process(frameNodes)
+      new AstFrame(context, locals.toArray).process(frameNodes)
       frameNodes.clear()
       lastFrame = null
       //locals.clear()

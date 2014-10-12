@@ -8,7 +8,9 @@ import scala.collection.mutable.ListBuffer
 
 // TODO: Analyzer should not call frame to generate, in order to be two separated steps
 class AstBranchAnalyzer {
+  val context = new AstMethodContext
   val map = new mutable.HashMap[AbstractInsnNode, AstBranch]
+  val mapInput = new mutable.HashMap[AbstractInsnNode, InoutFrame]
   var exploreQueue = new mutable.Queue[(AbstractInsnNode, InoutFrame)]()
 
   def analyze(list:InsnList): List[Stm] = {
@@ -33,12 +35,7 @@ class AstBranchAnalyzer {
   private def _explore(initial:AbstractInsnNode, input:InoutFrame): Unit = {
     val optframe = map.get(initial)
     if (optframe.isDefined) {
-      if (optframe.get.input != input) {
-        println("-------------------------- Label: " + initial)
-        println("Previous Stack Input: " + optframe.get.input)
-        println("Used Stack Input: " + input)
-      }
-      assert(optframe.get.input == input)
+      ensureInoutCompatible(optframe.get.input, input.sharedStack)
     } else {
       val frame = analyze(initial, input)
       println("<---- " + frame.output + " | " + frame.input)
@@ -47,9 +44,35 @@ class AstBranchAnalyzer {
 
   }
 
-  private def queue(initial:AbstractInsnNode, input:InoutFrame = InoutFrame(List())) = {
+  private def queue(initial:AbstractInsnNode, input:InoutFrame = InoutFrame(List(), List())) = {
     exploreQueue.enqueue((initial, input))
     this
+  }
+
+  private def ensureInoutCompatible(l:InoutFrame, r:List[NodeType]): Unit = {
+    if (l.sharedStack != r) {
+      println("--------------------------")
+      println("Previous Stack Input: " + l.sharedStack)
+      println("Used Stack Input: " + r)
+    }
+    assert(l.sharedStack == r)
+
+  }
+
+  private def createInout(outputStack:List[Expr], nextList:Seq[AbstractInsnNode]): InoutFrame = {
+    val outputStackType = outputStack.map(_.getType)
+    var inout:InoutFrame = null
+    for (next <- nextList) {
+      if (mapInput.contains(next)) {
+        inout = mapInput(next)
+        ensureInoutCompatible(inout, outputStackType)
+      }
+    }
+    if (inout == null) {
+      InoutFrame.forStack(context, outputStack)
+    } else {
+      inout
+    }
   }
 
   private def analyze(initial:AbstractInsnNode, input:InoutFrame): AstBranch = {
@@ -66,20 +89,23 @@ class AstBranchAnalyzer {
     }
 
     def process(nextList:Seq[AbstractInsnNode], hasGoto:Boolean): AstBranch = {
-      val frame = new AstFrame(null, input.locals)
+      val frame = new AstFrame(context, null, input.locals)
       frame.process(nodes)
       val stms = frame.stms.toList
 
 
       val outputStack = frame.stack.toList
-      val output = InoutFrame.forStack(outputStack)
+      val output = createInout(outputStack, nextList)
       println(s" Output --> $output")
 
       val stms0 = if (hasGoto) stms.dropRight(1) else stms
       val stms1 = (output.locals, outputStack).zipped.map((local, value) => Assign(local, value))
       val stms2 = if (hasGoto) stms.takeRight(1) else List()
 
-      for (next <- nextList) queue(next, output)
+      for (next <- nextList) {
+        mapInput(next) = output
+        queue(next, output)
+      }
       AstBranch(nodes.toList, output, input, stms0 ::: stms1 ::: stms2)
     }
 
@@ -101,10 +127,14 @@ class AstBranchAnalyzer {
 }
 
 object InoutFrame {
-  def forStack(stack:List[Expr]) = InoutFrame(stack.map(_.getType))
+  def forStack(context:AstMethodContext, stack:List[Expr]) = {
+    InoutFrame(stack.map(_.getType), stack.map(kind => {
+      context.allocLocal(kind.getType)
+    }))
+  }
 }
 
-case class InoutFrame(sharedStack:List[NodeType]) {
-  lazy val locals = sharedStack.map(Local(_, -1, "temp_stack"))
+case class InoutFrame(sharedStack:List[NodeType], locals:List[Local]) {
+  //lazy val locals = sharedStack.map(Local(_, -1, "temp_stack"))
 }
 case class AstBranch(nodes:List[AbstractInsnNode], output:InoutFrame, input:InoutFrame, stms:List[Stm])
