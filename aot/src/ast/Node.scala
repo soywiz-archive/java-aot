@@ -49,9 +49,9 @@ object NodeUtils {
 abstract class Expr() { def getType:NodeType; }
 
 abstract class LValue() extends Expr()
-case class Local(kind:NodeType, index:Int = -1) extends LValue() { val getType = kind; }
+case class Local(kind:NodeType, index:Int = -1, name:String = "") extends LValue() { val getType = kind; }
 case class This(kind:NodeType) extends LValue() { val getType = kind; }
-case class Argument(kind:NodeType, index:Int) extends LValue() { val getType = kind; }
+//case class Argument(kind:NodeType, index:Int) extends LValue() { val getType = kind; }
 case class ArrayAccess(items:(Expr, Expr)) extends LValue() { lazy val getType = items._1.getType; }
 case class Field(field:FieldRef, instance:Expr) extends LValue() { val getType = field.getType; }
 case class StaticField(field:FieldRef) extends LValue() { val getType = field.getType; }
@@ -71,7 +71,7 @@ case class ArrayLength(v:Expr) extends Expr() { val getType = IntType(); }
 case class CheckCast(kind:ClassType, v:Expr) extends Expr() { val getType = kind; }
 case class InstanceOf(kind:ClassType, v:Expr) extends Expr() { val getType = BoolType(); }
 case class New(kind:ClassType) extends Expr() { val getType = kind; }
-case class NewArray(kind:ClassType, count:Expr) extends Expr() { val getType = kind; }
+case class NewArray(kind:NodeType, count:Expr) extends Expr() { val getType = kind; }
 
 abstract class Constant() extends Expr()
 case class NullConstant() extends Constant() { val getType = NullType(); }
@@ -86,7 +86,8 @@ case class ClassConstant(v: ClassType) extends Constant() { val getType = v; }
 case class Invoke(methodRef:MethodRef, args:Seq[Expr]) extends Expr() { val getType = methodRef.kind.retval; }
 
 abstract class Stm()
-case class GotoStm(cond:Expr, label:LabelNode) extends Stm()
+case class BranchStm(cond:Expr, label:LabelNode) extends Stm()
+case class JumpStm(label:LabelNode) extends Stm()
 case class ExprStm(v:Expr) extends Stm()
 case class ReturnStm(cond:Expr) extends Stm()
 case class ReturnVoidStm() extends Stm()
@@ -94,3 +95,4 @@ case class ThrowStm(cond:Expr) extends Stm()
 case class MonitorEnter(cond:Expr) extends Stm()
 case class MonitorExit(cond:Expr) extends Stm()
 case class Assign(value:LValue, v:Expr) extends Stm()
+case class LabelStm(labelNode:LabelNode) extends Stm()
