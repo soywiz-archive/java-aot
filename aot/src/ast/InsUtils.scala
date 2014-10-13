@@ -1,9 +1,16 @@
 package ast
 
-import org.objectweb.asm.Opcodes
+import org.objectweb.asm.{ClassReader, Opcodes}
 import org.objectweb.asm.tree._
 
 object InsUtils {
+  def classFromByteArray(data:Array[Byte]): ClassNode = {
+    val cn = new ClassNode(Opcodes.ASM5)
+    val cr = new ClassReader(data)
+    cr.accept(cn, ClassReader.EXPAND_FRAMES)
+    cn
+  }
+
   def createList(nodes:Seq[AbstractInsnNode]) = {
     val list = new InsnList()
     for (node <- nodes) {

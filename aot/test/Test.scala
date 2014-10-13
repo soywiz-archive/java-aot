@@ -8,6 +8,7 @@ import org.scalatest._
 import org.scalatest.matchers.Matchers
 import util.FileBytes
 import scala.collection.mutable
+import scala.collection.JavaConverters._
 
 class Test extends FlatSpec with Matchers {
   "test" should "test" in {
@@ -31,9 +32,12 @@ class Test extends FlatSpec with Matchers {
   }
   */
 
-  "analyzer" should "allow ternary operator 2" in {
+  "analyzer" should "load class" in {
     val stream = classOf[SimpleFixture].getClassLoader.getResourceAsStream(classOf[SimpleFixture].getCanonicalName.replace(".", "/") + ".class")
-    println(FileBytes.read(stream).length)
+    val data = FileBytes.read(stream)
+    val clazz = InsUtils.classFromByteArray(data)
+    val methods = clazz.methods.asScala.map(_.asInstanceOf[MethodNode]).toList
+    println(methods.map(_.name))
   }
 
   "analyzer" should "allow ternary operator" in {
