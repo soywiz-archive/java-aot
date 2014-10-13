@@ -1,10 +1,10 @@
 package sample1;
 
+import jflash.EngineContextFactory;
+import jflash.backend.EngineContext;
 import jflash.display.Quad;
 import jflash.display.Stage;
 import jflash.util.Color;
-import libcore.Native;
-import libgame.as3.As3EngineContext;
 //import libgame.*;
 
 public class Sample2 {
@@ -26,7 +26,7 @@ public class Sample2 {
     }
 
 	static public void main(String[] args) {
-        libcore.Native.putchar('H');
+        //libcore.Native.putchar('H');
         System.out.println("Hello world!");
         System.out.println("args:" + args.length);
         for (String arg : args) System.out.println("arg:" + arg);
@@ -42,7 +42,7 @@ public class Sample2 {
 
 		int len = sum(list);
 
-		Native.putchar(':');
+		//Native.putchar(':');
 
         System.out.println("test:" + Sample2.test);
 
@@ -51,15 +51,15 @@ public class Sample2 {
 
         int[] data2 = new int[1000000];
 
-        //long start = System.currentTimeMillis();
-        int start = Native.getTimerTime();
+        long start = System.currentTimeMillis();
+        //int start = Native.getTimerTime();
 		System.out.println("start:" + start);
         int data2length = data2.length;
         for (int m = 0; m < data2length; m++) {
             data2[m] = m * 2;
         }
-        int end = Native.getTimerTime();
-        //long end = System.currentTimeMillis();
+        //int end = Native.getTimerTime();
+        long end = System.currentTimeMillis();
 		System.out.println("end:" + end);
         System.out.println("diff:" + (end - start));
 
@@ -108,8 +108,7 @@ public class Sample2 {
         int item = -1;
         System.out.println("Inverting -1 bits: " + ~item);
 
-        As3EngineContext context = new As3EngineContext();
-        //SDLEngineContext context = new SDLEngineContext();
+        EngineContext context = EngineContextFactory.create();
         Stage stage = new Stage(context);
 
         stage.addChild(new Quad() {

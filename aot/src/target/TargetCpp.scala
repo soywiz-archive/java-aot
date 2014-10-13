@@ -518,7 +518,7 @@ class TargetCpp extends Target {
       |	<key>CFBundleExecutable</key><string>app</string>
       |	<key>CFBundleGetInfoString</key><string>0.1, 2014-Jul-08, App Foundation</string>
       |	<key>CFBundleIconFile</key><string>app.icns</string>
-      |	<key>CFBundleIdentifier</key><string>com.soywiz.sample1</string>
+      |	<key>CFBundleIdentifier</key><string>com.soywiz.jflash.sample1</string>
       |	<key>CFBundleInfoDictionaryVersion</key><string>1.0</string>
       |	<key>CFBundleName</key><string>$name</string>
       |	<key>CFBundlePackageType</key><string>APPL</string>

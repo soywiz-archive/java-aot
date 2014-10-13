@@ -1,6 +1,5 @@
 package target
 
-import java.io.File
 import java.nio.charset.Charset
 
 import _root_.util._
@@ -44,11 +43,13 @@ abstract class Target {
 
     for (className <- projectContext.classNames) {
       val clazz = tree.getTargetClass(className)
+      val nativeClassTag = SootUtils.getTag(clazz.clazz.getTags.asScala, "Llibcore/NativeClass;", "")
+
       print("Processing class: " + clazz.clazz.getName + "...")
       val elapsed = measureTime(() => {
         generateClass(createClassContext(projectContext, clazz))
       })
-      println(s"Ok($elapsed)")
+      println(s"Ok($elapsed):$nativeClassTag")
     }
     println("Processed classes: " + projectContext.classNames.length)
   }
@@ -220,7 +221,7 @@ abstract class Target {
       case e: InstanceOfExpr => context.referenceType(e.getType); doInstanceof(e.getType, e.getCheckType, e.getOp, context)
       case e: NewExpr => context.referenceType(e.getType); doNew(e.getType, context)
       case e: NewArrayExpr =>
-        context.referenceType(e.getType.getArrayType);
+        context.referenceType(e.getType.getArrayType)
         doNewArray(e.getBaseType, e.getSize, context)
       case e: NewMultiArrayExpr => context.referenceType(e.getType); doNewMultiArray(e.getType, (0 to e.getSizeCount - 1).map(e.getSize).toArray, context)
       case e: LengthExpr => doLength(e.getOp, context)
@@ -231,12 +232,15 @@ abstract class Target {
         val argsList = e.getArgs.asScala.toList
         val castTypes = e.getMethod.getParameterTypes.asScala.map(_.asInstanceOf[Type]).toList
         val args = (argsList, castTypes).zipped.map((value, expectedType) => {
-          context.referenceType(expectedType);
+          context.referenceType(expectedType)
           doCastIfNeeded(expectedType, value, context)
         }).toList
         e.getArgs.asScala.foreach(i => context.referenceType(i.getType))
+        //val isProperty = SootUtils.getTag(e.getMethod.getTags.asScala, "Llibcore/Property;", "").asInstanceOf[String]
+        //println("Property:" + isProperty)
         e match {
-          case i: StaticInvokeExpr => doInvokeStatic(e.getMethod, args, context)
+          case i: StaticInvokeExpr =>
+            doInvokeStatic(e.getMethod, args, context)
           case i: InstanceInvokeExpr => doInvokeInstance(i.getBase, e.getMethod, args, i.isInstanceOf[SpecialInvokeExpr], context)
         }
     }

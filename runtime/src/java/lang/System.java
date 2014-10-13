@@ -28,6 +28,10 @@ public class System {
 		Native.exit(status);
 	}
 
+	public static String getProperty(String key) {
+		return getProperty(key, key);
+	}
+
 	public static String getProperty(String key, String def) {
 		if (key.equals("file.separator")) return "/";
 		if (key.equals("path.separator")) return ":";

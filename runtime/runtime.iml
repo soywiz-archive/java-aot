@@ -8,9 +8,10 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src_sample1" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/native" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src_java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src_game" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="1.8_nojdk" jdkType="JavaSDK" />
+    <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
-

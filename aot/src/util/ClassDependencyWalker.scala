@@ -36,7 +36,15 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
     visited.toList
   }
 
-  private def getRefClasses(path:String): List[String] = getRefClasses(runtimeProvider.getClassVfsNode(path).read())
+  private def getRefClasses(path:String): List[String] = {
+    val node = runtimeProvider.getClassVfsNode(path)
+    if (node.exists()) {
+      getRefClasses(node.read())
+    } else {
+      println(s"Warning: Can't find class $path")
+      List()
+    }
+  }
 
   private def getRefClasses(data:Array[Byte]): List[String] = {
     val cn = new ClassNode(Opcodes.ASM5)
@@ -45,6 +53,18 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
     //cr.accept(cn, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
     //cr.accept(cn, ClassReader.SKIP_FRAMES)
     cr.accept(cn, ClassReader.EXPAND_FRAMES)
+
+    var mustProcess = true
+    if (cn.invisibleAnnotations != null) {
+      for (annotation <- cn.invisibleAnnotations.asScala.map(_.asInstanceOf[AnnotationNode])) {
+        if (annotation.desc == "Llibcore/NativeClass;") {
+          mustProcess = false
+        }
+      }
+
+    }
+
+    if (!mustProcess) return List()
 
     val classNames = mutable.HashSet[String]()
 
@@ -78,8 +98,19 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
 
     //val debug = (cn.name == "java/lang/System")
 
-    //println(cn.name)
-    for (method <- cn.methods.asScala.map(_.asInstanceOf[MethodNode])) {
+    def processMethod(method:MethodNode): Unit = {
+      var mustProcess = true
+
+      if (method.invisibleAnnotations != null) {
+        for (annotation <- method.invisibleAnnotations.asScala.map(_.asInstanceOf[AnnotationNode])) {
+          if (annotation.desc == "Llibcore/NativeMethod;") {
+            mustProcess = false
+          }
+        }
+      }
+
+      if (!mustProcess) return
+
       //println("---------------------------------------------")
       //println(s"Analyzing: ${cn.name} :: ${method.name}")
       //for (node <- method.instructions.toArray) println(InsUtils.toString(node))
@@ -110,10 +141,13 @@ class ClassDependencyWalker(runtimeProvider:RuntimeProvider) {
           case i:LdcInsnNode =>
           case i:VarInsnNode =>
           case _ =>
-            //println(ins)
+          //println(ins)
         }
       }
     }
+
+    //println(cn.name)
+    cn.methods.asScala.map(_.asInstanceOf[MethodNode]).foreach(processMethod)
 
     classNames.toList
     //classNames.map(println)
