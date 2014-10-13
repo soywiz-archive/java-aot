@@ -1,10 +1,12 @@
 import _root_.java.lang.invoke.MethodHandles
 
 import ast._
+import fixtures.SimpleFixture
 import org.objectweb.asm.{Label, Opcodes}
 import org.objectweb.asm.tree._
 import org.scalatest._
 import org.scalatest.matchers.Matchers
+import util.FileBytes
 import scala.collection.mutable
 
 class Test extends FlatSpec with Matchers {
@@ -29,9 +31,18 @@ class Test extends FlatSpec with Matchers {
   }
   */
 
+  "analyzer" should "allow ternary operator 2" in {
+    val stream = classOf[SimpleFixture].getClassLoader.getResourceAsStream(classOf[SimpleFixture].getCanonicalName.replace(".", "/") + ".class")
+    println(FileBytes.read(stream).length)
+  }
+
   "analyzer" should "allow ternary operator" in {
+
     val label1 = new LabelNode(new Label())
     val label2 = new LabelNode(new Label())
+
+    // push1
+    // eq != 0
 
     val ins = InsUtils.createList(List(
       new InsnNode(Opcodes.ICONST_1),
