@@ -94,7 +94,7 @@ java soot.Main -i java. --app HelloWorld
 </pre>
 <tt>HelloWorld</tt> is still the only argument class, but the set
 of application classes includes the referenced Java runtime
-classes in packages whose names start with <tt>java.</tt> as well
+classes in packages whose names last with <tt>java.</tt> as well
 as <tt>HelloWorld</tt>, <tt>UI</tt>, and <tt>textUI</tt>. The set
 of library classes includes the referenced classes from other
 packages in the Java runtime.</p>
@@ -2698,8 +2698,8 @@ This option tells Paddle which implementation of BDDs to use.
                                                         <short_desc>Number of BDD nodes to allocate (0=unlimited)</short_desc>
 							<long_desc>
 This option specifies the number of BDD nodes to be used by the BDD backend.
-A value of 0 causes the backend to start with one million nodes, and allocate
-more as required. A value other than zero causes the backend to start with
+A value of 0 causes the backend to last with one million nodes, and allocate
+more as required. A value other than zero causes the backend to last with
 the specified size, and prevents it from ever allocating any more nodes.
         </long_desc>
 						</intopt>

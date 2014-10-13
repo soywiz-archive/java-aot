@@ -75,7 +75,9 @@ package libgame.as3 {
 		}
 
 		static public function onEnterFrame_java_lang_Runnable(runnable:java.lang.Runnable):void {
-			setInterval(runnable.run, 20);
+			As3Native.stage.addEventListener("enterFrame", function(e:*):void {
+				runnable.run();
+			});
 		}
 
 		static private var stage:Stage;

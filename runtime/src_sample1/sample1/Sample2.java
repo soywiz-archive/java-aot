@@ -5,6 +5,7 @@ import jflash.backend.EngineContext;
 import jflash.display.Quad;
 import jflash.display.Stage;
 import jflash.util.Color;
+import libgame.as3.As3EngineContext;
 //import libgame.*;
 
 public class Sample2 {
@@ -108,7 +109,8 @@ public class Sample2 {
         int item = -1;
         System.out.println("Inverting -1 bits: " + ~item);
 
-        EngineContext context = EngineContextFactory.create();
+        //EngineContext context = EngineContextFactory.create();
+		EngineContext context = new As3EngineContext();
         Stage stage = new Stage(context);
 
         stage.addChild(new Quad() {

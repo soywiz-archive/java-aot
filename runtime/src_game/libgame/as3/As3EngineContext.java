@@ -45,10 +45,15 @@ public class As3EngineContext extends RawEngineContext {
         final As3EngineContext context = this;
 
         As3Native.onEnterFrame(new Runnable() {
+	        long last = 0;
+
             @Override
             public void run() {
-            root.update(20);
-            root.render(context);
+	            if (last == 0) last = System.currentTimeMillis();
+	            long current = System.currentTimeMillis();
+	            root.update((int) (current - last));
+	            root.render(context);
+	            last = current;
             }
         });
     }

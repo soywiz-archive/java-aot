@@ -44,13 +44,23 @@ class TargetAs3 extends Target {
 
   override def buildProject(projectContext: BaseProjectContext): scala.Unit = {
     getOutputExecutablePath(projectContext).remove()
-    val command = "/Developer/airsdk15/bin/mxmlc -optimize=false -debug=true -verbose-stacktraces=true -inline +configname=air -source-path+=" + projectContext.output.absoluteFullPath + " BootMain.as -output=" + getOutputExecutablePath(projectContext).absoluteFullPath
+    val mxmlc = if (OS.isWindows) {
+      "C:\\dev\\airsdk15\\bin\\mxmlc.bat"
+    } else {
+      "/Developer/airsdk15/bin/mxmlc"
+    }
+    val command =s"$mxmlc -optimize=false -debug=true -verbose-stacktraces=true -inline +configname=air -source-path+=" + projectContext.output.absoluteFullPath + " BootMain.as -output=" + getOutputExecutablePath(projectContext).absoluteFullPath
     val result = ProcessUtils.runAndRedirect(command, new File(projectContext.output.absoluteFullPath))
     if (result != 0) throw new Exception("Can't compile")
   }
 
   override def runProject(projectContext:BaseProjectContext): scala.Unit = {
-    val command = "open " + getOutputExecutablePath(projectContext).absoluteFullPath
+    val run = if (OS.isWindows) {
+      "C:\\dev\\airsdk15\\flashplayer_15_sa_debug.exe"
+    } else {
+      "open"
+    }
+    val command = s"$run " + getOutputExecutablePath(projectContext).absoluteFullPath
     val result = ProcessUtils.runAndRedirect(command, new File(projectContext.output.absoluteFullPath)) == 0
   }
 
@@ -527,7 +537,8 @@ class TargetAs3 extends Target {
         case e:CharType => "Vector.<int>"
         case e:ByteType => "Vector.<int>"
         //case e:ByteType => "ByteArray"
-        case _ => "Array"
+        case _ =>
+          "Array"
       }
     }
 
