@@ -170,6 +170,7 @@ class TargetAs3 extends Target {
       val nullValue = field.getType match {
         case _:RefLikeType => "null"
         case _:BooleanType => "false"
+        case _:LongType => "Long.fromInt(0)"
         case _ => "0"
       }
       val static = if (field.isStatic) "static" else ""

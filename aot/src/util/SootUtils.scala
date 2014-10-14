@@ -10,7 +10,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
 object SootUtils {
-  def init(runtimeProvider:RuntimeProvider): Unit = {
+  def init(classpath:List[String]): Unit = {
     soot.G.reset
     Options.v.set_output_format(Options.output_format_jimple)
     //Options.v.set_output_format(Options.output_format_grimple)
@@ -26,13 +26,7 @@ object SootUtils {
 
     println(s"file_separator: $file_separator ... PathSeparator: ${File.pathSeparator}")
 
-    val java_runtime_classes_path = runtimeProvider.java_runtime_classes_path
-    val java_sample1_classes_path = runtimeProvider.java_sample1_classes_path
-
-    println(s"java_runtime_classes_path: $java_runtime_classes_path")
-    println(s"java_sample1_classes_path: $java_sample1_classes_path")
-
-    Options.v.set_soot_classpath(List(java_runtime_classes_path, java_sample1_classes_path).mkString(File.pathSeparator))
+    Options.v.set_soot_classpath(classpath.mkString(File.pathSeparator))
 
     Options.v.setPhaseOption("jb.dae", "enabled:false")
     Options.v.setPhaseOption("jb.uce", "enabled:false")
@@ -104,7 +98,7 @@ object SootUtils {
   
   def hasMethod(clazz:SootClass, name:String, parameterTypes:java.util.List[_]):Boolean = {
     try {
-      (clazz.getMethod(name, parameterTypes) != null)
+      clazz.getMethod(name, parameterTypes) != null
     } catch {
       case _:Throwable => false
     }

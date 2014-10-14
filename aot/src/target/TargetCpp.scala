@@ -57,7 +57,7 @@ class TargetCpp extends Target {
     val cppProjectContext = projectContext.asInstanceOf[CppProjectContext]
     
     val runtime = projectContext.runtime
-    var java_macos_embedded_frameworks = runtime.java_sample1_classes_path + "/frameworks/cpp"
+    var java_macos_embedded_frameworks = runtime.java_runtime_classes_path + "/frameworks/cpp"
     if (OS.isWindows) java_macos_embedded_frameworks = "^/+".r.replaceAllIn(java_macos_embedded_frameworks, "")
 
     val mainClassName = mangler.mangleClassName(projectContext.mainClass)

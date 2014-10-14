@@ -1,6 +1,5 @@
 package sample1;
 
-import jflash.EngineContextFactory;
 import jflash.backend.EngineContext;
 import jflash.display.Quad;
 import jflash.display.Stage;
@@ -108,26 +107,6 @@ public class Sample2 {
 
         int item = -1;
         System.out.println("Inverting -1 bits: " + ~item);
-
-        //EngineContext context = EngineContextFactory.create();
-		EngineContext context = new As3EngineContext();
-        Stage stage = new Stage(context);
-
-        stage.addChild(new Quad() {
-            {
-                this.color = Color.red;
-                this.width = 200;
-                this.height = 200;
-            }
-
-            @Override
-            public void update(int dt) {
-                x++;
-                System.out.println("Quad.updated!");
-            }
-        });
-
-        context.loop(stage);
 	}
 }
 
