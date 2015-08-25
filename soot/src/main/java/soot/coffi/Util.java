@@ -781,7 +781,7 @@ swtch:
     }
 
     public Local getLocal(Body b, String name) 
-        throws soot.jimple.NoSuchLocalException
+        throws NoSuchLocalException
     {
         Iterator localIt = b.getLocals().iterator();
 
@@ -793,7 +793,7 @@ swtch:
                 return local;
         }
 
-        throw new soot.jimple.NoSuchLocalException();
+        throw new NoSuchLocalException();
     }
 
 

@@ -44,6 +44,6 @@ public interface ValueBox extends Host, Serializable
     /** Returns true if the given Value fits in this box. */
     public boolean canContainValue(Value value);
 
-    public void toString( UnitPrinter up );
+    public void toString(UnitPrinter up);
 
 }

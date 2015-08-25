@@ -35,7 +35,7 @@ public class StringTools
 
     /** Returns fromString, but with non-isalpha() characters printed as
      * <code>'\\unnnn'</code>.  Used by SootClass to generate output. */
-    public static java.lang.String getEscapedStringOf(String fromString)
+    public static String getEscapedStringOf(String fromString)
     {
        char[] fromStringArray;
        int cr, lf, ch;
@@ -78,12 +78,12 @@ public class StringTools
     /** Returns fromString, but with certain characters printed as
      * if they were in a Java string literal.  
      * Used by StringConstant.toString() */
-    public static java.lang.String getQuotedStringOf(String fromString)
+    public static String getQuotedStringOf(String fromString)
     {
         StringBuffer toStringBuffer;
         char[] fromStringArray;
 
-        toStringBuffer = new java.lang.StringBuffer();
+        toStringBuffer = new StringBuffer();
         fromStringArray = fromString.toCharArray();
 
         toStringBuffer.append("\"");

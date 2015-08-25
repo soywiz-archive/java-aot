@@ -22,7 +22,7 @@ import soot.*;
 import java.util.*;
 
 /** Represents a set of (local,type) pairs using a bit-vector. */
-class LocalTypeSet extends java.util.BitSet {
+class LocalTypeSet extends BitSet {
     protected List<Local> locals;
     protected List<Type> types;
 

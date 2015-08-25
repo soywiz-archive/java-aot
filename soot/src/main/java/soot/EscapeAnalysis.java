@@ -27,20 +27,20 @@ import soot.jimple.*;
 public interface EscapeAnalysis {
     /** Returns true if objects allocated at n may continue to be live
      * after the method in which they are allocated returns. */
-    public boolean mayEscapeMethod( AnyNewExpr n );
+    public boolean mayEscapeMethod(AnyNewExpr n);
 
     /** Returns true if objects allocated at n in context c may
      * continue to be live after the method in which they are allocated
      * returns. */
-    public boolean mayEscapeMethod( Context c, AnyNewExpr n );
+    public boolean mayEscapeMethod(Context c, AnyNewExpr n);
 
     /** Returns true if objects allocated at n may be accessed in
      * a thread other than the thread in which they were allocated. */
-    public boolean mayEscapeThread( AnyNewExpr n );
+    public boolean mayEscapeThread(AnyNewExpr n);
 
     /** Returns true if objects allocated at n in context c may be
      * accessed in a thread other than the thread in which they 
      * were allocated. */
-    public boolean mayEscapeThread( Context c, AnyNewExpr n );
+    public boolean mayEscapeThread(Context c, AnyNewExpr n);
 }
 

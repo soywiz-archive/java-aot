@@ -9,7 +9,7 @@
       </configuration>
     </facet>
   </component>
-  <component name="NewModuleRootManager" inherit-compiler-output="false">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_5" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/target/classes" />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
@@ -20,18 +20,18 @@
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="scala-library" level="application" />
-    <orderEntry type="library" name="Maven: org.scala-lang:scala-compiler:2.11.1" level="project" />
-    <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.11.1" level="project" />
-    <orderEntry type="library" name="Maven: org.scala-lang:scala-reflect:2.11.1" level="project" />
-    <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-xml_2.11:1.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.1" level="project" />
-    <orderEntry type="module" module-name="soot" />
-    <orderEntry type="library" name="Maven: org.ow2.asm:asm-all:5.0.3" level="project" />
     <orderEntry type="module" module-name="runtime" />
     <orderEntry type="library" name="junit:junit:4.11" level="project" />
     <orderEntry type="library" name="org.scalatest:scalatest_2.10.0:1.8" level="project" />
     <orderEntry type="library" name="scala-compiler" level="application" />
     <orderEntry type="module" module-name="sample2" />
+    <orderEntry type="library" name="scala-sdk-2.11.4" level="application" />
+    <orderEntry type="library" name="Maven: org.scala-lang:scala-compiler:2.11.7" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.11.7" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang:scala-reflect:2.11.7" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-xml_2.11:1.0.4" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.4" level="project" />
+    <orderEntry type="module" module-name="soot" />
+    <orderEntry type="library" name="Maven: org.ow2.asm:asm-all:5.0.3" level="project" />
   </component>
 </module>
-

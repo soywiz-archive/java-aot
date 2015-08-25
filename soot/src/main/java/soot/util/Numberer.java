@@ -24,13 +24,13 @@ package soot.util;
  */
 public interface Numberer<E> {
     /** Tells the numberer that a new object needs to be assigned a number. */
-    public void add( E o );
+    public void add(E o);
     /** Should return the number that was assigned to object o that was
      * previously passed as an argument to add().
      */
-    public long get( E o );
+    public long get(E o);
     /** Should return the object that was assigned the number number. */
-    public E get( long number );
+    public E get(long number);
     /** Should return the number of objects that have been assigned numbers. */
     public int size();
 }

@@ -372,7 +372,7 @@ public class ExceptionalBlockGraph extends BlockGraph implements ExceptionalGrap
 		Unit unit = unitIt.next();
 		throwables = throwables.add(throwAnalysis.mightThrow(unit));
 	    }
-	    result.add(new ExceptionalBlockGraph.ExceptionDest(null, throwables,
+	    result.add(new ExceptionDest(null, throwables,
 							       null));
 	    return result;
 	} else {

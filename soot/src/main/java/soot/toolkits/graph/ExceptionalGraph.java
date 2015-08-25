@@ -161,7 +161,7 @@ public interface ExceptionalGraph<N> extends DirectedGraph<N>
 
     /**
      * Returns a collection of 
-     * {@link ExceptionalGraph.ExceptionDest ExceptionDest}
+     * {@link ExceptionDest ExceptionDest}
      * objects which represent how exceptions thrown by a specified
      * node will be handled.
      *

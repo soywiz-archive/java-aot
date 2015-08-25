@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
 	
     <properties>
-        <scala.version>2.11.1</scala.version>
+        <scala.version>2.11.7</scala.version>
     </properties>
 
     <dependencies>
@@ -18,8 +18,16 @@
             <artifactId>scala-compiler</artifactId>
             <version>${scala.version}</version>
         </dependency>
-		
-		<dependency>
+
+        <!--
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest</artifactId>
+            <version>1.4.RC2</version>
+        </dependency>
+        -->
+
+        <dependency>
             <groupId>java-aot</groupId>
             <artifactId>soot</artifactId>
             <version>1.0-SNAPSHOT</version>

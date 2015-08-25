@@ -97,7 +97,7 @@ public class UnitThrowAnalysis extends AbstractThrowAnalysis {
      * @param m method whose exceptions are to be returned.
      *
      * @return a representation of the set of {@link
-     * java.lang.Throwable Throwable} types that <code>m</code> might
+     * Throwable Throwable} types that <code>m</code> might
      * throw.
      */
     ThrowableSet mightThrow(SootMethod m) {

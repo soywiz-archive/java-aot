@@ -55,7 +55,7 @@ final class BBQ {
 
    /** Removes the first block in the queue (and resets its <i>inq</i> flag).
     * @return BasicBlock which was first.
-    * @exception java.util.NoSuchElementException if the queue is empty.
+    * @exception NoSuchElementException if the queue is empty.
     * @see BasicBlock#inq
     */
    public BasicBlock pull() throws NoSuchElementException {

@@ -60,7 +60,7 @@ public interface Host
     public void removeAllTags();
 
     /** Adds all the tags from h to this host. */
-    public void addAllTagsOf( Host h );
+    public void addAllTagsOf(Host h);
 }
 
 

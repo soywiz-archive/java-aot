@@ -434,7 +434,7 @@ public class ClassFile {
    /** Reads in the constant pool from the given stream.
     * @param d Stream forming the <tt>.class</tt> file.
     * @return <i>true</i> if read was successful, <i>false</i> on some error.
-    * @exception java.io.IOException on error.
+    * @exception IOException on error.
     */
    protected boolean readConstantPool(DataInputStream d) throws IOException {
       byte tag;
@@ -570,7 +570,7 @@ public class ClassFile {
     * @param attributes_count number of attributes to read in.
     * @param ai pre-allocated array of attributes to be filled in.
     * @return <i>true</i> if read was successful, <i>false</i> on some error.
-    * @exception java.io.IOException on error.
+    * @exception IOException on error.
     */
    protected boolean readAttributes(DataInputStream d,int attributes_count,
                                     attribute_info[] ai) throws IOException {
@@ -888,7 +888,7 @@ public class ClassFile {
    /** Reads in the fields from the given stream.
     * @param d Stream forming the <tt>.class</tt> file.
     * @return <i>true</i> if read was successful, <i>false</i> on some error.
-    * @exception java.io.IOException on error.
+    * @exception IOException on error.
     */
    protected boolean readFields(DataInputStream d) throws IOException {
       field_info fi;
@@ -918,7 +918,7 @@ public class ClassFile {
    /** Reads in the methods from the given stream.
     * @param d Stream forming the <tt>.class</tt> file.
     * @return <i>true</i> if read was successful, <i>false</i> on some error.
-    * @exception java.io.IOException on error.
+    * @exception IOException on error.
     */
    protected boolean readMethods(DataInputStream d) throws IOException {
       method_info mi;
@@ -981,7 +981,7 @@ public class ClassFile {
    /** Writes the current constant pool to the given stream.
     * @param dd output stream.
     * @return <i>true</i> if write was successful, <i>false</i> on some error.
-    * @exception java.io.IOException on error.
+    * @exception IOException on error.
     */
    protected boolean writeConstantPool(DataOutputStream dd) throws IOException {
       byte tag;
@@ -1051,7 +1051,7 @@ public class ClassFile {
     * @param attributes_count number of attributes to write.
     * @param ai array of attributes to write.
     * @return <i>true</i> if write was successful, <i>false</i> on some error.
-    * @exception java.io.IOException on error.
+    * @exception IOException on error.
     */
    protected boolean writeAttributes(DataOutputStream dd, int attributes_count,
                                      attribute_info[] ai) throws IOException {
@@ -1135,7 +1135,7 @@ public class ClassFile {
    /** Writes the fields to the given stream.
     * @param dd output stream.
     * @return <i>true</i> if write was successful, <i>false</i> on some error.
-    * @exception java.io.IOException on error.
+    * @exception IOException on error.
     */
    protected boolean writeFields(DataOutputStream dd) throws IOException {
       field_info fi;
@@ -1157,7 +1157,7 @@ public class ClassFile {
    /** Writes the methods to the given stream.
     * @param dd output stream.
     * @return <i>true</i> if write was successful, <i>false</i> on some error.
-    * @exception java.io.IOException on error.
+    * @exception IOException on error.
     */
    protected boolean writeMethods(DataOutputStream dd) throws IOException {
       method_info mi;

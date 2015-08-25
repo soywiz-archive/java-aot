@@ -26,6 +26,6 @@ public interface ClassProvider
 {
     /** Look for the specified class. Return a ClassSource for it if found,
      * or null if it was not found. */
-    public abstract ClassSource find( String className );
+    public abstract ClassSource find(String className);
 }
 

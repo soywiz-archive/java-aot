@@ -27,7 +27,7 @@ import soot.jimple.ThrowStmt;
 /**
  * A {@link ThrowAnalysis} that says that every unit can throw every
  * possible exception type.  Strictly speaking, this is correct, since
- * the deprecated {@link java.lang.Thread#stop(Throwable)} method
+ * the deprecated {@link Thread#stop(Throwable)} method
  * allows one thread to cause any {@link Throwable} it wants to be
  * thrown in another thread, meaning that all {@link Throwable}s may
  * arrive asynchronously from the perspective of the victim thread.

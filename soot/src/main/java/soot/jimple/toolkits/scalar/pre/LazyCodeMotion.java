@@ -51,7 +51,7 @@ import soot.options.LCMOptions;
  * The term "lazy" refers to the fact, that we move computations only if
  * necessary.
  *
- * @see soot.jimple.toolkits.graph.CriticalEdgeRemover
+ * @see CriticalEdgeRemover
  */
 public class LazyCodeMotion extends BodyTransformer {
     public LazyCodeMotion( Singletons.Global g ) {}

@@ -24,7 +24,7 @@ import java.util.*;
 
 public class LocalGenerator{
 
-    private final soot.Body body;
+    private final Body body;
     public LocalGenerator(Body b){
           body = b;
     }
@@ -39,75 +39,75 @@ public class LocalGenerator{
     	localNames = new HashSet<String>();
         Iterator it = body.getLocals().iterator();
         while (it.hasNext()){
-            localNames.add(((soot.Local)it.next()).getName());
+            localNames.add(((Local)it.next()).getName());
         }    	
     }
     
     /**
      * generates a new soot local given the type
      */
-    public soot.Local generateLocal(soot.Type type){
+    public Local generateLocal(Type type){
         
     	//store local names for enhanced performance
     	initLocalNames();
     	
 		String name = "v";
-		if (type instanceof soot.IntType) {
+		if (type instanceof IntType) {
             while (true){
 			    name = nextIntName();
                 if (!bodyContainsLocal(name)) break;
             }
 		}
-        else if (type instanceof soot.ByteType) {
+        else if (type instanceof ByteType) {
             while (true){
 			    name = nextByteName();
                 if (!bodyContainsLocal(name)) break;
             }
 		}
-        else if (type instanceof soot.ShortType) {
+        else if (type instanceof ShortType) {
             while (true){
 			    name = nextShortName();
                 if (!bodyContainsLocal(name)) break;
             }
 		}
-        else if (type instanceof soot.BooleanType) {
+        else if (type instanceof BooleanType) {
             while (true){
 			    name = nextBooleanName();
                 if (!bodyContainsLocal(name)) break;
             }
 		}
-        else if (type instanceof soot.VoidType) {
+        else if (type instanceof VoidType) {
             while (true){
 			    name = nextVoidName();
                 if (!bodyContainsLocal(name)) break;
             }
 		}
-        else if (type instanceof soot.CharType) {
+        else if (type instanceof CharType) {
             while (true){
                 name = nextCharName();
                 if (!bodyContainsLocal(name)) break;
             }
-            type = soot.CharType.v();
+            type = CharType.v();
         }
-		else if (type instanceof soot.DoubleType) {
+		else if (type instanceof DoubleType) {
             while (true){
 			    name = nextDoubleName();
                 if (!bodyContainsLocal(name)) break;
             }
 		}
-		else if (type instanceof soot.FloatType) {
+		else if (type instanceof FloatType) {
             while (true){
 			    name = nextFloatName();
                 if (!bodyContainsLocal(name)) break;
             }
 		}
-		else if (type instanceof soot.LongType) {
+		else if (type instanceof LongType) {
             while (true){
 			    name = nextLongName();
                 if (!bodyContainsLocal(name)) break;
             }
 		}
-        else if (type instanceof soot.RefLikeType) {
+        else if (type instanceof RefLikeType) {
             while (true){
                 name = nextRefLikeTypeName();
                 if (!bodyContainsLocal(name)) break;
@@ -185,8 +185,8 @@ public class LocalGenerator{
     }
     
     // this should be used for generated locals only
-    private soot.Local createLocal(String name, soot.Type sootType) {
-        soot.Local sootLocal = soot.jimple.Jimple.v().newLocal(name, sootType);
+    private Local createLocal(String name, Type sootType) {
+        Local sootLocal = soot.jimple.Jimple.v().newLocal(name, sootType);
         body.getLocals().add(sootLocal);
 		return sootLocal;
 	}

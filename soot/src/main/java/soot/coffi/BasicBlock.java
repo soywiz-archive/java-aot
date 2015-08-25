@@ -58,11 +58,11 @@ class BasicBlock {
     */
    public Instruction tail;
    /** Vector of predecessor BasicBlocks.
-    * @see java.util.Vector
+    * @see Vector
     */
    public Vector<BasicBlock> succ;
    /** Vector of successor BasicBlocks.
-    * @see java.util.Vector
+    * @see Vector
     */
    public Vector<BasicBlock> pred;
 
@@ -85,12 +85,12 @@ class BasicBlock {
    List<Stmt> statements;
    Set addressesToFixup = new ArraySet();
 
-   soot.jimple.Stmt getHeadJStmt()
+   Stmt getHeadJStmt()
    {
       return statements.get(0);
    }
 
-   soot.jimple.Stmt getTailJStmt()
+   Stmt getTailJStmt()
    {
       return statements.get(statements.size() - 1);
    }

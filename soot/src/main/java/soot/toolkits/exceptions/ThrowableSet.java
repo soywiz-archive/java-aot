@@ -29,7 +29,7 @@ import java.util.*;
  * instruction may throw.</p>
  *
  * <p> <code>ThrowableSet</code> does not implement the 
- * {@link java.util.Set} interface, so perhaps it is misnamed.
+ * {@link Set} interface, so perhaps it is misnamed.
  * Instead, it provides only the operations that we require for
  * determining whether a given statement might throw an exception that
  * would be caught by a given handler.</p>
@@ -46,7 +46,7 @@ import java.util.*;
  * </blockquote>
  *
  * for any <code>ThrowableSet</code> <code>s</code> and 
- * {@link soot.RefType RefType} <code>r</code>, and 
+ * {@link RefType RefType} <code>r</code>, and
  *
  * <blockquote>
  * <code>t == p.getUncaught()</code> or 
@@ -55,7 +55,7 @@ import java.util.*;
  *
  * then calls to 
  * <code>t.add(r)</code>, <code>t.add(a)</code>, and <code>s.add(t)</code>,
- * will throw an {@link ThrowableSet.AlreadyHasExclusionsException}, for any 
+ * will throw an {@link AlreadyHasExclusionsException}, for any
  * <code>RefType</code> <code>r</code>, {@link AnySubType} <code>a</code>, 
  * and <code>ThrowableSet</code> <code>t</code>.</p>
  *
@@ -500,7 +500,7 @@ public final class ThrowableSet {
      * represent the addition of <code>e</code>.
      */
     public ThrowableSet add(RefType e) 
-      throws ThrowableSet.AlreadyHasExclusionsException {
+      throws AlreadyHasExclusionsException {
 	if (INSTRUMENTING) {
 	    Manager.v().addsOfRefType++;
 	}
@@ -605,13 +605,13 @@ public final class ThrowableSet {
      * @return a set containing <code>e</code> and all its subclasses,
      * as well as the exceptions represented by this set.
      *
-     * @throws ThrowableSet.AlreadyHasExclusionsException if this
+     * @throws AlreadyHasExclusionsException if this
      * <code>ThrowableSet</code> is the result of a {@link
      * #whichCatchableAs(RefType)} operation and, thus, unable to
      * represent the addition of <code>e</code>.
      */
     public ThrowableSet add(AnySubType e) 
-      throws ThrowableSet.AlreadyHasExclusionsException {
+      throws AlreadyHasExclusionsException {
 	if (INSTRUMENTING) {
 	    Manager.v().addsOfAnySubType++;
 	}
@@ -721,14 +721,14 @@ public final class ThrowableSet {
      *
      * @return the union of this set with <code>s</code>
      *
-     * @throws ThrowableSet.AlreadyHasExclusionsException if this 
+     * @throws AlreadyHasExclusionsException if this
      * <code>ThrowableSet</code> or <code>s</code> is the
      * result of a {@link #whichCatchableAs(RefType)} operation, so that
      * it is not possible to represent the addition of <code>s</code> to
      * this <code>ThrowableSet</code>.
      */
     public ThrowableSet add(ThrowableSet s)
-      throws ThrowableSet.AlreadyHasExclusionsException {
+      throws AlreadyHasExclusionsException {
 	if (INSTRUMENTING) {
 	    Manager.v().addsOfSet++;
 	}
@@ -953,7 +953,7 @@ public final class ThrowableSet {
 		// Because the add() operations ban additions to sets
 		// with exclusions, we can be sure no types in this are
 		// caught by catcher.
-		return new Pair(ThrowableSet.Manager.v().EMPTY, this);
+		return new Pair(Manager.v().EMPTY, this);
 	    } else if (h.canStoreType(exclusionBase, catcher)) {
 		// exclusion wouldn't be in exceptionsExcluded if one
 		// of its supertypes were not in exceptionsIncluded,
@@ -1164,7 +1164,7 @@ public final class ThrowableSet {
      * Comparator used to implement sortedThrowableIterator().
      * 
      */
-    private static class ThrowableComparator implements java.util.Comparator {
+    private static class ThrowableComparator implements Comparator {
 
 	private static RefType baseType(Object o) {
 	    if (o instanceof AnySubType) {
@@ -1221,7 +1221,7 @@ public final class ThrowableSet {
      * &ldquo;<code>Any_subtype_of_</code>&rdquo;</li>
      *
      * <li>If this <code>ThrowableSet</code> includes all the elements
-     * of {@link ThrowableSet.Manager#VM_ERRORS VM_ERRORS}, they are
+     * of {@link Manager#VM_ERRORS VM_ERRORS}, they are
      * abbreviated as &ldquo;<code>vmErrors</code>&rdquo; rather than
      * listed individually.</li>
      * 
@@ -1249,7 +1249,7 @@ public final class ThrowableSet {
 	final String EXCEPTION = "Exception";
 	final  int EXCEPTION_LENGTH = EXCEPTION.length();
 
-	Collection vmErrorThrowables = ThrowableSet.Manager.v().VM_ERRORS.exceptionsIncluded;
+	Collection vmErrorThrowables = Manager.v().VM_ERRORS.exceptionsIncluded;
 	boolean containsAllVmErrors = s.containsAll(vmErrorThrowables);
 	StringBuffer buf = new StringBuffer();
 

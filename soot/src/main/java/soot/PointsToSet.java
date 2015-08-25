@@ -30,7 +30,7 @@ public interface PointsToSet {
     /** Returns true if this set contains no run-time objects. */
     public boolean isEmpty();
     /** Returns true if this set shares some objects with other. */
-    public boolean hasNonEmptyIntersection( PointsToSet other );
+    public boolean hasNonEmptyIntersection(PointsToSet other);
     /** Set of all possible run-time types of objects in the set. */
     public Set<Type> possibleTypes();
 

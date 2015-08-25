@@ -286,7 +286,7 @@ public class Printer {
         out.println("    {");
         incJimpleLnNum();
         
-        UnitGraph unitGraph = new soot.toolkits.graph.BriefUnitGraph(b);
+        UnitGraph unitGraph = new BriefUnitGraph(b);
 
         LabeledUnitPrinter up;
         if( isPrecise ) up = new NormalUnitPrinter(b);
@@ -306,7 +306,7 @@ public class Printer {
     }
 
     /** Prints the given <code>JimpleBody</code> to the specified <code>PrintWriter</code>. */
-    private void printStatementsInBody(Body body, java.io.PrintWriter out, LabeledUnitPrinter up, UnitGraph unitGraph ) {
+    private void printStatementsInBody(Body body, PrintWriter out, LabeledUnitPrinter up, UnitGraph unitGraph ) {
     	Chain units = body.getUnits();
         Iterator unitIt = units.iterator();
         Unit currentStmt = null, previousStmt;
@@ -410,6 +410,34 @@ public class Printer {
                         + up.labels().get(trap.getEndUnit())
                         + " with "
                         + up.labels().get(trap.getHandlerUnit())
+                        + ";");
+
+                incJimpleLnNum();
+
+            }
+        }
+        // RoboVM note: This block added in RoboVM
+        // Print out local variables
+        {
+            Iterator lvsIt = body.getLocalVariables().iterator();
+
+            if (lvsIt.hasNext()) {
+                out.println();
+                incJimpleLnNum();
+            }
+
+            while (lvsIt.hasNext()) {
+                LocalVariable lv = (LocalVariable) lvsIt.next();
+
+                out.println(
+                    "        localvar index=" + lv.getIndex()
+                        + " name=" + Scene.v().quotedNameOf(lv.getName())
+                        + " type="
+                        + Scene.v().quotedNameOf(lv.getDescriptor())
+                        + " start="
+                        + up.labels().get(lv.getStartUnit())
+                        + " end="
+                        + (lv.getEndUnit() != null ? up.labels().get(lv.getEndUnit()) : "<end_of_method>")
                         + ";");
 
                 incJimpleLnNum();

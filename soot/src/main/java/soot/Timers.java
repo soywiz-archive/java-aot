@@ -132,17 +132,17 @@ public class Timers
 
      public long stmtCount;
 
-	public Timer fieldTimer = new soot.Timer();
+	public Timer fieldTimer = new Timer();
 
-	public Timer methodTimer = new soot.Timer();
+	public Timer methodTimer = new Timer();
 
-	public Timer attributeTimer = new soot.Timer();
+	public Timer attributeTimer = new Timer();
 
-	public Timer locatorTimer = new soot.Timer();
+	public Timer locatorTimer = new Timer();
 
-	public Timer readTimer = new soot.Timer();
+	public Timer readTimer = new Timer();
 	
-	public Timer orderComputation = new soot.Timer("orderComputation");
+	public Timer orderComputation = new Timer("orderComputation");
 
     public void printProfilingInformation()
     {                                                   

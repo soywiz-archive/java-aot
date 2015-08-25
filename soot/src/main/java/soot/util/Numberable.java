@@ -25,6 +25,6 @@ package soot.util;
  */
 
 public interface Numberable {
-    public void setNumber( int number );
+    public void setNumber(int number);
     public int getNumber();
 }

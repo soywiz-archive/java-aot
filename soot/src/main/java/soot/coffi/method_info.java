@@ -72,7 +72,7 @@ public class method_info {
     */
     public CFG cfg;
 
-    public soot.SootMethod jmethod;
+    public SootMethod jmethod;
 
     List instructionList;
 

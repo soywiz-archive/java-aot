@@ -26,8 +26,8 @@ import soot.*;
  */
 public interface ContextManager 
 { 
-    public void addStaticEdge( MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind );
-    public void addVirtualEdge( MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind, Context typeContext );
+    public void addStaticEdge(MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind);
+    public void addVirtualEdge(MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind, Context typeContext);
     public CallGraph callGraph();
 }
 

@@ -28,7 +28,7 @@ import java.util.*;
  * <b>after</b> the QueueReader was created.
  * @author Ondrej Lhotak
  */
-public class QueueReader<E> implements java.util.Iterator<E>
+public class QueueReader<E> implements Iterator<E>
 { 
     private E[] q;
     private int index;

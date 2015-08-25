@@ -221,13 +221,13 @@ public class SootMethod
     }
 
     /** Gets the modifiers of this method.
-     * @see soot.Modifier */
+     * @see Modifier */
     public int getModifiers() {
         return modifiers;
     }
 
     /** Sets the modifiers of this method.
-     * @see soot.Modifier */
+     * @see Modifier */
     public void setModifiers(int modifiers) {
         // RoboVM note: We allow all classes to be modified
 //        if ((declaringClass != null) && (!declaringClass.isApplicationClass()))

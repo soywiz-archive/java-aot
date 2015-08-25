@@ -286,7 +286,7 @@ public class ExceptionalUnitGraph extends UnitGraph implements ExceptionalGraph<
 
     /**
      * <p>Utility method used in the construction of 
-     * {@link soot.toolkits.graph.UnitGraph UnitGraph}
+     * {@link UnitGraph UnitGraph}
      * variants which include exceptional control flow. It determines
      * which {@link Unit}s may throw exceptions that would be caught
      * by {@link Trap}s within the method.</p>
@@ -351,7 +351,7 @@ public class ExceptionalUnitGraph extends UnitGraph implements ExceptionalGraph<
 	    }
 	}
 
-	for (Map.Entry<Unit,ThrowableSet> entry : unitToUncaughtThrowables.entrySet()) {
+	for (Entry<Unit,ThrowableSet> entry : unitToUncaughtThrowables.entrySet()) {
 	Unit unit = (Unit) entry.getKey();
 	ThrowableSet escaping = (ThrowableSet) entry.getValue();
 	if (escaping != ThrowableSet.Manager.v().EMPTY) {
@@ -417,7 +417,7 @@ public class ExceptionalUnitGraph extends UnitGraph implements ExceptionalGraph<
      *
      * @param unitToExceptionDests2 A <code>Map</code> from {@link Unit}s to 
      *                    {@link Collection}s of {@link
-     *                    ExceptionalUnitGraph.ExceptionDest
+     *                    ExceptionDest
      *                    ExceptionDest}s which represent the handlers
      *                    that might catch exceptions thrown by the
      *                    <code>Unit</code>. This is an ``in
@@ -737,7 +737,7 @@ public class ExceptionalUnitGraph extends UnitGraph implements ExceptionalGraph<
 	    if (u instanceof soot.jimple.ReturnStmt ||
 		u instanceof soot.jimple.ReturnVoidStmt) {
 		tailList.add(u);
-	    } else if (u instanceof soot.jimple.ThrowStmt) {
+	    } else if (u instanceof ThrowStmt) {
 		Collection<ExceptionDest> dests = getExceptionDests(u);
 		int escapeMethodCount = 0;
 		for (Iterator<ExceptionDest> destIt = dests.iterator(); destIt.hasNext(); ) {
@@ -758,14 +758,14 @@ public class ExceptionalUnitGraph extends UnitGraph implements ExceptionalGraph<
 
     /**
      * Returns a collection of 
-     * {@link ExceptionalUnitGraph.ExceptionDest ExceptionDest}
+     * {@link ExceptionDest ExceptionDest}
      * objects which represent how exceptions thrown by a specified
      * unit will be handled.
      *
      * @param u The unit for which to provide exception information.
      *          (<code>u</code> must be a <code>Unit</code>, though the parameter is
      *          declared as an <code>Object</code> to satisfy the interface of 
-     *          {@link soot.toolkits.graph.ExceptionalGraph ExceptionalGraph}.
+     *          {@link ExceptionalGraph ExceptionalGraph}.
      *
      * @return a collection of <code>ExceptionDest</code> objects describing
      *	       the traps, if any, which catch the exceptions
@@ -867,7 +867,7 @@ public class ExceptionalUnitGraph extends UnitGraph implements ExceptionalGraph<
      * <p>This method is package-private because it exposes a detail
      * of the implementation of <code>ExceptionalUnitGraph</code> so
      * that the 
-     * {@link soot.toolkits.graph.ExceptionalBlockGraph ExceptionalBlockGraph}
+     * {@link ExceptionalBlockGraph ExceptionalBlockGraph}
      * constructor can cache the same <code>ThrowAnalysis</code> for
      * the same purpose.
      *

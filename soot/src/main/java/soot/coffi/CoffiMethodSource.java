@@ -36,7 +36,7 @@ public class CoffiMethodSource implements MethodSource
     public ClassFile coffiClass;
     public method_info coffiMethod;
 
-    CoffiMethodSource(soot.coffi.ClassFile coffiClass, soot.coffi.method_info coffiMethod)
+    CoffiMethodSource(ClassFile coffiClass, method_info coffiMethod)
     {
         this.coffiClass = coffiClass;
         this.coffiMethod = coffiMethod;
@@ -50,7 +50,7 @@ public class CoffiMethodSource implements MethodSource
         boolean useOriginalNames = PhaseOptions.getBoolean(options, "use-original-names");
 
         if(useOriginalNames)
-            soot.coffi.Util.v().setFaithfulNaming(true);
+            Util.v().setFaithfulNaming(true);
 
         /*
             I need to set these to null to free Coffi structures.
@@ -84,7 +84,7 @@ public class CoffiMethodSource implements MethodSource
                 G.v().out.println("[" + m.getName() +
                     "]     Building Coffi CFG...");
 
-             new soot.coffi.CFG(coffiMethod);
+             new CFG(coffiMethod);
              
          }
 

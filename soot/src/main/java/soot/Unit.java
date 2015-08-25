@@ -52,9 +52,9 @@ public interface Unit extends Switchable, Host, Serializable, Context
     /** Returns a list of Boxes pointing to this Unit. */
     public List<UnitBox> getBoxesPointingToThis();
     /** Adds a box to the list returned by getBoxesPointingToThis. */
-    public void addBoxPointingToThis( UnitBox b );
+    public void addBoxPointingToThis(UnitBox b);
     /** Removes a box from the list returned by getBoxesPointingToThis. */
-    public void removeBoxPointingToThis( UnitBox b );
+    public void removeBoxPointingToThis(UnitBox b);
     /** Clears any pointers to and from this Unit's UnitBoxes. */
     public void clearUnitBoxes();
     

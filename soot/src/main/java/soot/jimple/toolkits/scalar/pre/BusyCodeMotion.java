@@ -51,7 +51,7 @@ import soot.options.BCMOptions;
  * refers to the fact, that we <b>always</b> move computations as high
  * as possible. Even, if this is not necessary.
  *
- * @see soot.jimple.toolkits.graph.CriticalEdgeRemover
+ * @see CriticalEdgeRemover
  */
 public class BusyCodeMotion extends BodyTransformer {
     public BusyCodeMotion( Singletons.Global g ) {}

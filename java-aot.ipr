@@ -23,10 +23,17 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="aot" />
+      </profile>
+      <profile default="false" name="Annotation profile for soot" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
         <module name="soot" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="aot" target="1.5" />
       <module name="soot" target="1.7" />
     </bytecodeTargetLevel>
   </component>
@@ -211,59 +218,59 @@
         <root url="jar://$MAVEN_REPOSITORY$/org/ow2/asm/asm-all/5.0.3/asm-all-5.0.3-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Maven: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.1">
+    <library name="Maven: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.4">
       <CLASSES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/modules/scala-parser-combinators_2.11/1.0.1/scala-parser-combinators_2.11-1.0.1.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/modules/scala-parser-combinators_2.11/1.0.4/scala-parser-combinators_2.11-1.0.4.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/modules/scala-parser-combinators_2.11/1.0.1/scala-parser-combinators_2.11-1.0.1-javadoc.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/modules/scala-parser-combinators_2.11/1.0.4/scala-parser-combinators_2.11-1.0.4-javadoc.jar!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/modules/scala-parser-combinators_2.11/1.0.1/scala-parser-combinators_2.11-1.0.1-sources.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/modules/scala-parser-combinators_2.11/1.0.4/scala-parser-combinators_2.11-1.0.4-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Maven: org.scala-lang.modules:scala-xml_2.11:1.0.2">
+    <library name="Maven: org.scala-lang.modules:scala-xml_2.11:1.0.4">
       <CLASSES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/modules/scala-xml_2.11/1.0.2/scala-xml_2.11-1.0.2.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/modules/scala-xml_2.11/1.0.4/scala-xml_2.11-1.0.4.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/modules/scala-xml_2.11/1.0.2/scala-xml_2.11-1.0.2-javadoc.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/modules/scala-xml_2.11/1.0.4/scala-xml_2.11-1.0.4-javadoc.jar!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/modules/scala-xml_2.11/1.0.2/scala-xml_2.11-1.0.2-sources.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/modules/scala-xml_2.11/1.0.4/scala-xml_2.11-1.0.4-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Maven: org.scala-lang:scala-compiler:2.11.1">
+    <library name="Maven: org.scala-lang:scala-compiler:2.11.7">
       <CLASSES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-compiler/2.11.1/scala-compiler-2.11.1.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-compiler/2.11.7/scala-compiler-2.11.7.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-compiler/2.11.1/scala-compiler-2.11.1-javadoc.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-compiler/2.11.7/scala-compiler-2.11.7-javadoc.jar!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-compiler/2.11.1/scala-compiler-2.11.1-sources.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-compiler/2.11.7/scala-compiler-2.11.7-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Maven: org.scala-lang:scala-library:2.11.1">
+    <library name="Maven: org.scala-lang:scala-library:2.11.7">
       <CLASSES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.11.1/scala-library-2.11.1.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.11.7/scala-library-2.11.7.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.11.1/scala-library-2.11.1-javadoc.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.11.7/scala-library-2.11.7-javadoc.jar!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.11.1/scala-library-2.11.1-sources.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.11.7/scala-library-2.11.7-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Maven: org.scala-lang:scala-reflect:2.11.1">
+    <library name="Maven: org.scala-lang:scala-reflect:2.11.7">
       <CLASSES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.11.1/scala-reflect-2.11.1.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.11.7/scala-reflect-2.11.7.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.11.1/scala-reflect-2.11.1-javadoc.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.11.7/scala-reflect-2.11.7-javadoc.jar!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.11.1/scala-reflect-2.11.1-sources.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.11.7/scala-reflect-2.11.7-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="org.scalatest:scalatest_2.10.0:1.8" type="repository">
@@ -279,4 +286,3 @@
     </library>
   </component>
 </project>
-

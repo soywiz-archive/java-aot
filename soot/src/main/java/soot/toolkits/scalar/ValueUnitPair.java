@@ -55,7 +55,7 @@ public class ValueUnitPair extends AbstractValueBox implements UnitBox, EquivTo
     }
 
     /**
-     * @see soot.UnitBox#setUnit(Unit)
+     * @see UnitBox#setUnit(Unit)
      **/
     public void setUnit(Unit unit)
     {
@@ -79,7 +79,7 @@ public class ValueUnitPair extends AbstractValueBox implements UnitBox, EquivTo
     }
 
     /**
-     * @see soot.UnitBox#getUnit()
+     * @see UnitBox#getUnit()
      **/
     public Unit getUnit()
     {
@@ -87,7 +87,7 @@ public class ValueUnitPair extends AbstractValueBox implements UnitBox, EquivTo
     }
 
     /**
-     * @see soot.UnitBox#canContainUnit(Unit)
+     * @see UnitBox#canContainUnit(Unit)
      **/
     public boolean canContainUnit(Unit u)
     {
@@ -95,7 +95,7 @@ public class ValueUnitPair extends AbstractValueBox implements UnitBox, EquivTo
     }
 
     /**
-     * @see soot.UnitBox#isBranchTarget()
+     * @see UnitBox#isBranchTarget()
      **/
     public boolean isBranchTarget()
     {
